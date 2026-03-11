@@ -45,7 +45,7 @@ export default function Overview() {
     api.getStats().then(s => { setStats(s); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="page-loading">Loading stats...</div>;
+  if (loading) return <div className="page-loading"><div className="spinner large" />Loading stats...</div>;
   if (!stats) return <div className="page-error">Failed to load stats.</div>;
 
   const { totals, byTeam, byYear, byProduct, recentlyOwned, topPlayer, topSet } = stats;

@@ -164,7 +164,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
                 </div>
 
                 {loadingPreview ? (
-                  <div className="page-loading">Loading cards...</div>
+                  <div className="page-loading"><div className="spinner large" />Loading cards...</div>
                 ) : (
                   <div className="table-wrap" style={{ padding: '0 16px 16px' }}>
                     <table className="data-table collection-table">

@@ -164,7 +164,7 @@ export default function Catalog() {
             </div>
 
             {loadingPreview ? (
-              <div className="page-loading">Loading cards...</div>
+              <div className="page-loading"><div className="spinner large" />Loading cards...</div>
             ) : (
               <div className="table-wrap">
                 <table className="data-table collection-table">

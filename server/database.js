@@ -1,25 +1,26 @@
-import { DatabaseSync } from 'node:sqlite';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import postgres from 'postgres';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const db = new DatabaseSync(join(__dirname, 'hockey_cards.db'));
+const db = postgres(process.env.DATABASE_URL, {
+  ssl: /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL || '') ? false : { rejectUnauthorized: false }
+});
 
-db.exec('PRAGMA journal_mode = WAL');
-db.exec('PRAGMA foreign_keys = ON');
-
-db.exec(`
+await db`
   CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     is_admin INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT
+  )
+`;
 
+await db`
   CREATE TABLE IF NOT EXISTS cards (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     owned INTEGER DEFAULT 0,
     card_number TEXT,
     set_name TEXT,
@@ -36,17 +37,18 @@ db.exec(`
     product TEXT,
     grade TEXT,
     duplicates INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
 
-  CREATE INDEX IF NOT EXISTS idx_cards_user ON cards(user_id);
-  CREATE INDEX IF NOT EXISTS idx_cards_year_product ON cards(year, product);
-  CREATE INDEX IF NOT EXISTS idx_cards_description ON cards(description);
-  CREATE INDEX IF NOT EXISTS idx_cards_team ON cards(team_city, team_name);
+await db`CREATE INDEX IF NOT EXISTS idx_cards_user ON cards(user_id)`;
+await db`CREATE INDEX IF NOT EXISTS idx_cards_year_product ON cards(year, product)`;
+await db`CREATE INDEX IF NOT EXISTS idx_cards_description ON cards(description)`;
+await db`CREATE INDEX IF NOT EXISTS idx_cards_team ON cards(team_city, team_name)`;
 
+await db`
   CREATE TABLE IF NOT EXISTS catalog_cards (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     card_number TEXT,
     set_name TEXT,
     description TEXT,
@@ -61,15 +63,10 @@ db.exec(`
     year TEXT NOT NULL,
     product TEXT NOT NULL,
     grade TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
 
-  CREATE INDEX IF NOT EXISTS idx_catalog_year_product ON catalog_cards(year, product);
-`);
-
-// Migrations for new columns (safe to run on existing DBs)
-for (const col of ['first_name TEXT', 'last_name TEXT', 'email TEXT']) {
-  try { db.exec(`ALTER TABLE users ADD COLUMN ${col}`); } catch { /* column already exists */ }
-}
+await db`CREATE INDEX IF NOT EXISTS idx_catalog_year_product ON catalog_cards(year, product)`;
 
 export default db;

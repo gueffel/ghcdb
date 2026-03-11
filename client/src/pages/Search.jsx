@@ -141,7 +141,7 @@ export default function Search() {
       </div>
 
       <div className="search-meta">
-        {loading ? 'Searching...' : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`}
+        {loading ? <><div className="spinner" />Searching...</> : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`}
       </div>
 
       {results.length > 0 && (

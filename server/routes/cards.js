@@ -23,138 +23,157 @@ function normalizeCard(raw, userId) {
   return { ...base, user_id: userId, owned: toBool(get('owned')), duplicates: toInt(get('duplicates', 'dups', 'duplicate')) || 0 };
 }
 
-const INSERT_SQL = `
-  INSERT INTO cards (user_id, owned, card_number, set_name, description, team_city, team_name,
-    rookie, auto, mem, serial, serial_of, thickness, year, product, grade, duplicates)
-  VALUES (@user_id, @owned, @card_number, @set_name, @description, @team_city, @team_name,
-    @rookie, @auto, @mem, @serial, @serial_of, @thickness, @year, @product, @grade, @duplicates)
-`;
-
-const UPDATE_SQL = `
-  UPDATE cards SET owned=@owned, card_number=@card_number, set_name=@set_name,
-    description=@description, team_city=@team_city, team_name=@team_name,
-    rookie=@rookie, auto=@auto, mem=@mem, serial=@serial, serial_of=@serial_of,
-    thickness=@thickness, year=@year, product=@product, grade=@grade, duplicates=@duplicates
-  WHERE id=@id AND user_id=@user_id
-`;
+// Numeric-aware ORDER BY for card_number (safe for PostgreSQL)
+const CARD_ORDER = `year DESC, product, (CASE WHEN card_number ~ '^[0-9]+$' THEN card_number::int ELSE NULL END) NULLS LAST, card_number`;
 
 // GET /api/cards - list with optional filters
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const { year, product, owned, search, page = 1, limit = 200 } = req.query;
-  let where = ['user_id = ?'];
-  let params = [req.user.id];
+  let i = 1;
+  const where = [`user_id = $${i++}`];
+  const params = [req.user.id];
 
-  if (year) { where.push('year = ?'); params.push(year); }
-  if (product) { where.push('product = ?'); params.push(product); }
-  if (owned !== undefined && owned !== '') { where.push('owned = ?'); params.push(owned === 'true' || owned === '1' ? 1 : 0); }
+  if (year) { where.push(`year = $${i++}`); params.push(year); }
+  if (product) { where.push(`product = $${i++}`); params.push(product); }
+  if (owned !== undefined && owned !== '') {
+    where.push(`owned = $${i++}`);
+    params.push(owned === 'true' || owned === '1' ? 1 : 0);
+  }
   if (search) {
-    where.push('(description LIKE ? OR team_city LIKE ? OR team_name LIKE ? OR card_number LIKE ? OR set_name LIKE ?)');
+    where.push(`(description ILIKE $${i} OR team_city ILIKE $${i+1} OR team_name ILIKE $${i+2} OR card_number ILIKE $${i+3} OR set_name ILIKE $${i+4})`);
     const s = `%${search}%`;
     params.push(s, s, s, s, s);
+    i += 5;
   }
 
-  const whereClause = where.join(' AND ');
+  const whereSQL = where.join(' AND ');
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
-  const total = db.prepare(`SELECT COUNT(*) as n FROM cards WHERE ${whereClause}`).get(...params).n;
-  const cards = db.prepare(
-    `SELECT * FROM cards WHERE ${whereClause} ORDER BY year DESC, product, CAST(card_number AS INTEGER), card_number LIMIT ? OFFSET ?`
-  ).all(...params, parseInt(limit), offset);
+  const [countRow] = await db.unsafe(`SELECT COUNT(*) as n FROM cards WHERE ${whereSQL}`, params);
+  const cards = await db.unsafe(
+    `SELECT * FROM cards WHERE ${whereSQL} ORDER BY ${CARD_ORDER} LIMIT $${i} OFFSET $${i+1}`,
+    [...params, parseInt(limit), offset]
+  );
 
-  res.json({ cards, total, page: parseInt(page), limit: parseInt(limit) });
+  res.json({ cards, total: Number(countRow.n), page: parseInt(page), limit: parseInt(limit) });
 });
 
 // GET /api/cards/products - distinct year/product combos
-router.get('/products', (req, res) => {
-  const rows = db.prepare(
-    'SELECT DISTINCT year, product, COUNT(*) as total, SUM(owned) as owned FROM cards WHERE user_id = ? GROUP BY year, product ORDER BY year DESC, product'
-  ).all(req.user.id);
+router.get('/products', async (req, res) => {
+  const rows = await db`
+    SELECT DISTINCT year, product, COUNT(*) as total, SUM(owned) as owned
+    FROM cards WHERE user_id = ${req.user.id}
+    GROUP BY year, product ORDER BY year DESC, product
+  `;
   res.json(rows);
 });
 
 // GET /api/cards/:id
-router.get('/:id', (req, res) => {
-  const card = db.prepare('SELECT * FROM cards WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
+router.get('/:id', async (req, res) => {
+  const [card] = await db`SELECT * FROM cards WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
   if (!card) return res.status(404).json({ error: 'Card not found' });
   res.json(card);
 });
 
 // POST /api/cards - add single card (upsert: mark owned or increment duplicates if card exists)
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const card = normalizeCard(req.body, req.user.id);
 
   if (card.card_number) {
-    const existing = db.prepare(
-      'SELECT id, owned FROM cards WHERE user_id = ? AND year = ? AND product = ? AND card_number = ? AND COALESCE(set_name, \'\') = COALESCE(?, \'\') LIMIT 1'
-    ).get(req.user.id, card.year, card.product, card.card_number, card.set_name);
-
+    const [existing] = await db`
+      SELECT id, owned FROM cards
+      WHERE user_id = ${req.user.id} AND year = ${card.year} AND product = ${card.product}
+        AND card_number = ${card.card_number}
+        AND COALESCE(set_name, '') = COALESCE(${card.set_name}, '')
+      LIMIT 1
+    `;
     if (existing) {
       if (!existing.owned) {
-        db.prepare('UPDATE cards SET owned = 1 WHERE id = ?').run(existing.id);
+        await db`UPDATE cards SET owned = 1 WHERE id = ${existing.id}`;
         return res.json({ id: existing.id, action: 'marked_owned' });
       } else {
-        db.prepare('UPDATE cards SET duplicates = duplicates + 1 WHERE id = ?').run(existing.id);
+        await db`UPDATE cards SET duplicates = duplicates + 1 WHERE id = ${existing.id}`;
         return res.json({ id: existing.id, action: 'duplicated' });
       }
     }
   }
 
-  const result = db.prepare(INSERT_SQL).run(card);
-  res.json({ id: Number(result.lastInsertRowid), action: 'inserted', ...card });
+  const [row] = await db`
+    INSERT INTO cards (user_id, owned, card_number, set_name, description, team_city, team_name,
+      rookie, auto, mem, serial, serial_of, thickness, year, product, grade, duplicates)
+    VALUES (${card.user_id}, ${card.owned}, ${card.card_number}, ${card.set_name}, ${card.description},
+      ${card.team_city}, ${card.team_name}, ${card.rookie}, ${card.auto}, ${card.mem},
+      ${card.serial}, ${card.serial_of}, ${card.thickness}, ${card.year}, ${card.product},
+      ${card.grade}, ${card.duplicates})
+    RETURNING id
+  `;
+  res.json({ id: row.id, action: 'inserted', ...card });
 });
 
 // POST /api/cards/import - bulk import array of cards
-router.post('/import', (req, res) => {
+router.post('/import', async (req, res) => {
   const { cards } = req.body;
   if (!Array.isArray(cards) || cards.length === 0) return res.status(400).json({ error: 'No cards provided' });
 
-  const insert = db.prepare(INSERT_SQL);
-  db.exec('BEGIN');
   try {
-    for (const raw of cards) {
-      insert.run(normalizeCard(raw, req.user.id));
-    }
-    db.exec('COMMIT');
+    await db.begin(async sql => {
+      for (const raw of cards) {
+        const c = normalizeCard(raw, req.user.id);
+        await sql`
+          INSERT INTO cards (user_id, owned, card_number, set_name, description, team_city, team_name,
+            rookie, auto, mem, serial, serial_of, thickness, year, product, grade, duplicates)
+          VALUES (${c.user_id}, ${c.owned}, ${c.card_number}, ${c.set_name}, ${c.description},
+            ${c.team_city}, ${c.team_name}, ${c.rookie}, ${c.auto}, ${c.mem},
+            ${c.serial}, ${c.serial_of}, ${c.thickness}, ${c.year}, ${c.product},
+            ${c.grade}, ${c.duplicates})
+        `;
+      }
+    });
     res.json({ imported: cards.length });
   } catch (err) {
-    db.exec('ROLLBACK');
     res.status(500).json({ error: err.message });
   }
 });
 
 // PATCH /api/cards/:id/owned - quick toggle owned, optionally update serial
-router.patch('/:id/owned', (req, res) => {
+router.patch('/:id/owned', async (req, res) => {
   const { owned, serial } = req.body;
   if ('serial' in req.body) {
     const serialVal = serial !== null && serial !== '' ? Number(serial) : null;
-    db.prepare('UPDATE cards SET owned = ?, serial = ? WHERE id = ? AND user_id = ?')
-      .run(owned ? 1 : 0, serialVal, req.params.id, req.user.id);
+    await db`UPDATE cards SET owned = ${owned ? 1 : 0}, serial = ${serialVal} WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
   } else {
-    db.prepare('UPDATE cards SET owned = ? WHERE id = ? AND user_id = ?').run(owned ? 1 : 0, req.params.id, req.user.id);
+    await db`UPDATE cards SET owned = ${owned ? 1 : 0} WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
   }
   res.json({ ok: true });
 });
 
 // PUT /api/cards/:id - full update
-router.put('/:id', (req, res) => {
-  const card = { ...normalizeCard(req.body, req.user.id), id: Number(req.params.id), user_id: req.user.id };
-  const result = db.prepare(UPDATE_SQL).run(card);
-  if (result.changes === 0) return res.status(404).json({ error: 'Card not found' });
+router.put('/:id', async (req, res) => {
+  const c = { ...normalizeCard(req.body, req.user.id), id: Number(req.params.id) };
+  const result = await db`
+    UPDATE cards SET owned=${c.owned}, card_number=${c.card_number}, set_name=${c.set_name},
+      description=${c.description}, team_city=${c.team_city}, team_name=${c.team_name},
+      rookie=${c.rookie}, auto=${c.auto}, mem=${c.mem}, serial=${c.serial},
+      serial_of=${c.serial_of}, thickness=${c.thickness}, year=${c.year},
+      product=${c.product}, grade=${c.grade}, duplicates=${c.duplicates}
+    WHERE id=${c.id} AND user_id=${req.user.id}
+  `;
+  if (result.count === '0') return res.status(404).json({ error: 'Card not found' });
   res.json({ ok: true });
 });
 
 // DELETE /api/cards/:id
-router.delete('/:id', (req, res) => {
-  const result = db.prepare('DELETE FROM cards WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
-  if (result.changes === 0) return res.status(404).json({ error: 'Card not found' });
+router.delete('/:id', async (req, res) => {
+  const result = await db`DELETE FROM cards WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
+  if (result.count === '0') return res.status(404).json({ error: 'Card not found' });
   res.json({ ok: true });
 });
 
 // DELETE /api/cards/product/all - delete all cards in a product
-router.delete('/product/all', (req, res) => {
+router.delete('/product/all', async (req, res) => {
   const { year, product } = req.body;
-  const result = db.prepare('DELETE FROM cards WHERE user_id = ? AND year = ? AND product = ?').run(req.user.id, year, product);
-  res.json({ deleted: result.changes });
+  const result = await db`DELETE FROM cards WHERE user_id = ${req.user.id} AND year = ${year} AND product = ${product}`;
+  res.json({ deleted: Number(result.count) });
 });
 
 export default router;
