@@ -72,7 +72,7 @@ html, body, #root {
   display: flex; align-items: center; gap: 0;
   padding: 0 20px;
 }
-.nav-brand { display: flex; align-items: center; gap: 8px; margin-right: 24px; }
+.nav-brand { display: flex; align-items: center; gap: 8px; margin-right: 24px; text-decoration: none; }
 .nav-icon { font-size: 20px; }
 .nav-title { font-size: 16px; font-weight: 700; color: var(--text); white-space: nowrap; }
 .nav-links { display: flex; align-items: center; gap: 2px; flex: 1; }

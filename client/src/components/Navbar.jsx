@@ -13,10 +13,10 @@ export default function Navbar() {
   return (
     <>
       <nav className="navbar">
-        <div className="nav-brand">
+        <NavLink to="/overview" className="nav-brand">
           <span className="nav-icon">🏒</span>
           <span className="nav-title">GHCdb</span>
-        </div>
+        </NavLink>
         <div className="nav-links">
           <NavLink to="/overview" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Overview</NavLink>
           <NavLink to="/collection" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Collection</NavLink>
