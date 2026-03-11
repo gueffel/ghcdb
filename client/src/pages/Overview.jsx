@@ -169,7 +169,7 @@ export default function Overview() {
                     <td>{c.year}</td>
                     <td>{c.product}</td>
                     <td>{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                    <td>{c.auto ? <span className="badge badge-purple">AU</span> : ''}</td>
+                    <td>{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                   </tr>
                 ))}
               </tbody>

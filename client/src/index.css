@@ -274,12 +274,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .product-owned { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
 .all-collections-item { padding-left: 14px; font-weight: 600; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
 .product-delete {
-  display: none; flex-shrink: 0;
-  background: transparent; border: none; color: var(--text-dim);
-  font-size: 15px; line-height: 1; padding: 0 2px; cursor: pointer;
-  transition: font-size 0.1s;
+  display: none; flex-shrink: 0; margin-left: 6px;
+  background: var(--bg3); color: var(--text-muted);
+  font-size: 10px; font-weight: 600; letter-spacing: 0.03em;
+  line-height: 1; padding: 3px 7px; border-radius: 99px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
-.product-delete:hover { color: #e05; font-size: 18px; }
+.product-delete:hover { background: #c0112233; color: #e05; }
 .product-item:hover .product-delete { display: block; }
 
 .collection-main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }

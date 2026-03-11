@@ -79,11 +79,28 @@ router.get('/:id', (req, res) => {
   res.json(card);
 });
 
-// POST /api/cards - add single card
+// POST /api/cards - add single card (upsert: mark owned or increment duplicates if card exists)
 router.post('/', (req, res) => {
   const card = normalizeCard(req.body, req.user.id);
+
+  if (card.card_number) {
+    const existing = db.prepare(
+      'SELECT id, owned FROM cards WHERE user_id = ? AND year = ? AND product = ? AND card_number = ? AND COALESCE(set_name, \'\') = COALESCE(?, \'\') LIMIT 1'
+    ).get(req.user.id, card.year, card.product, card.card_number, card.set_name);
+
+    if (existing) {
+      if (!existing.owned) {
+        db.prepare('UPDATE cards SET owned = 1 WHERE id = ?').run(existing.id);
+        return res.json({ id: existing.id, action: 'marked_owned' });
+      } else {
+        db.prepare('UPDATE cards SET duplicates = duplicates + 1 WHERE id = ?').run(existing.id);
+        return res.json({ id: existing.id, action: 'duplicated' });
+      }
+    }
+  }
+
   const result = db.prepare(INSERT_SQL).run(card);
-  res.json({ id: Number(result.lastInsertRowid), ...card });
+  res.json({ id: Number(result.lastInsertRowid), action: 'inserted', ...card });
 });
 
 // POST /api/cards/import - bulk import array of cards

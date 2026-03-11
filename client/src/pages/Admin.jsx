@@ -412,7 +412,7 @@ export default function Admin() {
                   <th>Team City</th>
                   <th>Team Name</th>
                   <th>RC</th>
-                  <th>AU</th>
+                  <th>AUTO</th>
                   <th>Mem</th>
                   <th>Serial#</th>
                   <th>Grade</th>
@@ -436,7 +436,7 @@ export default function Admin() {
                       <td className="text-muted">{card.team_city}</td>
                       <td className="text-muted">{card.team_name}</td>
                       <td className="text-center">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                      <td className="text-center">{card.auto ? <span className="badge badge-purple">AU</span> : ''}</td>
+                      <td className="text-center">{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                       <td className="text-muted">{card.mem || ''}</td>
                       <td className="text-muted">{card.serial_of ? `/${card.serial_of}` : ''}</td>
                       <td className="text-muted">{card.grade || ''}</td>

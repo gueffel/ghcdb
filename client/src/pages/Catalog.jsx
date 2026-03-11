@@ -175,7 +175,7 @@ export default function Catalog() {
                       <th onClick={() => onSort('set_name')} className={`sortable-th ${sortKey === 'set_name' ? 'sorted' : ''}`}>Set {indicator('set_name')}</th>
                       <th onClick={() => onSort('team_city')} className={`sortable-th ${sortKey === 'team_city' ? 'sorted' : ''}`}>Team {indicator('team_city')}</th>
                       <th onClick={() => onSort('rookie')} className={`sortable-th ${sortKey === 'rookie' ? 'sorted' : ''}`}>RC {indicator('rookie')}</th>
-                      <th onClick={() => onSort('auto')} className={`sortable-th ${sortKey === 'auto' ? 'sorted' : ''}`}>AU {indicator('auto')}</th>
+                      <th onClick={() => onSort('auto')} className={`sortable-th ${sortKey === 'auto' ? 'sorted' : ''}`}>AUTO {indicator('auto')}</th>
                       <th onClick={() => onSort('mem')} className={`sortable-th ${sortKey === 'mem' ? 'sorted' : ''}`}>Mem {indicator('mem')}</th>
                       <th onClick={() => onSort('serial_of')} className={`sortable-th ${sortKey === 'serial_of' ? 'sorted' : ''}`}>Serial {indicator('serial_of')}</th>
                     </tr>
@@ -188,7 +188,7 @@ export default function Catalog() {
                         <td className="text-muted">{card.set_name}</td>
                         <td className="text-muted">{formatTeam(card.team_city, card.team_name)}</td>
                         <td>{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                        <td>{card.auto ? <span className="badge badge-purple">AU</span> : ''}</td>
+                        <td>{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                         <td className="text-muted">{card.mem || ''}</td>
                         <td className="text-muted">{card.serial_of ? `/${card.serial_of}` : ''}</td>
                       </tr>

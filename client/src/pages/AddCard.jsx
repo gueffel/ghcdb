@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api.js';
 
 const EMPTY = {
-  owned: false, card_number: '', set_name: '', description: '', team_city: '', team_name: '',
+  owned: true, card_number: '', set_name: '', description: '', team_city: '', team_name: '',
   rookie: false, auto: false, mem: '', serial: '', serial_of: '', thickness: '', year: '',
   product: '', grade: '', duplicates: 0,
 };
@@ -26,8 +26,14 @@ export default function AddCard() {
     setError('');
     setSuccess('');
     try {
-      await api.addCard(form);
-      setSuccess(`Card "${form.description || form.card_number}" added successfully!`);
+      const result = await api.addCard(form);
+      if (result.action === 'marked_owned') {
+        setSuccess(`"${form.description || form.card_number}" does exist already — marked as owned.`);
+      } else if (result.action === 'duplicated') {
+        setSuccess(`"${form.description || form.card_number}" is already owned — duplicate count increased.`);
+      } else {
+        setSuccess(`Card "${form.description || form.card_number}" added successfully!`);
+      }
       setForm({ ...EMPTY, year: form.year, product: form.product }); // keep year/product for quick re-add
     } catch (err) {
       setError(err.message);
@@ -60,11 +66,11 @@ export default function AddCard() {
             </div>
             <div className="field">
               <label>Set Name</label>
-              <input value={form.set_name} onChange={e => set('set_name', e.target.value)} placeholder="Young Guns" />
+              <input value={form.set_name} onChange={e => set('set_name', e.target.value)} placeholder="e.g. Young Guns" />
             </div>
             <div className="field">
               <label>Card #</label>
-              <input value={form.card_number} onChange={e => set('card_number', e.target.value)} placeholder="101" />
+              <input value={form.card_number} onChange={e => set('card_number', e.target.value)} placeholder="e.g. 101" />
             </div>
           </div>
         </div>
@@ -73,16 +79,16 @@ export default function AddCard() {
           <div className="form-section-title">Player & Team</div>
           <div className="form-grid">
             <div className="field field-wide">
-              <label>Description / Player Name *</label>
-              <input value={form.description} onChange={e => set('description', e.target.value)} placeholder="Connor McDavid" required />
+              <label>Player Name *</label>
+              <input value={form.description} onChange={e => set('description', e.target.value)} placeholder="e.g. Nils Hoglander" required />
             </div>
             <div className="field">
               <label>Team City</label>
-              <input value={form.team_city} onChange={e => set('team_city', e.target.value)} placeholder="Edmonton" />
+              <input value={form.team_city} onChange={e => set('team_city', e.target.value)} placeholder="e.g. Vancouver" />
             </div>
             <div className="field">
               <label>Team Name</label>
-              <input value={form.team_name} onChange={e => set('team_name', e.target.value)} placeholder="Oilers" />
+              <input value={form.team_name} onChange={e => set('team_name', e.target.value)} placeholder="e.g. Canucks" />
             </div>
           </div>
         </div>
@@ -92,14 +98,14 @@ export default function AddCard() {
           <div className="form-grid">
             <div className="field">
               <label>Mem / Relic</label>
-              <input value={form.mem} onChange={e => set('mem', e.target.value)} placeholder="Jersey / Patch" />
+              <input value={form.mem} onChange={e => set('mem', e.target.value)} placeholder="Jsy / Patch" />
             </div>
             <div className="field">
               <label>Serial #</label>
               <input type="number" value={form.serial} onChange={e => set('serial', e.target.value)} placeholder="42" />
             </div>
             <div className="field">
-              <label>Numbered /</label>
+              <label>Numbered to</label>
               <input type="number" value={form.serial_of} onChange={e => set('serial_of', e.target.value)} placeholder="99" />
             </div>
             <div className="field">

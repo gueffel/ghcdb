@@ -220,7 +220,7 @@ export default function Collection() {
                       className="product-delete"
                       onClick={e => { e.stopPropagation(); deleteSet(year, p.product); }}
                       title="Delete set"
-                    >🗑</button>
+                    >del</button>
                   </div>
                 ))}
               </div>
@@ -293,7 +293,7 @@ export default function Collection() {
                       {showAll && <th onClick={() => onSort('year')} className={`sortable-th ${sortKey === 'year' ? 'sorted' : ''}`}>Year {indicator('year')}</th>}
                       {showAll && <th onClick={() => onSort('product')} className={`sortable-th ${sortKey === 'product' ? 'sorted' : ''}`}>Product {indicator('product')}</th>}
                       <th onClick={() => onSort('rookie')} className={`sortable-th ${sortKey === 'rookie' ? 'sorted' : ''}`}>RC {indicator('rookie')}</th>
-                      <th onClick={() => onSort('auto')} className={`sortable-th ${sortKey === 'auto' ? 'sorted' : ''}`}>AU {indicator('auto')}</th>
+                      <th onClick={() => onSort('auto')} className={`sortable-th ${sortKey === 'auto' ? 'sorted' : ''}`}>AUTO {indicator('auto')}</th>
                       <th onClick={() => onSort('mem')} className={`sortable-th ${sortKey === 'mem' ? 'sorted' : ''}`}>Mem {indicator('mem')}</th>
                       <th onClick={() => onSort('serial_of')} className={`sortable-th ${sortKey === 'serial_of' ? 'sorted' : ''}`}>Serial {indicator('serial_of')}</th>
                       <th onClick={() => onSort('grade')} className={`sortable-th ${sortKey === 'grade' ? 'sorted' : ''}`}>Grade {indicator('grade')}</th>
@@ -320,7 +320,7 @@ export default function Collection() {
                         {showAll && <td className="text-muted">{card.year}</td>}
                         {showAll && <td className="text-muted">{card.product}</td>}
                         <td>{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                        <td>{card.auto ? <span className="badge badge-purple">AU</span> : ''}</td>
+                        <td>{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                         <td className="text-muted">{card.mem || ''}</td>
                         <td className="text-muted">
                           {card.serial && card.serial_of ? `${card.serial}/${card.serial_of}` : card.serial_of ? `/${card.serial_of}` : ''}
