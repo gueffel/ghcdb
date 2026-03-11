@@ -139,24 +139,14 @@ router.post('/', async (req, res) => {
 });
 
 // POST /api/cards/import - bulk import array of cards
+const IMPORT_COLS = ['user_id', 'owned', 'card_number', 'set_name', 'description', 'team_city', 'team_name', 'rookie', 'auto', 'mem', 'serial', 'serial_of', 'thickness', 'year', 'product', 'grade', 'duplicates'];
 router.post('/import', async (req, res) => {
   const { cards } = req.body;
   if (!Array.isArray(cards) || cards.length === 0) return res.status(400).json({ error: 'No cards provided' });
 
   try {
-    await db.begin(async sql => {
-      for (const raw of cards) {
-        const c = normalizeCard(raw, req.user.id);
-        await sql`
-          INSERT INTO cards (user_id, owned, card_number, set_name, description, team_city, team_name,
-            rookie, auto, mem, serial, serial_of, thickness, year, product, grade, duplicates)
-          VALUES (${c.user_id}, ${c.owned}, ${c.card_number}, ${c.set_name}, ${c.description},
-            ${c.team_city}, ${c.team_name}, ${c.rookie}, ${c.auto}, ${c.mem},
-            ${c.serial}, ${c.serial_of}, ${c.thickness}, ${c.year}, ${c.product},
-            ${c.grade}, ${c.duplicates})
-        `;
-      }
-    });
+    const normalized = cards.map(raw => normalizeCard(raw, req.user.id));
+    await db`INSERT INTO cards ${db(normalized, ...IMPORT_COLS)}`;
     res.json({ imported: cards.length });
   } catch (err) {
     res.status(500).json({ error: err.message });

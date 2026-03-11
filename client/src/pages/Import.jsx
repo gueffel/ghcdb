@@ -68,8 +68,8 @@ export default function Import() {
       if (replaceMode && replaceYear && replaceProduct) {
         await api.deleteProduct(replaceYear, replaceProduct);
       }
-      // Send in batches of 500
-      const BATCH = 500;
+      // Send in batches of 50 for frequent progress updates
+      const BATCH = 50;
       let imported = 0;
       for (let i = 0; i < rows.length; i += BATCH) {
         const batch = rows.slice(i, i + BATCH);
@@ -164,6 +164,9 @@ export default function Import() {
         <div className="import-progress">
           <div className="spinner large" />
           <p>Importing cards... {importCount.toLocaleString()} / {rows.length.toLocaleString()}</p>
+          <div className="import-progress-bar-wrap">
+            <div className="import-progress-bar" style={{ width: `${Math.round((importCount / rows.length) * 100)}%` }} />
+          </div>
         </div>
       )}
 

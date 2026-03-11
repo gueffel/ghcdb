@@ -176,8 +176,8 @@ export default function Collection() {
     ? products.find(p => p.year === selectedYear && p.product === selectedProduct)
     : null;
 
-  const totalOwned = products.reduce((s, p) => s + p.owned, 0);
-  const totalCards = products.reduce((s, p) => s + p.total, 0);
+  const totalOwned = products.reduce((s, p) => s + Number(p.owned), 0);
+  const totalCards = products.reduce((s, p) => s + Number(p.total), 0);
 
   return (
     <div className="collection-layout">
@@ -204,7 +204,7 @@ export default function Collection() {
             <button className="year-toggle" onClick={() => toggleYear(year)}>
               <span className="year-arrow">{openYears[year] ? '▼' : '▶'}</span>
               <span className="year-label">{year}</span>
-              <span className="year-count">{tree[year].reduce((s, p) => s + p.total, 0)}</span>
+              <span className="year-count">{tree[year].reduce((s, p) => s + Number(p.owned), 0)}/{tree[year].reduce((s, p) => s + Number(p.total), 0)}</span>
             </button>
             {openYears[year] && (
               <div className="product-list">

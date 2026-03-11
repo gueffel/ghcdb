@@ -11,6 +11,7 @@ import Import from './pages/Import.jsx';
 import Admin from './pages/Admin.jsx';
 import Settings from './pages/Settings.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
+import Help from './pages/Help.jsx';
 
 export const AuthContext = createContext(null);
 export function useAuth() { return useContext(AuthContext); }
@@ -28,6 +29,7 @@ const PAGE_TITLES = {
   '/import': 'Import CSV',
   '/admin': 'Admin',
   '/settings': 'Settings',
+  '/help': 'Help',
 };
 
 function TitleUpdater() {
@@ -78,6 +80,7 @@ export default function App() {
             <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to={user ? '/overview' : '/login'} replace />} />
           </Routes>
         </main>

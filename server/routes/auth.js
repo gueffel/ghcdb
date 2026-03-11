@@ -17,8 +17,9 @@ function isAdminUsername(username) {
 }
 
 router.post('/register', async (req, res) => {
-  const { username, password, first_name = null, last_name = null, email = null } = req.body;
+  const { username, password, first_name = null, last_name = null, email } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+  if (!email) return res.status(400).json({ error: 'Email is required' });
   if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
   try {
@@ -69,6 +70,7 @@ router.put('/profile', authenticate, async (req, res) => {
 
   const [user] = await db`SELECT * FROM users WHERE id = ${req.user.id}`;
   if (!user) return res.status(404).json({ error: 'User not found' });
+  if (!email) return res.status(400).json({ error: 'Email is required' });
 
   if (new_password) {
     if (!current_password) return res.status(400).json({ error: 'Current password is required to set a new password' });
@@ -79,7 +81,7 @@ router.put('/profile', authenticate, async (req, res) => {
     await db`UPDATE users SET password_hash = ${newHash} WHERE id = ${user.id}`;
   }
 
-  await db`UPDATE users SET first_name = ${first_name || null}, last_name = ${last_name || null}, email = ${email || null} WHERE id = ${user.id}`;
+  await db`UPDATE users SET first_name = ${first_name || null}, last_name = ${last_name || null}, email = ${email} WHERE id = ${user.id}`;
 
   const [updated] = await db`SELECT first_name, last_name, email FROM users WHERE id = ${user.id}`;
   const token = jwt.sign({ id: user.id, username: user.username, is_admin: user.is_admin, first_name: updated.first_name || null }, JWT_SECRET, { expiresIn: '30d' });

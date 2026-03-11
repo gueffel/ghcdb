@@ -6,6 +6,7 @@ A full-stack web app to track your hockey card collection.
 - **Backend**: Node.js + Express + PostgreSQL (`postgres` npm package)
 - **Frontend**: React + Vite + Chart.js
 - **Auth**: JWT + bcrypt
+- **Email**: Resend (signup notifications, welcome emails, password reset)
 
 ---
 
@@ -77,6 +78,12 @@ Make sure `DATABASE_URL`, `JWT_SECRET`, and `ALLOWED_ORIGIN` are set in your env
 | `ADMIN_USERNAMES` | No | Comma-separated usernames that get admin on register/login |
 | `ALLOWED_ORIGIN` | No | Restrict CORS to your frontend URL in production |
 | `PORT` | No | Port to listen on (default: `3001`) |
+| `RESEND_API_KEY` | No | API key from [resend.com](https://resend.com) — required for email features |
+| `ADMIN_EMAIL` | No | Email address to notify when a new user registers |
+| `APP_URL` | No | Base URL of your frontend — used in password reset links (e.g. `https://yourdomain.com`) |
+| `EMAIL_FROM` | No | Sender address for outgoing emails (must be a verified domain in Resend) |
+
+Email features (welcome email, admin signup notification, password reset) are silently disabled if `RESEND_API_KEY` is not set.
 
 ---
 

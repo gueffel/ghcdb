@@ -80,7 +80,7 @@ export default function Settings() {
           <form onSubmit={saveProfile} className="settings-form">
             <div className="field-row">
               <div className="field">
-                <label>First Name</label>
+                <label>First Name <span className="field-optional">(optional)</span></label>
                 <input
                   value={profile.first_name}
                   onChange={e => setProfile(p => ({ ...p, first_name: e.target.value }))}
@@ -89,7 +89,7 @@ export default function Settings() {
                 />
               </div>
               <div className="field">
-                <label>Last Name</label>
+                <label>Last Name <span className="field-optional">(optional)</span></label>
                 <input
                   value={profile.last_name}
                   onChange={e => setProfile(p => ({ ...p, last_name: e.target.value }))}
@@ -99,13 +99,14 @@ export default function Settings() {
               </div>
             </div>
             <div className="field">
-              <label>Email <span className="field-optional">(optional)</span></label>
+              <label>Email</label>
               <input
                 type="email"
                 value={profile.email}
                 onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
                 autoComplete="email"
                 placeholder="your@email.com"
+                required
               />
             </div>
             {profileStatus && (

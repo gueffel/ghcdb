@@ -18,16 +18,62 @@ function getGreeting(name) {
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
-const TEAM_COLORS = [
+// Official NHL team primary colors keyed by full "City Name" string
+const NHL_TEAM_COLORS = {
+  'Anaheim Ducks':          '#F47A38',
+  'Boston Bruins':          '#FFB81C',
+  'Buffalo Sabres':         '#003087',
+  'Calgary Flames':         '#C8102E',
+  'Carolina Hurricanes':    '#CC0000',
+  'Chicago Blackhawks':     '#CF0A2C',
+  'Colorado Avalanche':     '#6F263D',
+  'Columbus Blue Jackets':  '#002654',
+  'Dallas Stars':           '#006847',
+  'Detroit Red Wings':      '#CE1126',
+  'Edmonton Oilers':        '#FF4C00',
+  'Florida Panthers':       '#041E42',
+  'Los Angeles Kings':      '#A2AAAD',
+  'Minnesota Wild':         '#154734',
+  'Montreal Canadiens':     '#AF1E2D',
+  'Nashville Predators':    '#FFB81C',
+  'New Jersey Devils':      '#CE1126',
+  'New York Islanders':     '#F47D30',
+  'New York Rangers':       '#0038A8',
+  'Ottawa Senators':        '#C2912C',
+  'Philadelphia Flyers':    '#F74902',
+  'Pittsburgh Penguins':    '#FCB514',
+  'San Jose Sharks':        '#006D75',
+  'Seattle Kraken':         '#68A2B9',
+  'St. Louis Blues':        '#002F87',
+  'Tampa Bay Lightning':    '#002868',
+  'Toronto Maple Leafs':    '#00205B',
+  'Utah Hockey Club':       '#6F263D',
+  'Vancouver Canucks':      '#00843D',
+  'Vegas Golden Knights':   '#B4975A',
+  'Washington Capitals':    '#C8102E',
+  'Winnipeg Jets':          '#004C97',
+  // Arizona / Phoenix legacy
+  'Arizona Coyotes':        '#8C2633',
+  'Phoenix Coyotes':        '#8C2633',
+};
+
+const FALLBACK_COLORS = [
   '#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f',
   '#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac',
   '#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd',
-  '#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf',
 ];
 
-function StatCard({ label, value, sub, color }) {
+function teamColor(name, idx) {
+  if (NHL_TEAM_COLORS[name]) return NHL_TEAM_COLORS[name];
+  // fuzzy: check if any known key is a substring of (or contained in) the team string
+  const lower = name.toLowerCase();
+  const match = Object.keys(NHL_TEAM_COLORS).find(k => lower.includes(k.toLowerCase().split(' ').slice(-1)[0]));
+  return match ? NHL_TEAM_COLORS[match] : FALLBACK_COLORS[idx % FALLBACK_COLORS.length];
+}
+
+function StatCard({ label, value, sub, gradient }) {
   return (
-    <div className="stat-card" style={{ borderTopColor: color }}>
+    <div className="stat-card" style={{ '--card-grad': gradient }}>
       <div className="stat-value">{value}</div>
       <div className="stat-label">{label}</div>
       {sub && <div className="stat-sub">{sub}</div>}
@@ -55,7 +101,7 @@ export default function Overview() {
     labels: byTeam.map(t => t.team),
     datasets: [{
       data: byTeam.map(t => t.owned),
-      backgroundColor: TEAM_COLORS,
+      backgroundColor: byTeam.map((t, i) => teamColor(t.team, i)),
       borderColor: '#1a1f2e',
       borderWidth: 2,
     }],
@@ -97,13 +143,13 @@ export default function Overview() {
       <h1 className="page-title">{greeting}</h1>
 
       <div className="stat-grid">
-        <StatCard label="Owned" value={totals.owned.toLocaleString()} sub={`${pct}% complete`} color="#59a14f" />
-        <StatCard label="Rookies" value={totals.ownedRookies.toLocaleString()} sub={`of ${totals.rookies} total`} color="#f28e2b" />
-        <StatCard label="Autos" value={totals.ownedAutos.toLocaleString()} sub={`of ${totals.autos} total`} color="#b07aa1" />
-        <StatCard label="Graded" value={totals.graded.toLocaleString()} color="#edc948" />
-        <StatCard label="Duplicates" value={totals.duplicates.toLocaleString()} color="#9c755f" />
-        {topPlayer && <StatCard label="Most Owned Player" value={topPlayer.name} sub={`${topPlayer.count} cards`} color="#76b7b2" />}
-        {topSet && <StatCard label="Most Owned Set" value={topSet.name} sub={`${topSet.count} cards`} color="#e15759" />}
+        <StatCard label="Owned" value={totals.owned.toLocaleString()} sub={`${pct}% complete`} gradient="linear-gradient(135deg, #22c55e, #0d9488)" />
+        <StatCard label="Rookies" value={totals.ownedRookies.toLocaleString()} sub={`of ${totals.rookies} total`} gradient="linear-gradient(135deg, #f97316, #eab308)" />
+        <StatCard label="Autos" value={totals.ownedAutos.toLocaleString()} sub={`of ${totals.autos} total`} gradient="linear-gradient(135deg, #a855f7, #ec4899)" />
+        <StatCard label="Graded" value={totals.graded.toLocaleString()} gradient="linear-gradient(135deg, #eab308, #f59e0b)" />
+        <StatCard label="Duplicates" value={totals.duplicates.toLocaleString()} gradient="linear-gradient(135deg, #78716c, #ef4444)" />
+        {topPlayer && <StatCard label="Most Owned Player" value={topPlayer.name} sub={`${topPlayer.count} cards`} gradient="linear-gradient(135deg, #0d9488, #3b82f6)" />}
+        {topSet && <StatCard label="Most Owned Set" value={topSet.name} sub={`${topSet.count} cards`} gradient="linear-gradient(135deg, #ef4444, #ec4899)" />}
       </div>
 
       <div className="chart-grid">
@@ -154,7 +200,7 @@ export default function Overview() {
 
       {recentlyOwned.length > 0 && (
         <div className="table-card">
-          <h2 className="chart-title">Recently Added (Owned)</h2>
+          <h2 className="chart-title">Recently Added</h2>
           <div className="table-wrap">
             <table className="data-table">
               <thead>

@@ -32,7 +32,7 @@ export default function Login() {
         if (mode === 'login') {
           data = await api.login(username, password);
         } else {
-          data = await api.register(username, password, firstName || null, lastName || null, email || null);
+          data = await api.register(username, password, firstName || null, lastName || null, email);
         }
         login(data.token, data.username, data.is_admin, data.first_name || null);
         navigate('/overview');
@@ -50,6 +50,7 @@ export default function Login() {
         <div className="login-logo">🏒</div>
         <h1 className="login-title">GHCdb</h1>
         <p className="login-subtitle">Track your collection</p>
+        <p className="login-desc">Log every card in your hockey card collection, track what you own vs. what you're still hunting for, and see stats on your progress — by team, year, and set.</p>
 
         {mode !== 'forgot' && (
           <div className="tab-row">
@@ -83,19 +84,19 @@ export default function Login() {
             {mode === 'register' && (
               <div className="field-row">
                 <div className="field">
-                  <label>First Name</label>
+                  <label>First Name <span className="field-optional">(optional)</span></label>
                   <input value={firstName} onChange={e => setFirstName(e.target.value)} autoComplete="given-name" />
                 </div>
                 <div className="field">
-                  <label>Last Name</label>
+                  <label>Last Name <span className="field-optional">(optional)</span></label>
                   <input value={lastName} onChange={e => setLastName(e.target.value)} autoComplete="family-name" />
                 </div>
               </div>
             )}
             {mode === 'register' && (
               <div className="field">
-                <label>Email <span className="field-optional">(optional)</span></label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
+                <label>Email</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
               </div>
             )}
             <div className="field">
