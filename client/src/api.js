@@ -39,6 +39,12 @@ export const api = {
     return request('GET', `/cards?${q}`);
   },
   getProducts: () => request('GET', '/cards/products'),
+  getSetNames: (year, product) => {
+    const q = new URLSearchParams();
+    if (year) q.set('year', year);
+    if (product) q.set('product', product);
+    return request('GET', `/cards/set-names?${q}`);
+  },
   getCard: (id) => request('GET', `/cards/${id}`),
   addCard: (card) => request('POST', '/cards', card),
   updateCard: (id, card) => request('PUT', `/cards/${id}`, card),

@@ -13,10 +13,19 @@ export default function AddCard() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [products, setProducts] = useState([]);
+  const [years, setYears] = useState([]);
+  const [setNames, setSetNames] = useState([]);
 
   useEffect(() => {
-    api.getProducts().then(p => setProducts([...new Set(p.map(x => x.product))].sort()));
+    api.getProducts().then(p => {
+      setProducts([...new Set(p.map(x => x.product))].sort());
+      setYears([...new Set(p.map(x => x.year))].sort((a, b) => b.localeCompare(a)));
+    });
   }, []);
+
+  useEffect(() => {
+    api.getSetNames(form.year, form.product).then(setSetNames).catch(() => {});
+  }, [form.year, form.product]);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -55,7 +64,10 @@ export default function AddCard() {
           <div className="form-grid">
             <div className="field">
               <label>Year *</label>
-              <input value={form.year} onChange={e => set('year', e.target.value)} placeholder="2023-24" required />
+              <input value={form.year} onChange={e => set('year', e.target.value)} placeholder="2023-24" required list="year-list" autoComplete="off" />
+              <datalist id="year-list">
+                {years.map(y => <option key={y} value={y} />)}
+              </datalist>
             </div>
             <div className="field">
               <label>Product *</label>
@@ -66,7 +78,10 @@ export default function AddCard() {
             </div>
             <div className="field">
               <label>Set Name</label>
-              <input value={form.set_name} onChange={e => set('set_name', e.target.value)} placeholder="e.g. Young Guns" />
+              <input value={form.set_name} onChange={e => set('set_name', e.target.value)} placeholder="e.g. Young Guns" list="set-name-list" autoComplete="off" />
+              <datalist id="set-name-list">
+                {setNames.map(s => <option key={s} value={s} />)}
+              </datalist>
             </div>
             <div className="field">
               <label>Card #</label>

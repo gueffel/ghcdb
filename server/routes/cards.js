@@ -68,6 +68,34 @@ router.get('/products', async (req, res) => {
   res.json(rows);
 });
 
+// GET /api/cards/set-names?year=&product= - distinct set names for autocomplete
+router.get('/set-names', async (req, res) => {
+  const { year, product } = req.query;
+  let rows;
+  if (year && product) {
+    rows = await db`
+      SELECT DISTINCT set_name FROM cards
+      WHERE user_id = ${req.user.id} AND set_name IS NOT NULL AND set_name != ''
+        AND year = ${year} AND product = ${product}
+      ORDER BY set_name
+    `;
+  } else if (year) {
+    rows = await db`
+      SELECT DISTINCT set_name FROM cards
+      WHERE user_id = ${req.user.id} AND set_name IS NOT NULL AND set_name != ''
+        AND year = ${year}
+      ORDER BY set_name
+    `;
+  } else {
+    rows = await db`
+      SELECT DISTINCT set_name FROM cards
+      WHERE user_id = ${req.user.id} AND set_name IS NOT NULL AND set_name != ''
+      ORDER BY set_name
+    `;
+  }
+  res.json(rows.map(r => r.set_name));
+});
+
 // GET /api/cards/:id
 router.get('/:id', async (req, res) => {
   const [card] = await db`SELECT * FROM cards WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
