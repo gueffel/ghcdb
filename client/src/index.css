@@ -277,8 +277,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   display: none; flex-shrink: 0;
   background: transparent; border: none; color: var(--text-dim);
   font-size: 15px; line-height: 1; padding: 0 2px; cursor: pointer;
+  transition: font-size 0.1s;
 }
-.product-delete:hover { color: #e05; }
+.product-delete:hover { color: #e05; font-size: 18px; }
 .product-item:hover .product-delete { display: block; }
 
 .collection-main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }

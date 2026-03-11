@@ -220,7 +220,7 @@ export default function Collection() {
                       className="product-delete"
                       onClick={e => { e.stopPropagation(); deleteSet(year, p.product); }}
                       title="Delete set"
-                    >×</button>
+                    >🗑</button>
                   </div>
                 ))}
               </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '../api.js';
 
 const EMPTY = {
@@ -12,6 +12,11 @@ export default function AddCard() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    api.getProducts().then(p => setProducts([...new Set(p.map(x => x.product))].sort()));
+  }, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -48,7 +53,10 @@ export default function AddCard() {
             </div>
             <div className="field">
               <label>Product *</label>
-              <input value={form.product} onChange={e => set('product', e.target.value)} placeholder="Series 1" required />
+              <input value={form.product} onChange={e => set('product', e.target.value)} placeholder="Series 1" required list="product-list" autoComplete="off" />
+              <datalist id="product-list">
+                {products.map(p => <option key={p} value={p} />)}
+              </datalist>
             </div>
             <div className="field">
               <label>Set Name</label>
