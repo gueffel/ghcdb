@@ -32,6 +32,8 @@ export const api = {
   register: (username, password, first_name, last_name, email) => request('POST', '/auth/register', { username, password, first_name, last_name, email }),
   me: () => request('GET', '/auth/me'),
   updateProfile: (data) => request('PUT', '/auth/profile', data),
+  forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
+  resetPassword: (token, password) => request('POST', '/auth/reset-password', { token, password }),
 
   // Cards
   getCards: (params = {}) => {

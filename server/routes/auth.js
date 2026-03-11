@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import db from '../database.js';
 import { authenticate, JWT_SECRET } from '../middleware/authenticate.js';
+import { sendAdminSignupNotification, sendWelcomeEmail, sendPasswordResetEmail } from '../utils/email.js';
 
 const router = Router();
 
@@ -29,6 +31,8 @@ router.post('/register', async (req, res) => {
     `;
     const token = jwt.sign({ id: row.id, username, is_admin, first_name }, JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, username, is_admin, first_name });
+    sendAdminSignupNotification({ username, email }).catch(() => {});
+    sendWelcomeEmail({ username, email }).catch(() => {});
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'Username already taken' });
     res.status(500).json({ error: 'Server error' });
@@ -80,6 +84,41 @@ router.put('/profile', authenticate, async (req, res) => {
   const [updated] = await db`SELECT first_name, last_name, email FROM users WHERE id = ${user.id}`;
   const token = jwt.sign({ id: user.id, username: user.username, is_admin: user.is_admin, first_name: updated.first_name || null }, JWT_SECRET, { expiresIn: '30d' });
   res.json({ ok: true, token, first_name: updated.first_name, last_name: updated.last_name, email: updated.email });
+});
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  res.json({ ok: true }); // always respond immediately — don't leak whether email exists
+  if (!email) return;
+  try {
+    const [user] = await db`SELECT id FROM users WHERE email = ${email}`;
+    if (!user) return;
+    const token = crypto.randomBytes(32).toString('hex');
+    await db`
+      INSERT INTO password_reset_tokens (user_id, token, expires_at)
+      VALUES (${user.id}, ${token}, NOW() + interval '1 hour')
+    `;
+    sendPasswordResetEmail({ email, token }).catch(() => {});
+  } catch (err) {
+    console.error('forgot-password error:', err);
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Token and password required' });
+  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+  const [row] = await db`
+    SELECT * FROM password_reset_tokens
+    WHERE token = ${token} AND used = 0 AND expires_at > NOW()
+  `;
+  if (!row) return res.status(400).json({ error: 'Invalid or expired reset link' });
+
+  const hash = await bcrypt.hash(password, 10);
+  await db`UPDATE users SET password_hash = ${hash} WHERE id = ${row.user_id}`;
+  await db`UPDATE password_reset_tokens SET used = 1 WHERE id = ${row.id}`;
+  res.json({ ok: true });
 });
 
 export default router;

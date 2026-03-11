@@ -69,4 +69,15 @@ await db`
 
 await db`CREATE INDEX IF NOT EXISTS idx_catalog_year_product ON catalog_cards(year, product)`;
 
+await db`
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
 export default db;

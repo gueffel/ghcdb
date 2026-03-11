@@ -10,6 +10,7 @@ import AddCard from './pages/AddCard.jsx';
 import Import from './pages/Import.jsx';
 import Admin from './pages/Admin.jsx';
 import Settings from './pages/Settings.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 
 export const AuthContext = createContext(null);
 export function useAuth() { return useContext(AuthContext); }
@@ -69,6 +70,7 @@ export default function App() {
         <main className={user ? 'with-nav' : ''}>
           <Routes>
             <Route path="/login" element={user ? <Navigate to="/overview" replace /> : <Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/overview" element={<ProtectedRoute><Overview /></ProtectedRoute>} />
             <Route path="/collection" element={<ProtectedRoute><Collection /></ProtectedRoute>} />
             <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
