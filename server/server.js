@@ -13,15 +13,28 @@ import adminRoutes from './routes/admin.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-// CORS — in production restrict to your actual domain via ALLOWED_ORIGIN in .env
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
+  next();
+});
+
+// CORS — in production, ALLOWED_ORIGIN must be set to your frontend domain
 const allowedOrigin = process.env.ALLOWED_ORIGIN;
+if (process.env.NODE_ENV === 'production' && !allowedOrigin) {
+  console.error('FATAL: ALLOWED_ORIGIN must be set in production to prevent open CORS.');
+  process.exit(1);
+}
 app.use(cors(
   allowedOrigin
     ? { origin: allowedOrigin, credentials: true }
-    : undefined  // unrestricted in dev when ALLOWED_ORIGIN is not set
+    : undefined  // unrestricted in local dev only
 ));
 
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 // Rate limit login/register: max 10 attempts per 15 minutes per IP
 const authLimiter = rateLimit({
@@ -31,8 +44,18 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many attempts, please try again in 15 minutes.' },
 });
+// Rate limit password reset: max 5 per hour per IP (prevents email bombing)
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many password reset attempts, please try again later.' },
+});
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', resetLimiter);
+app.use('/api/auth/reset-password', resetLimiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cards', cardRoutes);

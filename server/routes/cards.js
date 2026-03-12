@@ -50,15 +50,17 @@ router.get('/', async (req, res) => {
   }
 
   const whereSQL = where.join(' AND ');
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const parsedPage = Math.max(1, parseInt(page) || 1);
+  const parsedLimit = Math.min(1000, Math.max(1, parseInt(limit) || 200));
+  const offset = (parsedPage - 1) * parsedLimit;
 
   const [countRow] = await db.unsafe(`SELECT COUNT(*) as n FROM cards WHERE ${whereSQL}`, params);
   const cards = await db.unsafe(
     `SELECT * FROM cards WHERE ${whereSQL} ORDER BY ${CARD_ORDER} LIMIT $${i} OFFSET $${i+1}`,
-    [...params, parseInt(limit), offset]
+    [...params, parsedLimit, offset]
   );
 
-  res.json({ cards, total: Number(countRow.n), page: parseInt(page), limit: parseInt(limit) });
+  res.json({ cards, total: Number(countRow.n), page: parsedPage, limit: parsedLimit });
 });
 
 // GET /api/cards/products - distinct year/product combos
@@ -80,20 +82,20 @@ router.get('/set-names', async (req, res) => {
       SELECT DISTINCT set_name FROM cards
       WHERE user_id = ${req.user.id} AND set_name IS NOT NULL AND set_name != ''
         AND year = ${year} AND product = ${product}
-      ORDER BY set_name
+      ORDER BY set_name LIMIT 500
     `;
   } else if (year) {
     rows = await db`
       SELECT DISTINCT set_name FROM cards
       WHERE user_id = ${req.user.id} AND set_name IS NOT NULL AND set_name != ''
         AND year = ${year}
-      ORDER BY set_name
+      ORDER BY set_name LIMIT 500
     `;
   } else {
     rows = await db`
       SELECT DISTINCT set_name FROM cards
       WHERE user_id = ${req.user.id} AND set_name IS NOT NULL AND set_name != ''
-      ORDER BY set_name
+      ORDER BY set_name LIMIT 500
     `;
   }
   res.json(rows.map(r => r.set_name));
@@ -146,13 +148,15 @@ const IMPORT_COLS = ['user_id', 'owned', 'card_number', 'set_name', 'description
 router.post('/import', async (req, res) => {
   const { cards } = req.body;
   if (!Array.isArray(cards) || cards.length === 0) return res.status(400).json({ error: 'No cards provided' });
+  if (cards.length > 10000) return res.status(400).json({ error: 'Import limit is 10,000 cards per request' });
 
   try {
     const normalized = cards.map(raw => normalizeCard(raw, req.user.id));
     await db`INSERT INTO cards ${db(normalized, ...IMPORT_COLS)}`;
     res.json({ imported: cards.length });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Card import error:', err);
+    res.status(500).json({ error: 'Import failed. Check your data and try again.' });
   }
 });
 

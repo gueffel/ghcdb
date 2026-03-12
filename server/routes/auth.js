@@ -19,8 +19,9 @@ function isAdminUsername(username) {
 router.post('/register', async (req, res) => {
   const { username, password, first_name = null, last_name = null, email } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+  if (username.length > 50) return res.status(400).json({ error: 'Username must be 50 characters or fewer' });
   if (!email) return res.status(400).json({ error: 'Email is required' });
-  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
   try {
     const hash = await bcrypt.hash(password, 10);
@@ -74,7 +75,7 @@ router.put('/profile', authenticate, async (req, res) => {
 
   if (new_password) {
     if (!current_password) return res.status(400).json({ error: 'Current password is required to set a new password' });
-    if (new_password.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    if (new_password.length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters' });
     const valid = await bcrypt.compare(current_password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
     const newHash = await bcrypt.hash(new_password, 10);
@@ -109,7 +110,7 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ error: 'Token and password required' });
-  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
 
   const [row] = await db`
     SELECT * FROM password_reset_tokens

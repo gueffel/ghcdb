@@ -1,5 +1,11 @@
 import jwt from 'jsonwebtoken';
-export const JWT_SECRET = process.env.JWT_SECRET || 'hockey-cards-secret-change-in-production';
+
+const INSECURE_DEFAULT = 'hockey-cards-secret-change-in-production';
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === INSECURE_DEFAULT) {
+  console.error('FATAL: JWT_SECRET is not set or is using the insecure default value. Set a strong random secret in your .env (e.g. run: openssl rand -hex 64).');
+  process.exit(1);
+}
+export const JWT_SECRET = process.env.JWT_SECRET;
 
 export function requireAdmin(req, res, next) {
   if (!req.user?.is_admin) return res.status(403).json({ error: 'Admin access required' });

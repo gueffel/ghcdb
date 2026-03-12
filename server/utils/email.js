@@ -3,13 +3,17 @@ import { Resend } from 'resend';
 function getClient() { return new Resend(process.env.RESEND_API_KEY); }
 const FROM = () => process.env.EMAIL_FROM || 'GHCdb <noreply@yourdomain.com>';
 
+function esc(str) {
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export async function sendAdminSignupNotification({ username, email }) {
   if (!process.env.ADMIN_EMAIL || !process.env.RESEND_API_KEY) return;
   await getClient().emails.send({
     from: FROM(),
     to: process.env.ADMIN_EMAIL,
     subject: 'New user registered — GHCdb',
-    html: `<p>New user registered: <strong>${username}</strong>${email ? ` (${email})` : ''}</p>`,
+    html: `<p>New user registered: <strong>${esc(username)}</strong>${email ? ` (${esc(email)})` : ''}</p>`,
   });
 }
 
@@ -19,7 +23,7 @@ export async function sendWelcomeEmail({ username, email }) {
     from: FROM(),
     to: email,
     subject: 'Welcome to GHCdb!',
-    html: `<p>Hi ${username},</p><p>Your account has been created. You can now log in and start tracking your hockey card collection.</p>`,
+    html: `<p>Hi ${esc(username)},</p><p>Your account has been created. You can now log in and start tracking your hockey card collection.</p>`,
   });
 }
 

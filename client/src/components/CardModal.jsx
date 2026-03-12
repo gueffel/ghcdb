@@ -8,6 +8,8 @@ export default function CardModal({ card, onClose, onSaved, onDeleted }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const close = () => { setClosing(true); setTimeout(onClose, 180); };
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -33,11 +35,11 @@ export default function CardModal({ card, onClose, onSaved, onDeleted }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className={`modal-overlay${closing ? ' closing' : ''}`} onClick={e => e.target === e.currentTarget && close()}>
       <div className="modal card-edit-modal">
         <div className="modal-header">
           <h2>Edit Card</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={close}>✕</button>
         </div>
         <form onSubmit={save} className="card-form">
           <div className="form-grid">
@@ -125,7 +127,7 @@ export default function CardModal({ card, onClose, onSaved, onDeleted }) {
               )}
             </div>
             <div className="modal-footer-right">
-              <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
+              <button type="button" className="btn-ghost" onClick={close}>Cancel</button>
               <button type="submit" className="btn-primary" disabled={saving}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>

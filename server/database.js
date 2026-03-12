@@ -47,6 +47,8 @@ await db`CREATE INDEX IF NOT EXISTS idx_cards_user ON cards(user_id)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_year_product ON cards(year, product)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_description ON cards(description)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_team ON cards(team_city, team_name)`;
+await db`CREATE INDEX IF NOT EXISTS idx_cards_user_owned ON cards(user_id, owned)`;
+await db`CREATE INDEX IF NOT EXISTS idx_cards_user_year_product ON cards(user_id, year, product)`;
 
 await db`
   CREATE TABLE IF NOT EXISTS catalog_cards (

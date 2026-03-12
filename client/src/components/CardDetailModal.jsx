@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TeamChip from './TeamChip.jsx';
 import { getTeamMeta } from '../nhlTeams.js';
 
 export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }) {
   const teamMeta = getTeamMeta(card.team_city, card.team_name);
+  const [justOwned, setJustOwned] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const close = () => { setClosing(true); setTimeout(onClose, 180); };
   const serialDisplay = card.serial && card.serial_of
     ? `${card.serial}/${card.serial_of}`
     : card.serial_of ? `/${card.serial_of}` : null;
@@ -16,7 +19,7 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }
   );
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className={`modal-overlay${closing ? ' closing' : ''}`} onClick={close}>
       <div className="modal card-detail-modal" onClick={e => e.stopPropagation()} style={teamMeta ? { background: `linear-gradient(160deg, var(--bg2) 55%, ${teamMeta.color}1a 100%)` } : undefined}>
         <div className="modal-header">
           <div className="modal-header-left">
@@ -32,7 +35,7 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }
               {card.card_number && <div className="card-detail-subtitle">#{card.card_number}</div>}
             </div>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={close}>✕</button>
         </div>
         <div className="card-detail-body">
           <div className="card-detail-grid">
@@ -53,8 +56,9 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }
             </div>
             {onToggleOwned ? (
               <button
-                className={`card-detail-owned-btn ${card.owned ? 'owned' : ''}`}
-                onClick={() => onToggleOwned(card)}
+                className={`card-detail-owned-btn ${card.owned ? 'owned' : ''} ${justOwned ? 'just-owned' : ''}`}
+                onClick={() => { if (!card.owned) setJustOwned(true); onToggleOwned(card); }}
+                onAnimationEnd={() => setJustOwned(false)}
               >
                 {card.owned ? '✓ Owned' : '○ Not owned'}
               </button>
@@ -70,7 +74,7 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }
           <div className="modal-footer">
             <div />
             <div className="modal-footer-right">
-              <button className="btn-ghost" onClick={onClose}>Close</button>
+              <button className="btn-ghost" onClick={close}>Close</button>
               <button className="btn-primary" onClick={() => onEdit(card)}>Edit Card</button>
             </div>
           </div>

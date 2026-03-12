@@ -23,6 +23,8 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
   const [userProducts, setUserProducts] = useState(new Set());
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState(null);
+  const [closing, setClosing] = useState(false);
+  const close = () => { setClosing(true); setTimeout(onClose, 180); };
 
   useEffect(() => {
     Promise.all([api.getCatalogSets(), api.getProducts()]).then(([catalogSets, userProds]) => {
@@ -69,11 +71,11 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
   const alreadyOwned = selectedYear && selectedProduct ? userProducts.has(`${selectedYear}::${selectedProduct}`) : false;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className={`modal-overlay${closing ? ' closing' : ''}`} onClick={close}>
       <div className="catalog-picker-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Add from Catalog</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={close}>✕</button>
         </div>
 
         <div className="catalog-picker-body">

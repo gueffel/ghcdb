@@ -35,6 +35,7 @@ router.get('/cards', async (req, res) => {
 router.post('/import', requireAdmin, async (req, res) => {
   const { cards, replaceExisting } = req.body;
   if (!Array.isArray(cards) || cards.length === 0) return res.status(400).json({ error: 'No cards provided' });
+  if (cards.length > 10000) return res.status(400).json({ error: 'Import limit is 10,000 cards per request' });
 
   const first = normalizeCard(cards[0]);
   if (!first.year || !first.product) return res.status(400).json({ error: 'Cards must have year and product columns' });
@@ -57,7 +58,8 @@ router.post('/import', requireAdmin, async (req, res) => {
     });
     res.json({ imported: cards.length, year: first.year, product: first.product });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Catalog import error:', err);
+    res.status(500).json({ error: 'Import failed. Check your data and try again.' });
   }
 });
 
@@ -114,7 +116,8 @@ router.post('/add-to-collection', async (req, res) => {
     });
     res.json({ added: catalogCards.length });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Add-to-collection error:', err);
+    res.status(500).json({ error: 'Failed to add set to collection.' });
   }
 });
 

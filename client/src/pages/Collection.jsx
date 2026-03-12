@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import CardModal from '../components/CardModal.jsx';
 import CardDetailModal from '../components/CardDetailModal.jsx';
@@ -51,6 +52,10 @@ export default function Collection() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [cardDetail, setCardDetail] = useState(null);
+  const [poppingIds, setPoppingIds] = useState(new Set());
+  const [sidebarSearch, setSidebarSearch] = useState('');
+  const mainRef = useRef(null);
+  const location = useLocation();
 
   const loadProducts = useCallback(() => {
     api.getProducts().then(p => {
@@ -66,6 +71,8 @@ export default function Collection() {
     setSearch('');
     setLoadingCards(true);
     setSidebarOpen(false);
+    mainRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
     localStorage.setItem('collection_last', '__all__');
     api.getCards({ limit: 10000 })
       .then(data => setCards(deduplicateCards(data.cards, true)))
@@ -79,6 +86,8 @@ export default function Collection() {
     setSearch('');
     setLoadingCards(true);
     setSidebarOpen(false);
+    mainRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
     localStorage.setItem('collection_last', `${year}::${product}`);
     api.getCards({ year, product, limit: 2000 })
       .then(data => setCards(deduplicateCards(data.cards)))
@@ -89,6 +98,26 @@ export default function Collection() {
     api.getProducts().then(p => {
       setProducts(p);
       setTree(buildTree(p));
+
+      // Auto-select from navigation state (e.g. coming from Import page)
+      const autoSelect = location.state?.autoSelect;
+      if (autoSelect?.year && autoSelect?.product) {
+        const { year, product } = autoSelect;
+        const exists = p.some(x => x.year === year && x.product === product);
+        if (exists) {
+          setSelectedYear(year);
+          setSelectedProduct(product);
+          setShowAll(false);
+          setOpenYears(prev => ({ ...prev, [year]: true }));
+          setLoadingCards(true);
+          localStorage.setItem('collection_last', `${year}::${product}`);
+          api.getCards({ year, product, limit: 2000 })
+            .then(data => setCards(deduplicateCards(data.cards)))
+            .finally(() => setLoadingCards(false));
+          return;
+        }
+      }
+
       const last = localStorage.getItem('collection_last');
       if (!last) return;
       if (last === '__all__') {
@@ -120,8 +149,13 @@ export default function Collection() {
   const doToggleOwned = async (card, newOwned, serial) => {
     const updated = { ...card, owned: newOwned, ...(serial !== undefined ? { serial } : {}) };
     setCards(prev => prev.map(c => c.id === card.id ? updated : c));
+    setProducts(prev => prev.map(p =>
+      p.year === card.year && p.product === card.product
+        ? { ...p, owned: Number(p.owned) + (newOwned ? 1 : -1) }
+        : p
+    ));
+    if (newOwned) setPoppingIds(prev => new Set([...prev, card.id]));
     await api.toggleOwned(card.id, newOwned, serial);
-    loadProducts();
   };
 
   const toggleOwned = (card) => {
@@ -182,6 +216,18 @@ export default function Collection() {
   const totalOwned = products.reduce((s, p) => s + Number(p.owned), 0);
   const totalCards = products.reduce((s, p) => s + Number(p.total), 0);
 
+  const exportCsv = () => {
+    const cols = ['owned','card_number','set_name','description','team_city','team_name','rookie','auto','mem','serial','serial_of','thickness','year','product','grade','duplicates'];
+    const esc = v => v == null ? '' : String(v).includes(',') || String(v).includes('"') || String(v).includes('\n') ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+    const rows = [cols.join(','), ...displayCards.map(c => cols.map(k => esc(c[k])).join(','))];
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = showAll ? 'collection.csv' : `${selectedYear} ${selectedProduct}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   return (
     <div className="collection-layout">
       {/* Sidebar */}
@@ -189,6 +235,18 @@ export default function Collection() {
         <div className="sidebar-header">
           <span>Products</span>
           <button className="sidebar-add-btn" onClick={() => setCatalogOpen(true)} title="Add from catalog">+</button>
+        </div>
+
+        <div className="sidebar-search-wrap">
+          <input
+            className="sidebar-search"
+            placeholder="Filter by year or product…"
+            value={sidebarSearch}
+            onChange={e => setSidebarSearch(e.target.value)}
+          />
+          {sidebarSearch && (
+            <button className="sidebar-search-clear" onClick={() => setSidebarSearch('')}>✕</button>
+          )}
         </div>
 
         {/* All Collections entry */}
@@ -202,7 +260,25 @@ export default function Collection() {
           </button>
         )}
 
-        {Object.keys(tree).sort((a, b) => b.localeCompare(a)).map(year => (
+        {sidebarSearch ? (() => {
+          const tokens = sidebarSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
+          const matches = products.filter(p =>
+            tokens.every(t => p.year.toLowerCase().includes(t) || p.product.toLowerCase().includes(t))
+          ).sort((a, b) => b.year.localeCompare(a.year) || a.product.localeCompare(b.product));
+          return matches.length === 0
+            ? <div className="sidebar-empty">No matches.</div>
+            : matches.map(p => (
+              <div
+                key={`${p.year}::${p.product}`}
+                className={`product-item ${selectedYear === p.year && selectedProduct === p.product ? 'active' : ''}`}
+                onClick={() => selectProduct(p.year, p.product)}
+              >
+                <span className="product-name"><span className="product-year-tag">{p.year}</span>{p.product}</span>
+                <span className="product-owned">{p.owned}/{p.total}</span>
+                <button className="product-delete" onClick={e => { e.stopPropagation(); deleteSet(p.year, p.product); }} title="Delete set">del</button>
+              </div>
+            ));
+        })() : Object.keys(tree).sort((a, b) => b.localeCompare(a)).map(year => (
           <div key={year} className="year-group">
             <button className="year-toggle" onClick={() => toggleYear(year)}>
               <span className="year-arrow">{openYears[year] ? '▼' : '▶'}</span>
@@ -238,7 +314,7 @@ export default function Collection() {
       {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main content */}
-      <div className="collection-main">
+      <div className="collection-main" ref={mainRef}>
         <button className="collection-sidebar-toggle btn-ghost" onClick={() => setSidebarOpen(o => !o)}>
           ☰ Products
         </button>
@@ -283,6 +359,7 @@ export default function Collection() {
                     </button>
                   ))}
                 </div>
+                <button className="btn-ghost btn-icon-text" onClick={exportCsv} title="Export to CSV">↓ CSV</button>
               </div>
             </div>
 
@@ -314,9 +391,10 @@ export default function Collection() {
                       <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
                         <td onClick={e => e.stopPropagation()}>
                           <button
-                            className={`owned-toggle ${card.owned ? 'owned' : ''}`}
+                            className={`owned-toggle ${card.owned ? 'owned' : ''} ${poppingIds.has(card.id) ? 'just-owned' : ''}`}
                             onClick={() => toggleOwned(card)}
                             title={card.owned ? 'Mark as not owned' : 'Mark as owned'}
+                            onAnimationEnd={() => setPoppingIds(prev => { const s = new Set(prev); s.delete(card.id); return s; })}
                           >
                             {card.owned ? '✓' : '○'}
                           </button>

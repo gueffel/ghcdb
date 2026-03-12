@@ -8,32 +8,20 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   const uid = req.user.id;
 
-  const [
-    [{ n: total }],
-    [{ n: owned }],
-    [{ n: rookies }],
-    [{ n: ownedRookies }],
-    [{ n: autos }],
-    [{ n: ownedAutos }],
-    [{ n: serialized }],
-    [{ n: graded }],
-    [{ n: dupSum }],
-    byTeam,
-    byYear,
-    byProduct,
-    recentlyOwned,
-    [topPlayerRow],
-    [topSetRow],
-  ] = await Promise.all([
-    db`SELECT COUNT(*) as n FROM cards WHERE user_id = ${uid}`,
-    db`SELECT COUNT(*) as n FROM cards WHERE user_id = ${uid} AND owned = 1`,
-    db`SELECT COUNT(*) as n FROM cards WHERE user_id = ${uid} AND rookie = 1`,
-    db`SELECT COUNT(*) as n FROM cards WHERE user_id = ${uid} AND rookie = 1 AND owned = 1`,
-    db`SELECT COUNT(*) as n FROM cards WHERE user_id = ${uid} AND auto = 1`,
-    db`SELECT COUNT(*) as n FROM cards WHERE user_id = ${uid} AND auto = 1 AND owned = 1`,
-    db`SELECT COUNT(*) as n FROM cards WHERE user_id = ${uid} AND serial_of IS NOT NULL`,
-    db`SELECT COUNT(*) as n FROM cards WHERE user_id = ${uid} AND grade IS NOT NULL AND grade != ''`,
-    db`SELECT COALESCE(SUM(duplicates), 0) as n FROM cards WHERE user_id = ${uid}`,
+  const [[totalsRow], byTeam, byYear, byProduct, recentlyOwned, [topPlayerRow], [topSetRow]] = await Promise.all([
+    db`
+      SELECT
+        COUNT(*)                                                             AS total,
+        SUM(CASE WHEN owned = 1 THEN 1 ELSE 0 END)                          AS owned,
+        SUM(CASE WHEN rookie = 1 THEN 1 ELSE 0 END)                         AS rookies,
+        SUM(CASE WHEN rookie = 1 AND owned = 1 THEN 1 ELSE 0 END)           AS owned_rookies,
+        SUM(CASE WHEN auto = 1 THEN 1 ELSE 0 END)                           AS autos,
+        SUM(CASE WHEN auto = 1 AND owned = 1 THEN 1 ELSE 0 END)             AS owned_autos,
+        SUM(CASE WHEN serial_of IS NOT NULL THEN 1 ELSE 0 END)              AS serialized,
+        SUM(CASE WHEN grade IS NOT NULL AND grade != '' THEN 1 ELSE 0 END)  AS graded,
+        COALESCE(SUM(duplicates), 0)                                        AS dup_sum
+      FROM cards WHERE user_id = ${uid}
+    `,
     db`
       SELECT team_city || ' ' || team_name as team, COUNT(*) as total, SUM(owned) as owned
       FROM cards WHERE user_id = ${uid} AND team_city IS NOT NULL AND team_city != ''
@@ -62,13 +50,15 @@ router.get('/', async (req, res) => {
     `,
   ]);
 
+  const { total, owned, rookies, owned_rookies, autos, owned_autos, serialized, graded, dup_sum } = totalsRow;
+
   res.json({
     totals: {
       total: Number(total), owned: Number(owned),
-      rookies: Number(rookies), ownedRookies: Number(ownedRookies),
-      autos: Number(autos), ownedAutos: Number(ownedAutos),
+      rookies: Number(rookies), ownedRookies: Number(owned_rookies),
+      autos: Number(autos), ownedAutos: Number(owned_autos),
       serialized: Number(serialized), graded: Number(graded),
-      duplicates: Number(dupSum),
+      duplicates: Number(dup_sum),
     },
     byTeam,
     byYear,

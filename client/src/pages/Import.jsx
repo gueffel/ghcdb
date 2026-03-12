@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Papa from 'papaparse';
 import { api } from '../api.js';
 
@@ -22,6 +23,7 @@ const COLUMN_MAP = {
 };
 
 export default function Import() {
+  const navigate = useNavigate();
   const [step, setStep] = useState('upload'); // upload | preview | importing | done
   const [rows, setRows] = useState([]);
   const [headers, setHeaders] = useState([]);
@@ -175,9 +177,16 @@ export default function Import() {
           <div className="success-icon">✓</div>
           <h2>Import Complete!</h2>
           <p>{importCount.toLocaleString()} cards imported successfully.</p>
-          <div className="form-actions">
+          <div className="form-actions" style={{ justifyContent: 'center' }}>
             <button className="btn-primary" onClick={reset}>Import Another File</button>
-            <a href="/collection" className="btn-ghost">Go to Collection</a>
+            <button
+              className="btn-ghost"
+              onClick={() => navigate('/collection', {
+                state: { autoSelect: { year: replaceYear, product: replaceProduct } }
+              })}
+            >
+              Go to Collection
+            </button>
           </div>
         </div>
       )}

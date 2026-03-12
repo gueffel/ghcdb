@@ -36,6 +36,7 @@ export default function Search() {
   const [cardDetail, setCardDetail] = useState(null);
   const [products, setProducts] = useState([]);
   const [years, setYears] = useState([]);
+  const [poppingIds, setPoppingIds] = useState(new Set());
   const debounceRef = useRef(null);
   const LIMIT = 35;
 
@@ -81,6 +82,7 @@ export default function Search() {
   const doToggleOwned = async (card, newOwned, serial) => {
     const updated = { ...card, owned: newOwned, ...(serial !== undefined ? { serial } : {}) };
     setResults(prev => prev.map(c => c.id === card.id ? updated : c));
+    if (newOwned) setPoppingIds(prev => new Set([...prev, card.id]));
     await api.toggleOwned(card.id, newOwned, serial);
   };
 
@@ -179,8 +181,9 @@ export default function Search() {
                   <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
                     <td onClick={e => e.stopPropagation()}>
                       <button
-                        className={`owned-toggle ${card.owned ? 'owned' : ''}`}
+                        className={`owned-toggle ${card.owned ? 'owned' : ''} ${poppingIds.has(card.id) ? 'just-owned' : ''}`}
                         onClick={() => toggleOwned(card)}
+                        onAnimationEnd={() => setPoppingIds(prev => { const s = new Set(prev); s.delete(card.id); return s; })}
                       >
                         {card.owned ? '✓' : '○'}
                       </button>
