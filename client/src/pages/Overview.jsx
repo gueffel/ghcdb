@@ -5,7 +5,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
-import { NHL_TEAM_COLORS } from '../nhlTeams.js';
+import { NHL_TEAM_COLORS, getTeamMeta } from '../nhlTeams.js';
 
 
 
@@ -139,7 +139,7 @@ export default function Overview() {
           ) : (
             <>
               <div className="table-wrap" style={{ flex: 1 }}>
-                <table className="data-table">
+                <table className="data-table wishlist-table">
                   <thead>
                     <tr>
                       <th>Player / Description</th>
@@ -150,15 +150,24 @@ export default function Overview() {
                     </tr>
                   </thead>
                   <tbody>
-                    {wishlistCards.map(c => (
+                    {wishlistCards.map(c => {
+                      const wMeta = getTeamMeta(c.team_city, c.team_name);
+                      return (
                       <tr key={c.id} className="row-clickable" onClick={() => setCardDetail(c)}>
-                        <td>{c.description}</td>
+                        <td>
+                          <div className="wishlist-desc">
+                            {wMeta && <img className="team-logo ra-show" src={`https://assets.nhle.com/logos/nhl/svg/${wMeta.abbrev}_light.svg`} alt="" />}
+                            {c.description}
+                          </div>
+                          {c.set_name && <div className="wishlist-sub">{c.set_name}</div>}
+                        </td>
                         <td className="ra-hide"><TeamChip team_city={c.team_city} team_name={c.team_name} /></td>
                         <td className="text-muted">{[c.year, c.product].filter(Boolean).join(' ')}</td>
                         <td className="ra-hide">{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
                         <td className="ra-hide">{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -215,16 +224,25 @@ export default function Overview() {
                 </tr>
               </thead>
               <tbody>
-                {recentlyOwned.map(c => (
+                {recentlyOwned.map(c => {
+                  const raMeta = getTeamMeta(c.team_city, c.team_name);
+                  return (
                   <tr key={c.id} className="row-clickable" onClick={() => setCardDetail(c)}>
-                    <td className="ra-player-col">{c.description}</td>
+                    <td className="ra-player-col">
+                      <div className="wishlist-desc">
+                        {raMeta && <img className="team-logo ra-show" src={`https://assets.nhle.com/logos/nhl/svg/${raMeta.abbrev}_light.svg`} alt="" />}
+                        {c.description}
+                      </div>
+                      {c.set_name && <div className="wishlist-sub ra-show-block">{c.set_name}</div>}
+                    </td>
                     <td className="ra-hide"><TeamChip team_city={c.team_city} team_name={c.team_name} /></td>
                     <td className="ra-product-col text-muted">{[c.year, c.product].filter(Boolean).join(' ')}</td>
                     <td className="ra-hide text-muted">{c.set_name || ''}</td>
                     <td className="ra-hide">{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
                     <td className="ra-hide">{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

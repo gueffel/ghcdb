@@ -179,6 +179,11 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .wishlist-btn.wishlisted { color: var(--red); opacity: 1; }
 .wishlist-panel { display: flex; flex-direction: column; min-height: 240px; }
 .wishlist-panel-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.wishlist-sub { font-size: 0.78em; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 768px) {
+  .wishlist-table { table-layout: fixed; width: 100%; }
+  .wishlist-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 
 /* ── Login ────────────────────────────────────────────────── */
 .login-container {
@@ -778,10 +783,15 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Responsive tables (mobile) ──────────────────────────── */
 .col-sm-hide { /* visible by default */ }
+.col-sm-show { display: none; }
 .ra-hide { /* visible by default — recently-added table extra columns */ }
+.ra-show { display: none; }
+.ra-show-block { display: none; }
 .th-short { display: none; }
 @media (max-width: 768px) {
   .ra-hide { display: none; }
+  .ra-show { display: inline-block; vertical-align: middle; }
+  .ra-show-block { display: block; }
   .recently-added-table { table-layout: fixed; width: 100%; }
   .recently-added-table .ra-player-col { width: 45%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .recently-added-table .ra-product-col { width: 55%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -790,6 +800,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 @media (max-width: 640px) {
   .col-sm-hide { display: none; }
+  .col-sm-show { display: block; }
   .th-full { display: none; }
   .th-short { display: inline; }
   .table-wrap { overflow-x: hidden; margin: 0 -16px; width: calc(100% + 32px); }
@@ -801,6 +812,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   .data-table td:first-child, .data-table th:first-child { width: 56px; padding-left: 4px; padding-right: 4px; text-align: center; }
   .data-table td:first-child { display: flex; align-items: center; justify-content: center; }
   .recently-added-table td:first-child, .recently-added-table th:first-child { width: 45%; display: table-cell; text-align: left; padding: 7px 10px; }
+  .wishlist-table td:first-child, .wishlist-table th:first-child { width: 60%; display: table-cell; text-align: left; padding: 7px 10px; }
   tr.row-clickable { cursor: pointer; }
   tr.row-clickable:active { background: var(--bg4); }
 }
