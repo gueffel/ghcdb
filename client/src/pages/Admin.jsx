@@ -126,7 +126,7 @@ export default function Admin() {
   const doImport = async () => {
     setStep('importing');
     setError('');
-    const BATCH = 500;
+    const BATCH = 50;
     let imported = 0;
     try {
       for (let i = 0; i < rows.length; i += BATCH) {
@@ -498,6 +498,9 @@ export default function Admin() {
         <div className="import-progress">
           <div className="spinner large" />
           <p>Importing to catalog... {importCount.toLocaleString()} / {rows.length.toLocaleString()}</p>
+          <div className="import-progress-bar-wrap">
+            <div className="import-progress-bar" style={{ width: `${Math.round((importCount / rows.length) * 100)}%` }} />
+          </div>
         </div>
       )}
 

@@ -31,31 +31,23 @@ router.get('/cards', async (req, res) => {
   res.json(cards);
 });
 
+const CATALOG_COLS = ['card_number', 'set_name', 'description', 'team_city', 'team_name', 'rookie', 'auto', 'mem', 'serial', 'serial_of', 'thickness', 'year', 'product', 'grade'];
+
 // POST /api/catalog/import — admin: import a set to the catalog
 router.post('/import', requireAdmin, async (req, res) => {
   const { cards, replaceExisting } = req.body;
   if (!Array.isArray(cards) || cards.length === 0) return res.status(400).json({ error: 'No cards provided' });
   if (cards.length > 10000) return res.status(400).json({ error: 'Import limit is 10,000 cards per request' });
 
-  const first = normalizeCard(cards[0]);
+  const normalized = cards.map(normalizeCard);
+  const first = normalized[0];
   if (!first.year || !first.product) return res.status(400).json({ error: 'Cards must have year and product columns' });
 
   try {
-    await db.begin(async sql => {
-      if (replaceExisting) {
-        await sql`DELETE FROM catalog_cards WHERE year = ${first.year} AND product = ${first.product}`;
-      }
-      for (const raw of cards) {
-        const c = normalizeCard(raw);
-        await sql`
-          INSERT INTO catalog_cards (card_number, set_name, description, team_city, team_name,
-            rookie, auto, mem, serial, serial_of, thickness, year, product, grade)
-          VALUES (${c.card_number}, ${c.set_name}, ${c.description}, ${c.team_city}, ${c.team_name},
-            ${c.rookie}, ${c.auto}, ${c.mem}, ${c.serial}, ${c.serial_of},
-            ${c.thickness}, ${c.year}, ${c.product}, ${c.grade})
-        `;
-      }
-    });
+    if (replaceExisting) {
+      await db`DELETE FROM catalog_cards WHERE year = ${first.year} AND product = ${first.product}`;
+    }
+    await db`INSERT INTO catalog_cards ${db(normalized, ...CATALOG_COLS)}`;
     res.json({ imported: cards.length, year: first.year, product: first.product });
   } catch (err) {
     console.error('Catalog import error:', err);

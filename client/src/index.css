@@ -381,6 +381,18 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
   background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; padding: 2px;
 }
+.sidebar-group-row {
+  display: flex; gap: 4px; padding: 6px 10px;
+  border-bottom: 1px solid var(--border); background: var(--bg2);
+}
+.sidebar-group-btn {
+  flex: 1; padding: 3px 6px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  font-family: inherit; transition: background 0.15s, color 0.15s;
+}
+.sidebar-group-btn:hover { color: var(--text); }
+.sidebar-group-btn.active { background: var(--bg4); color: var(--text); }
 .product-year-tag { font-size: 10px; color: var(--text-muted); margin-right: 5px; font-weight: 600; }
 .sidebar-empty { padding: 24px 16px; color: var(--text-muted); font-size: 13px; text-align: center; }
 

@@ -12,15 +12,27 @@ function buildTree(sets) {
   return tree;
 }
 
+function buildProductTree(sets) {
+  const tree = {};
+  for (const s of sets) {
+    if (!tree[s.product]) tree[s.product] = [];
+    tree[s.product].push(s);
+  }
+  return tree;
+}
+
 export default function CatalogPickerModal({ onClose, onAdded }) {
   const [sets, setSets] = useState([]);
   const [tree, setTree] = useState({});
   const [openYears, setOpenYears] = useState({});
+  const [openProducts, setOpenProducts] = useState({});
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [previewCards, setPreviewCards] = useState([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [userProducts, setUserProducts] = useState(new Set());
+  const [sidebarGroup, setSidebarGroup] = useState('year');
+  const [sidebarSearch, setSidebarSearch] = useState('');
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState(null);
   const [closing, setClosing] = useState(false);
@@ -46,6 +58,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
   };
 
   const toggleYear = (year) => setOpenYears(prev => ({ ...prev, [year]: !prev[year] }));
+  const toggleProduct = (product) => setOpenProducts(prev => ({ ...prev, [product]: !prev[product] }));
 
   const addToCollection = async (year, product, mode = 'add') => {
     setMsg(null);
@@ -82,7 +95,76 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
           {/* Set list */}
           <div className="catalog-picker-sidebar">
             <div className="sidebar-header" style={{ position: 'sticky', top: 0 }}>Available Sets</div>
-            {Object.keys(tree).sort((a, b) => b.localeCompare(a)).map(year => (
+            <div className="sidebar-group-row" style={{ position: 'sticky', top: 41 }}>
+              <button
+                className={`sidebar-group-btn ${sidebarGroup === 'year' ? 'active' : ''}`}
+                onClick={() => setSidebarGroup('year')}
+              >By Year</button>
+              <button
+                className={`sidebar-group-btn ${sidebarGroup === 'product' ? 'active' : ''}`}
+                onClick={() => setSidebarGroup('product')}
+              >By Product</button>
+            </div>
+            <div className="sidebar-search-wrap">
+              <input
+                className="sidebar-search"
+                placeholder="Filter by year or product…"
+                value={sidebarSearch}
+                onChange={e => setSidebarSearch(e.target.value)}
+              />
+              {sidebarSearch && (
+                <button className="sidebar-search-clear" onClick={() => setSidebarSearch('')}>✕</button>
+              )}
+            </div>
+            {sidebarSearch ? (() => {
+              const tokens = sidebarSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
+              const matches = sets.filter(s =>
+                tokens.every(t => s.year.toLowerCase().includes(t) || s.product.toLowerCase().includes(t))
+              ).sort((a, b) => b.year.localeCompare(a.year) || a.product.localeCompare(b.product));
+              return matches.length === 0
+                ? <div className="sidebar-empty">No matches.</div>
+                : matches.map(s => (
+                  <button
+                    key={`${s.year}::${s.product}`}
+                    className={`product-item ${selectedYear === s.year && selectedProduct === s.product ? 'active' : ''}`}
+                    onClick={() => selectSet(s.year, s.product)}
+                  >
+                    <span className="product-name"><span className="product-year-tag">{s.year}</span>{s.product}</span>
+                    <span className="product-owned">
+                      {userProducts.has(`${s.year}::${s.product}`) ? <span className="catalog-owned-dot" title="In your collection">●</span> : ''}
+                      {s.total}
+                    </span>
+                  </button>
+                ));
+            })() : sidebarGroup === 'product' ? (() => {
+              const ptree = buildProductTree(sets);
+              return Object.keys(ptree).sort((a, b) => a.localeCompare(b)).map(prod => (
+                <div key={prod} className="year-group">
+                  <button className="year-toggle" onClick={() => toggleProduct(prod)}>
+                    <span className="year-arrow">{openProducts[prod] ? '▼' : '▶'}</span>
+                    <span className="year-label">{prod}</span>
+                    <span className="year-count">{ptree[prod].length}</span>
+                  </button>
+                  {openProducts[prod] && (
+                    <div className="product-list">
+                      {ptree[prod].slice().sort((a, b) => b.year.localeCompare(a.year)).map(s => (
+                        <button
+                          key={`${s.year}::${s.product}`}
+                          className={`product-item ${selectedYear === s.year && selectedProduct === s.product ? 'active' : ''}`}
+                          onClick={() => selectSet(s.year, s.product)}
+                        >
+                          <span className="product-name">{s.year}</span>
+                          <span className="product-owned">
+                            {userProducts.has(`${s.year}::${s.product}`) ? <span className="catalog-owned-dot" title="In your collection">●</span> : ''}
+                            {s.total}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ));
+            })() : Object.keys(tree).sort((a, b) => b.localeCompare(a)).map(year => (
               <div key={year} className="year-group">
                 <button className="year-toggle" onClick={() => toggleYear(year)}>
                   <span className="year-arrow">{openYears[year] ? '▼' : '▶'}</span>

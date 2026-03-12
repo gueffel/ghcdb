@@ -36,6 +36,15 @@ function buildTree(products) {
   return tree;
 }
 
+function buildProductTree(products) {
+  const tree = {};
+  for (const p of products) {
+    if (!tree[p.product]) tree[p.product] = [];
+    tree[p.product].push(p);
+  }
+  return tree;
+}
+
 export default function Collection() {
   const [products, setProducts] = useState([]);
   const [tree, setTree] = useState({});
@@ -51,6 +60,8 @@ export default function Collection() {
   const [serialPromptCard, setSerialPromptCard] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [sidebarGroup, setSidebarGroup] = useState(() => localStorage.getItem('collection_sidebar_group') || 'year');
+  const [openProducts, setOpenProducts] = useState({});
   const [cardDetail, setCardDetail] = useState(null);
   const [poppingIds, setPoppingIds] = useState(new Set());
   const [sidebarSearch, setSidebarSearch] = useState('');
@@ -179,6 +190,7 @@ export default function Collection() {
   };
 
   const toggleYear = (year) => setOpenYears(prev => ({ ...prev, [year]: !prev[year] }));
+  const toggleProduct = (product) => setOpenProducts(prev => ({ ...prev, [product]: !prev[product] }));
 
   const deleteSet = async (year, product) => {
     if (!window.confirm(`Delete all ${product} (${year}) cards from your collection?\n\nThis cannot be undone.`)) return;
@@ -255,6 +267,17 @@ export default function Collection() {
           )}
         </div>
 
+        <div className="sidebar-group-row">
+          <button
+            className={`sidebar-group-btn ${sidebarGroup === 'year' ? 'active' : ''}`}
+            onClick={() => { setSidebarGroup('year'); localStorage.setItem('collection_sidebar_group', 'year'); }}
+          >By Year</button>
+          <button
+            className={`sidebar-group-btn ${sidebarGroup === 'product' ? 'active' : ''}`}
+            onClick={() => { setSidebarGroup('product'); localStorage.setItem('collection_sidebar_group', 'product'); }}
+          >By Product</button>
+        </div>
+
         {/* All Collections entry */}
         {products.length > 0 && (
           <button
@@ -284,6 +307,32 @@ export default function Collection() {
                 <button className="product-delete" onClick={e => { e.stopPropagation(); deleteSet(p.year, p.product); }} title="Delete set">del</button>
               </div>
             ));
+        })() : sidebarGroup === 'product' ? (() => {
+          const ptree = buildProductTree(products);
+          return Object.keys(ptree).sort((a, b) => a.localeCompare(b)).map(prod => (
+            <div key={prod} className="year-group">
+              <button className="year-toggle" onClick={() => toggleProduct(prod)}>
+                <span className="year-arrow">{openProducts[prod] ? '▼' : '▶'}</span>
+                <span className="year-label">{prod}</span>
+                <span className="year-count">{ptree[prod].reduce((s, p) => s + Number(p.owned), 0)}/{ptree[prod].reduce((s, p) => s + Number(p.total), 0)}</span>
+              </button>
+              {openProducts[prod] && (
+                <div className="product-list">
+                  {ptree[prod].slice().sort((a, b) => b.year.localeCompare(a.year)).map(p => (
+                    <div
+                      key={`${p.year}::${p.product}`}
+                      className={`product-item ${selectedYear === p.year && selectedProduct === p.product ? 'active' : ''}`}
+                      onClick={() => selectProduct(p.year, p.product)}
+                    >
+                      <span className="product-name">{p.year}</span>
+                      <span className="product-owned">{p.owned}/{p.total}</span>
+                      <button className="product-delete" onClick={e => { e.stopPropagation(); deleteSet(p.year, p.product); }} title="Delete set">del</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ));
         })() : Object.keys(tree).sort((a, b) => b.localeCompare(a)).map(year => (
           <div key={year} className="year-group">
             <button className="year-toggle" onClick={() => toggleYear(year)}>
