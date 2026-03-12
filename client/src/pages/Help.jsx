@@ -95,6 +95,16 @@ export default function Help() {
         <p><strong>Replace mode</strong> — if you enable this option and pick a year/product, all existing cards for that set will be deleted before the import runs. Useful for re-importing a corrected file.</p>
       </Section>
 
+      <Section title="Nomenclature">
+        <p>GHCdb uses specific terms to organise your cards. Here's what each one means:</p>
+        <ul>
+          <li><strong>Product</strong> — the release or set name as sold by the manufacturer. Examples: <em>2024-25 Upper Deck Series 1</em>, <em>2023-24 SP Authentic</em>, <em>2022-23 Trilogy</em>. A product maps to one physical box or release. All cards imported together are typically from the same product.</li>
+          <li><strong>Set Name</strong> — a subset, insert, or parallel within a product. A single product contains many sets. Examples within <em>Series 1</em>: <em>Base</em>, <em>Young Guns</em>, <em>Silver Foil</em>, <em>UD Canvas</em>. Within <em>SP Authentic</em>: <em>Base</em>, <em>Future Watch</em>, <em>Autographs</em>. The Set Name column in the table distinguishes cards that share the same card number but belong to different subsets.</li>
+          <li><strong>Year</strong> — the season the product was released, e.g. <em>2024-25</em>. Used to group products in the Collection sidebar.</li>
+        </ul>
+        <p>In short: <strong>Product → Set Name → Card</strong>. One product contains many sets, each of which contains individual cards.</p>
+      </Section>
+
       <Section title="Card Fields Explained">
         <ul>
           <li><strong>Card #</strong> — the printed number on the card (e.g. <code>42</code>, <code>RC-12</code>).</li>
