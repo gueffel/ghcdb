@@ -179,6 +179,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .wishlist-btn.wishlisted { color: var(--red); opacity: 1; }
 .wishlist-panel { display: flex; flex-direction: column; min-height: 240px; }
 .wishlist-panel-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.wishlist-panel-header .chart-title { margin-bottom: 0; }
+.wishlist-panel-header .collection-search { width: 100%; }
 .wishlist-sub { font-size: 0.78em; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 768px) {
   .wishlist-table { table-layout: fixed; width: 100%; }
