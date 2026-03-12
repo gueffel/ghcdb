@@ -66,7 +66,7 @@ export default function App() {
 
   return (
     <AuthContext.Provider value={{ user, login, logout, updateUser }}>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <TitleUpdater />
         {user && <Navbar />}
         <main className={user ? 'with-nav' : ''}>

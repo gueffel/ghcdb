@@ -46,8 +46,18 @@ export default function Help() {
         </ul>
       </Section>
 
+      <Section title="Wishlist">
+        <p>The wishlist lets you flag cards you don't own yet but want to track separately from your general missing cards.</p>
+        <ul>
+          <li>Click the <strong>♥ heart button</strong> on any unowned card in the Collection or Search table to add it to your wishlist. Click it again to remove it.</li>
+          <li>The heart button is also available in the card detail modal for unowned cards.</li>
+          <li>Marking a wishlisted card as <strong>owned</strong> automatically removes it from the wishlist.</li>
+          <li>Your wishlist is shown in the <strong>Overview</strong> page as a quick-access panel. Click any row to open the card detail.</li>
+        </ul>
+      </Section>
+
       <Section title="Search">
-        <p>Search scans across your entire collection simultaneously — player name, team, card number, set name, and more. Results update as you type. Use the filter dropdowns to narrow by year, product, or owned status.</p>
+        <p>Search scans across your entire collection simultaneously — player name, team, card number, set name, and more. Results update as you type. Use the filter dropdowns to narrow by year, product, rookie status, auto status, or owned status.</p>
       </Section>
 
       <Section title="Add Card">
