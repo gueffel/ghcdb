@@ -40,10 +40,13 @@ router.get('/', async (req, res) => {
     params.push(owned === 'true' || owned === '1' ? 1 : 0);
   }
   if (search) {
-    where.push(`(description ILIKE $${i} OR team_city ILIKE $${i+1} OR team_name ILIKE $${i+2} OR card_number ILIKE $${i+3} OR set_name ILIKE $${i+4})`);
-    const s = `%${search}%`;
-    params.push(s, s, s, s, s);
-    i += 5;
+    const tokens = search.trim().split(/\s+/).filter(Boolean);
+    const fields = ['description', 'team_city', 'team_name', 'card_number', 'set_name', 'product', 'year'];
+    for (const token of tokens) {
+      const s = `%${token}%`;
+      const parts = fields.map(f => { params.push(s); return `${f} ILIKE $${i++}`; });
+      where.push(`(${parts.join(' OR ')})`);
+    }
   }
 
   const whereSQL = where.join(' AND ');

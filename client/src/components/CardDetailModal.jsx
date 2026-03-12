@@ -1,7 +1,9 @@
 import React from 'react';
 import TeamChip from './TeamChip.jsx';
+import { getTeamMeta } from '../nhlTeams.js';
 
 export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }) {
+  const teamMeta = getTeamMeta(card.team_city, card.team_name);
   const serialDisplay = card.serial && card.serial_of
     ? `${card.serial}/${card.serial_of}`
     : card.serial_of ? `/${card.serial_of}` : null;
@@ -15,11 +17,20 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal card-detail-modal" onClick={e => e.stopPropagation()}>
+      <div className="modal card-detail-modal" onClick={e => e.stopPropagation()} style={teamMeta ? { background: `linear-gradient(160deg, var(--bg2) 55%, ${teamMeta.color}1a 100%)` } : undefined}>
         <div className="modal-header">
-          <div>
-            <h2 className="modal-title">{card.description || 'Card Detail'}</h2>
-            {card.card_number && <div className="card-detail-subtitle">#{card.card_number}</div>}
+          <div className="modal-header-left">
+            {teamMeta && (
+              <img
+                className="modal-team-logo"
+                src={`https://assets.nhle.com/logos/nhl/svg/${teamMeta.abbrev}_light.svg`}
+                alt={`${card.team_city} ${card.team_name}`}
+              />
+            )}
+            <div>
+              <h2 className="modal-title">{card.description || 'Card Detail'}</h2>
+              {card.card_number && <div className="card-detail-subtitle">#{card.card_number}</div>}
+            </div>
           </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>

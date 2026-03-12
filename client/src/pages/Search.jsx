@@ -67,7 +67,7 @@ export default function Search() {
     debounceRef.current = setTimeout(() => {
       setPage(1);
       doSearch(query, filters, 1);
-    }, 300);
+    }, 600);
   }, [query, filters]);
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export default function Search() {
         <div className="search-input-wrap">
           <input
             className="search-input"
-            placeholder="Search by player, team, card number..."
+            placeholder="e.g. Pettersson Red Parallel — each word narrows results"
             value={query}
             onChange={e => setQuery(e.target.value)}
             autoFocus
@@ -228,7 +228,7 @@ export default function Search() {
       {!loading && results.length === 0 && !query && !Object.values(filters).some(Boolean) && (
         <div className="empty-state">
           <div className="empty-icon">🔍</div>
-          <p>Type a player name, team, or card number to search your collection.</p>
+          <p>Type any combination of player, set, team, product, or year — each word narrows the results.</p>
         </div>
       )}
 

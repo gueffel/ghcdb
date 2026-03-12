@@ -53,13 +53,6 @@ export default function Overview() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cardDetail, setCardDetail] = useState(null);
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-  useEffect(() => {
-    const update = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-
   useEffect(() => {
     api.getStats().then(s => { setStats(s); setLoading(false); }).catch(() => setLoading(false));
   }, []);
@@ -68,8 +61,6 @@ export default function Overview() {
   if (!stats) return <div className="page-error">Failed to load stats.</div>;
 
   const { totals, byTeam, byYear, byProduct, recentlyOwned, topPlayer, topSet } = stats;
-  const pct = totals.total ? Math.round((totals.owned / totals.total) * 100) : 0;
-
   const teamPieData = {
     labels: byTeam.map(t => t.team),
     datasets: [{
@@ -148,7 +139,7 @@ export default function Overview() {
           <div className="table-wrap">
             <table className="data-table">
               <thead>
-                <tr><th>Year</th><th>Product</th><th>Owned</th><th>Total</th><th>%</th></tr>
+                <tr><th>Year</th><th>Product</th><th>Owned</th><th>Total</th></tr>
               </thead>
               <tbody>
                 {byProduct.map((p, i) => (
@@ -157,12 +148,6 @@ export default function Overview() {
                     <td>{p.product}</td>
                     <td className="text-green">{p.owned}</td>
                     <td>{p.total}</td>
-                    <td>
-                      <div className="progress-bar-wrap">
-                        <div className="progress-bar" style={{ width: `${Math.round((p.owned / p.total) * 100)}%` }} />
-                        <span>{Math.round((p.owned / p.total) * 100)}%</span>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -175,14 +160,14 @@ export default function Overview() {
         <div className="table-card">
           <h2 className="chart-title">Recently Added</h2>
           <div className="table-wrap">
-            <table className="data-table recently-added-table" style={isMobile ? { tableLayout: 'fixed', width: '100%' } : undefined}>
+            <table className="data-table recently-added-table">
               <thead>
                 <tr>
-                  <th className="ra-player-col" style={isMobile ? { width: '60%', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : undefined}>
+                  <th className="ra-player-col">
                     <span className="th-full">Player / Description</span><span className="th-short">Player</span>
                   </th>
                   <th className="ra-hide">Team</th>
-                  <th className="ra-product-col" style={isMobile ? { width: '40%', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : undefined}>Product</th>
+                  <th className="ra-product-col">Product</th>
                   <th className="ra-hide">Set</th>
                   <th className="ra-hide">Rookie</th>
                   <th className="ra-hide">Auto</th>
@@ -190,10 +175,10 @@ export default function Overview() {
               </thead>
               <tbody>
                 {recentlyOwned.map(c => (
-                  <tr key={c.id} className="row-clickable" onClick={() => setCardDetail(c)} style={isMobile ? { borderBottom: '1px solid var(--border)' } : undefined}>
-                    <td className="ra-player-col" style={isMobile ? { width: '60%', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: 'none' } : undefined}>{c.description}</td>
+                  <tr key={c.id} className="row-clickable" onClick={() => setCardDetail(c)}>
+                    <td className="ra-player-col">{c.description}</td>
                     <td className="ra-hide"><TeamChip team_city={c.team_city} team_name={c.team_name} /></td>
-                    <td className="ra-product-col text-muted" style={isMobile ? { width: '40%', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: 'none' } : undefined}>{[c.year, c.product].filter(Boolean).join(' ')}</td>
+                    <td className="ra-product-col text-muted">{[c.year, c.product].filter(Boolean).join(' ')}</td>
                     <td className="ra-hide text-muted">{c.set_name || ''}</td>
                     <td className="ra-hide">{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
                     <td className="ra-hide">{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
