@@ -23,7 +23,7 @@ export function normalizeCard(raw) {
   };
 
   return {
-    card_number: get('card #', 'card#', 'card number', 'cardnumber', 'card_number') || null,
+    card_number: get('card #', 'card#', 'card number', 'cardnumber', 'card_number', 'card') || null,
     set_name:    get('set name', 'setname', 'set_name') || null,
     description: get('description', 'player', 'player name', 'name') || null,
     team_city:   get('team city', 'teamcity', 'team_city', 'city') || null,

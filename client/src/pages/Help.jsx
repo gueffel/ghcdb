@@ -73,7 +73,7 @@ export default function Help() {
         <table className="data-table help-table">
           <thead><tr><th>Field</th><th>Accepted headers</th></tr></thead>
           <tbody>
-            <tr><td>Card #</td><td>Card Number, Card #, #</td></tr>
+            <tr><td>Card #</td><td>Card Number, Card #, #, Card</td></tr>
             <tr><td>Set Name</td><td>Set Name, Subset, Insert, Parallel</td></tr>
             <tr><td>Description</td><td>Description, Player, Name, Subject</td></tr>
             <tr><td>Team City</td><td>Team City, City</td></tr>
