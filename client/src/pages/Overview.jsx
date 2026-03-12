@@ -116,9 +116,9 @@ export default function Overview() {
       <h1 className="page-title">{greeting}</h1>
 
       <div className="stat-grid">
-        <StatCard label="Owned" value={totals.owned.toLocaleString()} sub={`${pct}% complete`} gradient="linear-gradient(135deg, #22c55e, #0d9488)" />
-        <StatCard label="Rookies" value={totals.ownedRookies.toLocaleString()} sub={`of ${totals.rookies} total`} gradient="linear-gradient(135deg, #f97316, #eab308)" />
-        <StatCard label="Autos" value={totals.ownedAutos.toLocaleString()} sub={`of ${totals.autos} total`} gradient="linear-gradient(135deg, #a855f7, #ec4899)" />
+        <StatCard label="Owned" value={totals.owned.toLocaleString()} gradient="linear-gradient(135deg, #22c55e, #0d9488)" />
+        <StatCard label="Rookies" value={totals.ownedRookies.toLocaleString()} gradient="linear-gradient(135deg, #f97316, #eab308)" />
+        <StatCard label="Autos" value={totals.ownedAutos.toLocaleString()} gradient="linear-gradient(135deg, #a855f7, #ec4899)" />
         <StatCard label="Graded" value={totals.graded.toLocaleString()} gradient="linear-gradient(135deg, #eab308, #f59e0b)" />
         <StatCard label="Duplicates" value={totals.duplicates.toLocaleString()} gradient="linear-gradient(135deg, #78716c, #ef4444)" />
         {topPlayer && <StatCard label="Most Owned Player" value={topPlayer.name} sub={`${topPlayer.count} cards`} gradient="linear-gradient(135deg, #0d9488, #3b82f6)" />}
