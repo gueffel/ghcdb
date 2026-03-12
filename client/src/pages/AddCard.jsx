@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api.js';
+import { NHL_CITIES, NHL_NAMES, autoFillTeam } from '../nhlTeams.js';
+
+const MEM_OPTIONS = ['Jsy', 'Patch', 'Laundry Tag', 'Nameplate', 'Logo', 'Stick', 'Puck', 'Glove', 'Skate', 'Helmet', 'Auto', 'Dual Jsy', 'Dual Patch', 'Triple Jsy'];
+import Combobox from '../components/Combobox.jsx';
 
 const EMPTY = {
   owned: true, card_number: '', set_name: '', description: '', team_city: '', team_name: '',
@@ -64,24 +68,15 @@ export default function AddCard() {
           <div className="form-grid">
             <div className="field">
               <label>Year *</label>
-              <input value={form.year} onChange={e => set('year', e.target.value)} placeholder="2023-24" required list="year-list" autoComplete="off" />
-              <datalist id="year-list">
-                {years.map(y => <option key={y} value={y} />)}
-              </datalist>
+              <Combobox value={form.year} onChange={v => set('year', v)} options={years} placeholder="2023-24" required />
             </div>
             <div className="field">
               <label>Product *</label>
-              <input value={form.product} onChange={e => set('product', e.target.value)} placeholder="Series 1" required list="product-list" autoComplete="off" />
-              <datalist id="product-list">
-                {products.map(p => <option key={p} value={p} />)}
-              </datalist>
+              <Combobox value={form.product} onChange={v => set('product', v)} options={products} placeholder="Series 1" required />
             </div>
             <div className="field">
               <label>Set Name</label>
-              <input value={form.set_name} onChange={e => set('set_name', e.target.value)} placeholder="e.g. Young Guns" list="set-name-list" autoComplete="off" />
-              <datalist id="set-name-list">
-                {setNames.map(s => <option key={s} value={s} />)}
-              </datalist>
+              <Combobox value={form.set_name} onChange={v => set('set_name', v)} options={setNames} placeholder="e.g. Young Guns" />
             </div>
             <div className="field">
               <label>Card #</label>
@@ -99,11 +94,11 @@ export default function AddCard() {
             </div>
             <div className="field">
               <label>Team City</label>
-              <input value={form.team_city} onChange={e => set('team_city', e.target.value)} placeholder="e.g. Vancouver" />
+              <Combobox value={form.team_city} onChange={v => autoFillTeam('team_city', v, setForm)} options={NHL_CITIES} placeholder="e.g. Vancouver" />
             </div>
             <div className="field">
               <label>Team Name</label>
-              <input value={form.team_name} onChange={e => set('team_name', e.target.value)} placeholder="e.g. Canucks" />
+              <Combobox value={form.team_name} onChange={v => autoFillTeam('team_name', v, setForm)} options={NHL_NAMES} placeholder="e.g. Canucks" />
             </div>
           </div>
         </div>
@@ -113,7 +108,7 @@ export default function AddCard() {
           <div className="form-grid">
             <div className="field">
               <label>Mem / Relic</label>
-              <input value={form.mem} onChange={e => set('mem', e.target.value)} placeholder="Jsy / Patch" />
+              <Combobox value={form.mem} onChange={v => set('mem', v)} options={MEM_OPTIONS} placeholder="Jsy / Patch" />
             </div>
             <div className="field">
               <label>Serial #</label>

@@ -78,7 +78,7 @@ export default function Help() {
             <tr><td>Product</td><td>Product, Set</td></tr>
             <tr><td>Grade</td><td>Grade</td></tr>
             <tr><td>Owned</td><td>Owned</td></tr>
-            <tr><td>Duplicates</td><td>Duplicates, Dups, Duplicate</td></tr>
+            <tr><td>Duplicates</td><td>Duplicates, Dupes, Dups, Duplicate</td></tr>
           </tbody>
         </table>
         <p style={{ marginTop: 12 }}>Boolean columns (Owned, Rookie, Auto) accept: <code>TRUE</code>, <code>YES</code>, <code>Y</code>, <code>1</code>, <code>X</code> (case-insensitive). Anything else is treated as false.</p>

@@ -49,7 +49,7 @@ router.get('/', async (req, res) => {
       FROM cards WHERE user_id = ${uid}
       GROUP BY year, product ORDER BY year DESC, product
     `,
-    db`SELECT * FROM cards WHERE user_id = ${uid} AND owned = 1 ORDER BY created_at DESC LIMIT 10`,
+    db`SELECT * FROM cards WHERE user_id = ${uid} AND owned = 1 ORDER BY COALESCE(owned_at, created_at) DESC LIMIT 10`,
     db`
       SELECT description, COUNT(*) as n FROM cards
       WHERE user_id = ${uid} AND owned = 1 AND description IS NOT NULL AND description != ''

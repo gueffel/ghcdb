@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { api } from '../api.js';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
-import { formatTeam } from '../utils.js';
+import TeamChip from '../components/TeamChip.jsx';
 
 function buildTree(sets) {
   const tree = {};
@@ -186,7 +186,7 @@ export default function Catalog() {
                         <td className="text-muted card-num">{card.card_number}</td>
                         <td className="card-desc">{card.description}</td>
                         <td className="text-muted">{card.set_name}</td>
-                        <td className="text-muted">{formatTeam(card.team_city, card.team_name)}</td>
+                        <td className="text-muted"><TeamChip team_city={card.team_city} team_name={card.team_name} /></td>
                         <td>{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
                         <td>{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                         <td className="text-muted">{card.mem || ''}</td>

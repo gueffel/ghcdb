@@ -1,10 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import CardDetailModal from '../components/CardDetailModal.jsx';
+import TeamChip from '../components/TeamChip.jsx';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { api } from '../api.js';
-import { formatTeam } from '../utils.js';
 import { useAuth } from '../App.jsx';
+import { NHL_TEAM_COLORS } from '../nhlTeams.js';
+
+
 
 function getGreeting(name) {
   const hour = new Date().getHours();
@@ -19,44 +22,6 @@ function getGreeting(name) {
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
-// Official NHL team primary colors keyed by full "City Name" string
-const NHL_TEAM_COLORS = {
-  'Anaheim Ducks':          '#F47A38',
-  'Boston Bruins':          '#FFB81C',
-  'Buffalo Sabres':         '#003087',
-  'Calgary Flames':         '#C8102E',
-  'Carolina Hurricanes':    '#CC0000',
-  'Chicago Blackhawks':     '#CF0A2C',
-  'Colorado Avalanche':     '#6F263D',
-  'Columbus Blue Jackets':  '#002654',
-  'Dallas Stars':           '#006847',
-  'Detroit Red Wings':      '#CE1126',
-  'Edmonton Oilers':        '#FF4C00',
-  'Florida Panthers':       '#041E42',
-  'Los Angeles Kings':      '#A2AAAD',
-  'Minnesota Wild':         '#154734',
-  'Montreal Canadiens':     '#AF1E2D',
-  'Nashville Predators':    '#FFB81C',
-  'New Jersey Devils':      '#CE1126',
-  'New York Islanders':     '#F47D30',
-  'New York Rangers':       '#0038A8',
-  'Ottawa Senators':        '#C2912C',
-  'Philadelphia Flyers':    '#F74902',
-  'Pittsburgh Penguins':    '#FCB514',
-  'San Jose Sharks':        '#006D75',
-  'Seattle Kraken':         '#68A2B9',
-  'St. Louis Blues':        '#002F87',
-  'Tampa Bay Lightning':    '#002868',
-  'Toronto Maple Leafs':    '#00205B',
-  'Utah Hockey Club':       '#6F263D',
-  'Vancouver Canucks':      '#00843D',
-  'Vegas Golden Knights':   '#B4975A',
-  'Washington Capitals':    '#C8102E',
-  'Winnipeg Jets':          '#004C97',
-  // Arizona / Phoenix legacy
-  'Arizona Coyotes':        '#8C2633',
-  'Phoenix Coyotes':        '#8C2633',
-};
 
 const FALLBACK_COLORS = [
   '#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f',
@@ -88,6 +53,12 @@ export default function Overview() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cardDetail, setCardDetail] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   useEffect(() => {
     api.getStats().then(s => { setStats(s); setLoading(false); }).catch(() => setLoading(false));
@@ -151,7 +122,7 @@ export default function Overview() {
         <StatCard label="Graded" value={totals.graded.toLocaleString()} gradient="linear-gradient(135deg, #eab308, #f59e0b)" />
         <StatCard label="Duplicates" value={totals.duplicates.toLocaleString()} gradient="linear-gradient(135deg, #78716c, #ef4444)" />
         {topPlayer && <StatCard label="Most Owned Player" value={topPlayer.name} sub={`${topPlayer.count} cards`} gradient="linear-gradient(135deg, #0d9488, #3b82f6)" />}
-        {topSet && <StatCard label="Most Owned Set" value={topSet.name} sub={`${topSet.count} cards`} gradient="linear-gradient(135deg, #ef4444, #ec4899)" />}
+        {topSet && <StatCard label="Most Owned Product" value={topSet.name} sub={`${topSet.count} cards`} gradient="linear-gradient(135deg, #ef4444, #ec4899)" />}
       </div>
 
       <div className="chart-grid">
@@ -204,28 +175,28 @@ export default function Overview() {
         <div className="table-card">
           <h2 className="chart-title">Recently Added</h2>
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table recently-added-table" style={isMobile ? { tableLayout: 'fixed', width: '100%' } : undefined}>
               <thead>
                 <tr>
-                  <th className="col-sm-hide">#</th>
-                  <th><span className="th-full">Player / Description</span><span className="th-short">Player</span></th>
-                  <th className="col-sm-hide">Team</th>
-                  <th className="col-sm-hide">Year</th>
-                  <th className="col-sm-hide">Product</th>
-                  <th className="col-sm-hide">Rookie</th>
-                  <th className="col-sm-hide">Auto</th>
+                  <th className="ra-player-col" style={isMobile ? { width: '60%', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : undefined}>
+                    <span className="th-full">Player / Description</span><span className="th-short">Player</span>
+                  </th>
+                  <th className="ra-hide">Team</th>
+                  <th className="ra-product-col" style={isMobile ? { width: '40%', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : undefined}>Product</th>
+                  <th className="ra-hide">Set</th>
+                  <th className="ra-hide">Rookie</th>
+                  <th className="ra-hide">Auto</th>
                 </tr>
               </thead>
               <tbody>
                 {recentlyOwned.map(c => (
-                  <tr key={c.id} className="row-clickable" onClick={() => setCardDetail(c)}>
-                    <td className="text-muted col-sm-hide">{c.card_number}</td>
-                    <td>{c.description}</td>
-                    <td className="col-sm-hide">{formatTeam(c.team_city, c.team_name)}</td>
-                    <td className="col-sm-hide">{c.year}</td>
-                    <td className="col-sm-hide">{c.product}</td>
-                    <td className="col-sm-hide">{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                    <td className="col-sm-hide">{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
+                  <tr key={c.id} className="row-clickable" onClick={() => setCardDetail(c)} style={isMobile ? { borderBottom: '1px solid var(--border)' } : undefined}>
+                    <td className="ra-player-col" style={isMobile ? { width: '60%', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: 'none' } : undefined}>{c.description}</td>
+                    <td className="ra-hide"><TeamChip team_city={c.team_city} team_name={c.team_name} /></td>
+                    <td className="ra-product-col text-muted" style={isMobile ? { width: '40%', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', border: 'none' } : undefined}>{[c.year, c.product].filter(Boolean).join(' ')}</td>
+                    <td className="ra-hide text-muted">{c.set_name || ''}</td>
+                    <td className="ra-hide">{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
+                    <td className="ra-hide">{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                   </tr>
                 ))}
               </tbody>

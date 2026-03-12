@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatTeam } from '../utils.js';
+import TeamChip from './TeamChip.jsx';
 
 export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }) {
   const serialDisplay = card.serial && card.serial_of
@@ -26,7 +26,7 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }
         <div className="card-detail-body">
           <div className="card-detail-grid">
             {card.set_name && field('Set', card.set_name)}
-            {formatTeam(card.team_city, card.team_name) && field('Team', formatTeam(card.team_city, card.team_name))}
+            {(card.team_city || card.team_name) && field('Team', <TeamChip team_city={card.team_city} team_name={card.team_name} />)}
             {card.year && field('Year', card.year)}
             {card.product && field('Product', card.product)}
             {serialDisplay && field('Serial', serialDisplay)}

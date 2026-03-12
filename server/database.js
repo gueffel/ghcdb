@@ -37,10 +37,12 @@ await db`
     product TEXT,
     grade TEXT,
     duplicates INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    owned_at TIMESTAMP
   )
 `;
 
+await db`ALTER TABLE cards ADD COLUMN IF NOT EXISTS owned_at TIMESTAMP`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_user ON cards(user_id)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_year_product ON cards(year, product)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_description ON cards(description)`;

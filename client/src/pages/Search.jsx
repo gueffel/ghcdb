@@ -4,7 +4,7 @@ import CardModal from '../components/CardModal.jsx';
 import CardDetailModal from '../components/CardDetailModal.jsx';
 import SerialPromptModal from '../components/SerialPromptModal.jsx';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
-import { formatTeam } from '../utils.js';
+import TeamChip from '../components/TeamChip.jsx';
 
 function deduplicateCards(cards) {
   const map = new Map();
@@ -99,17 +99,22 @@ export default function Search() {
   };
 
   return (
-    <div className="page">
+    <div className="page page-wide">
       <h1 className="page-title">Search Cards</h1>
 
       <div className="search-bar-wrap">
-        <input
-          className="search-input"
-          placeholder="Search by player, team, card number..."
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          autoFocus
-        />
+        <div className="search-input-wrap">
+          <input
+            className="search-input"
+            placeholder="Search by player, team, card number..."
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            autoFocus
+          />
+          {query && (
+            <button className="search-clear-btn" onClick={() => setQuery('')} aria-label="Clear search">✕</button>
+          )}
+        </div>
       </div>
 
       <div className="filter-row">
@@ -165,6 +170,7 @@ export default function Search() {
                   <th onClick={() => onSort('mem')} className={`sortable-th col-sm-hide ${sortKey === 'mem' ? 'sorted' : ''}`}>Mem {indicator('mem')}</th>
                   <th onClick={() => onSort('serial_of')} className={`sortable-th col-sm-hide ${sortKey === 'serial_of' ? 'sorted' : ''}`}>Serial {indicator('serial_of')}</th>
                   <th onClick={() => onSort('grade')} className={`sortable-th col-sm-hide ${sortKey === 'grade' ? 'sorted' : ''}`}>Grade {indicator('grade')}</th>
+                  <th onClick={() => onSort('duplicates')} className={`sortable-th col-sm-hide ${sortKey === 'duplicates' ? 'sorted' : ''}`}>Dupes {indicator('duplicates')}</th>
                   <th className="col-sm-hide"></th>
                 </tr>
               </thead>
@@ -182,7 +188,7 @@ export default function Search() {
                     <td className="text-muted col-sm-hide">{card.card_number}</td>
                     <td><strong>{card.description}</strong></td>
                     <td className="text-muted">{card.set_name}</td>
-                    <td className="text-muted col-sm-hide">{formatTeam(card.team_city, card.team_name)}</td>
+                    <td className="text-muted col-sm-hide"><TeamChip team_city={card.team_city} team_name={card.team_name} /></td>
                     <td className="text-muted col-sm-hide">{card.year}</td>
                     <td className="text-muted col-sm-hide">{card.product}</td>
                     <td className="col-sm-hide">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
@@ -192,6 +198,7 @@ export default function Search() {
                       {card.serial && card.serial_of ? `${card.serial}/${card.serial_of}` : card.serial_of ? `/${card.serial_of}` : ''}
                     </td>
                     <td className="text-muted col-sm-hide">{card.grade || ''}</td>
+                    <td className="text-muted col-sm-hide">{card.duplicates > 0 ? card.duplicates : ''}</td>
                     <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
                       <button className="btn-icon" onClick={() => setEditCard(card)} title="Edit">✎</button>
                     </td>

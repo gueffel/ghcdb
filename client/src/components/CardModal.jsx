@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../api.js';
+import { NHL_CITIES, NHL_NAMES, autoFillTeam } from '../nhlTeams.js';
+import Combobox from './Combobox.jsx';
 
 export default function CardModal({ card, onClose, onSaved, onDeleted }) {
   const [form, setForm] = useState({ ...card });
@@ -61,11 +63,11 @@ export default function CardModal({ card, onClose, onSaved, onDeleted }) {
             </div>
             <div className="field">
               <label>Team City</label>
-              <input value={form.team_city || ''} onChange={e => set('team_city', e.target.value)} />
+              <Combobox value={form.team_city || ''} onChange={v => autoFillTeam('team_city', v, setForm)} options={NHL_CITIES} />
             </div>
             <div className="field">
               <label>Team Name</label>
-              <input value={form.team_name || ''} onChange={e => set('team_name', e.target.value)} />
+              <Combobox value={form.team_name || ''} onChange={v => autoFillTeam('team_name', v, setForm)} options={NHL_NAMES} />
             </div>
             <div className="field">
               <label>Mem / Relic</label>

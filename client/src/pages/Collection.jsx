@@ -5,7 +5,7 @@ import CardDetailModal from '../components/CardDetailModal.jsx';
 import SerialPromptModal from '../components/SerialPromptModal.jsx';
 import CatalogPickerModal from '../components/CatalogPickerModal.jsx';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
-import { formatTeam } from '../utils.js';
+import TeamChip from '../components/TeamChip.jsx';
 
 function deduplicateCards(cards, scopeBySet = false) {
   const map = new Map();
@@ -264,13 +264,18 @@ export default function Collection() {
                 )}
               </div>
               <div className="collection-controls">
-                <input
-                  className="collection-search"
-                  type="search"
-                  placeholder="Search cards…"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
+                <div className="search-input-wrap" style={{ flex: 1, minWidth: 120 }}>
+                  <input
+                    className="collection-search"
+                    type="text"
+                    placeholder="Search cards…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                  {search && (
+                    <button className="search-clear-btn" onClick={() => setSearch('')} aria-label="Clear search">✕</button>
+                  )}
+                </div>
                 <div className="filter-tabs">
                   {[['all', 'All'], ['owned', 'Owned'], ['missing', 'Missing']].map(([val, label]) => (
                     <button key={val} className={`tab ${filter === val ? 'active' : ''}`} onClick={() => setFilter(val)}>
@@ -300,7 +305,7 @@ export default function Collection() {
                       <th onClick={() => onSort('mem')} className={`sortable-th col-sm-hide ${sortKey === 'mem' ? 'sorted' : ''}`}>Mem {indicator('mem')}</th>
                       <th onClick={() => onSort('serial_of')} className={`sortable-th col-sm-hide ${sortKey === 'serial_of' ? 'sorted' : ''}`}>Serial {indicator('serial_of')}</th>
                       <th onClick={() => onSort('grade')} className={`sortable-th col-sm-hide ${sortKey === 'grade' ? 'sorted' : ''}`}>Grade {indicator('grade')}</th>
-                      <th onClick={() => onSort('duplicates')} className={`sortable-th col-sm-hide ${sortKey === 'duplicates' ? 'sorted' : ''}`}>Dups {indicator('duplicates')}</th>
+                      <th onClick={() => onSort('duplicates')} className={`sortable-th col-sm-hide ${sortKey === 'duplicates' ? 'sorted' : ''}`}>Dupes {indicator('duplicates')}</th>
                       <th className="col-sm-hide"></th>
                     </tr>
                   </thead>
@@ -319,7 +324,7 @@ export default function Collection() {
                         <td className="text-muted card-num col-sm-hide">{card.card_number}</td>
                         <td className="card-desc">{card.description}</td>
                         <td className="text-muted">{card.set_name}</td>
-                        <td className="text-muted col-sm-hide">{formatTeam(card.team_city, card.team_name)}</td>
+                        <td className="text-muted col-sm-hide"><TeamChip team_city={card.team_city} team_name={card.team_name} /></td>
                         {showAll && <td className="text-muted col-sm-hide">{card.year}</td>}
                         {showAll && <td className="text-muted col-sm-hide">{card.product}</td>}
                         <td className="col-sm-hide">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>

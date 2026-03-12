@@ -117,7 +117,7 @@ router.post('/', async (req, res) => {
     `;
     if (existing) {
       if (!existing.owned) {
-        await db`UPDATE cards SET owned = 1 WHERE id = ${existing.id}`;
+        await db`UPDATE cards SET owned = 1, owned_at = NOW() WHERE id = ${existing.id}`;
         return res.json({ id: existing.id, action: 'marked_owned' });
       } else {
         await db`UPDATE cards SET duplicates = duplicates + 1 WHERE id = ${existing.id}`;
@@ -128,11 +128,11 @@ router.post('/', async (req, res) => {
 
   const [row] = await db`
     INSERT INTO cards (user_id, owned, card_number, set_name, description, team_city, team_name,
-      rookie, auto, mem, serial, serial_of, thickness, year, product, grade, duplicates)
+      rookie, auto, mem, serial, serial_of, thickness, year, product, grade, duplicates, owned_at)
     VALUES (${card.user_id}, ${card.owned}, ${card.card_number}, ${card.set_name}, ${card.description},
       ${card.team_city}, ${card.team_name}, ${card.rookie}, ${card.auto}, ${card.mem},
       ${card.serial}, ${card.serial_of}, ${card.thickness}, ${card.year}, ${card.product},
-      ${card.grade}, ${card.duplicates})
+      ${card.grade}, ${card.duplicates}, ${card.owned ? new Date() : null})
     RETURNING id
   `;
   res.json({ id: row.id, action: 'inserted', ...card });
@@ -156,11 +156,21 @@ router.post('/import', async (req, res) => {
 // PATCH /api/cards/:id/owned - quick toggle owned, optionally update serial
 router.patch('/:id/owned', async (req, res) => {
   const { owned, serial } = req.body;
-  if ('serial' in req.body) {
-    const serialVal = serial !== null && serial !== '' ? Number(serial) : null;
-    await db`UPDATE cards SET owned = ${owned ? 1 : 0}, serial = ${serialVal} WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
+  const id = req.params.id;
+  const uid = req.user.id;
+  const serialVal = 'serial' in req.body ? (serial !== null && serial !== '' ? Number(serial) : null) : undefined;
+  if (owned) {
+    if (serialVal !== undefined) {
+      await db`UPDATE cards SET owned = 1, serial = ${serialVal}, owned_at = COALESCE(owned_at, NOW()) WHERE id = ${id} AND user_id = ${uid}`;
+    } else {
+      await db`UPDATE cards SET owned = 1, owned_at = COALESCE(owned_at, NOW()) WHERE id = ${id} AND user_id = ${uid}`;
+    }
   } else {
-    await db`UPDATE cards SET owned = ${owned ? 1 : 0} WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
+    if (serialVal !== undefined) {
+      await db`UPDATE cards SET owned = 0, serial = ${serialVal}, owned_at = NULL WHERE id = ${id} AND user_id = ${uid}`;
+    } else {
+      await db`UPDATE cards SET owned = 0, owned_at = NULL WHERE id = ${id} AND user_id = ${uid}`;
+    }
   }
   res.json({ ok: true });
 });
