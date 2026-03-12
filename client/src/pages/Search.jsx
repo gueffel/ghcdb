@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api.js';
 import CardModal from '../components/CardModal.jsx';
+import CardDetailModal from '../components/CardDetailModal.jsx';
 import SerialPromptModal from '../components/SerialPromptModal.jsx';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
 import { formatTeam } from '../utils.js';
@@ -8,9 +9,10 @@ import { formatTeam } from '../utils.js';
 function deduplicateCards(cards) {
   const map = new Map();
   for (const card of cards) {
+    const setSegment = card.set_name ? `::${card.set_name}` : '';
     const key = card.card_number != null && card.card_number !== ''
-      ? `${card.year}::${card.product}::${card.card_number}`
-      : `${card.year}::${card.product}::desc::${card.description}::${card.team_city}`;
+      ? `${card.year}::${card.product}::${card.card_number}${setSegment}`
+      : `${card.year}::${card.product}::desc::${card.description}::${card.team_city}${setSegment}`;
     if (!map.has(key)) {
       map.set(key, { ...card, duplicates: card.duplicates || 0 });
     } else {
@@ -31,6 +33,7 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [editCard, setEditCard] = useState(null);
   const [serialPromptCard, setSerialPromptCard] = useState(null);
+  const [cardDetail, setCardDetail] = useState(null);
   const [products, setProducts] = useState([]);
   const [years, setYears] = useState([]);
   const debounceRef = useRef(null);
@@ -151,24 +154,24 @@ export default function Search() {
               <thead>
                 <tr>
                   <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`}>Owned {indicator('owned')}</th>
-                  <th onClick={() => onSort('card_number')} className={`sortable-th ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
-                  <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}>Player / Description {indicator('description')}</th>
+                  <th onClick={() => onSort('card_number')} className={`sortable-th col-sm-hide ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
+                  <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}><span className="th-full">Player / Description</span><span className="th-short">Player</span> {indicator('description')}</th>
                   <th onClick={() => onSort('set_name')} className={`sortable-th ${sortKey === 'set_name' ? 'sorted' : ''}`}>Set {indicator('set_name')}</th>
-                  <th onClick={() => onSort('team_city')} className={`sortable-th ${sortKey === 'team_city' ? 'sorted' : ''}`}>Team {indicator('team_city')}</th>
-                  <th onClick={() => onSort('year')} className={`sortable-th ${sortKey === 'year' ? 'sorted' : ''}`}>Year {indicator('year')}</th>
-                  <th onClick={() => onSort('product')} className={`sortable-th ${sortKey === 'product' ? 'sorted' : ''}`}>Product {indicator('product')}</th>
-                  <th onClick={() => onSort('rookie')} className={`sortable-th ${sortKey === 'rookie' ? 'sorted' : ''}`}>RC {indicator('rookie')}</th>
-                  <th onClick={() => onSort('auto')} className={`sortable-th ${sortKey === 'auto' ? 'sorted' : ''}`}>AUTO {indicator('auto')}</th>
-                  <th onClick={() => onSort('mem')} className={`sortable-th ${sortKey === 'mem' ? 'sorted' : ''}`}>Mem {indicator('mem')}</th>
-                  <th onClick={() => onSort('serial_of')} className={`sortable-th ${sortKey === 'serial_of' ? 'sorted' : ''}`}>Serial {indicator('serial_of')}</th>
-                  <th onClick={() => onSort('grade')} className={`sortable-th ${sortKey === 'grade' ? 'sorted' : ''}`}>Grade {indicator('grade')}</th>
-                  <th></th>
+                  <th onClick={() => onSort('team_city')} className={`sortable-th col-sm-hide ${sortKey === 'team_city' ? 'sorted' : ''}`}>Team {indicator('team_city')}</th>
+                  <th onClick={() => onSort('year')} className={`sortable-th col-sm-hide ${sortKey === 'year' ? 'sorted' : ''}`}>Year {indicator('year')}</th>
+                  <th onClick={() => onSort('product')} className={`sortable-th col-sm-hide ${sortKey === 'product' ? 'sorted' : ''}`}>Product {indicator('product')}</th>
+                  <th onClick={() => onSort('rookie')} className={`sortable-th col-sm-hide ${sortKey === 'rookie' ? 'sorted' : ''}`}>RC {indicator('rookie')}</th>
+                  <th onClick={() => onSort('auto')} className={`sortable-th col-sm-hide ${sortKey === 'auto' ? 'sorted' : ''}`}>AUTO {indicator('auto')}</th>
+                  <th onClick={() => onSort('mem')} className={`sortable-th col-sm-hide ${sortKey === 'mem' ? 'sorted' : ''}`}>Mem {indicator('mem')}</th>
+                  <th onClick={() => onSort('serial_of')} className={`sortable-th col-sm-hide ${sortKey === 'serial_of' ? 'sorted' : ''}`}>Serial {indicator('serial_of')}</th>
+                  <th onClick={() => onSort('grade')} className={`sortable-th col-sm-hide ${sortKey === 'grade' ? 'sorted' : ''}`}>Grade {indicator('grade')}</th>
+                  <th className="col-sm-hide"></th>
                 </tr>
               </thead>
               <tbody>
                 {displayResults.map(card => (
-                  <tr key={card.id} className={card.owned ? 'row-owned' : 'row-missing'}>
-                    <td>
+                  <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
+                    <td onClick={e => e.stopPropagation()}>
                       <button
                         className={`owned-toggle ${card.owned ? 'owned' : ''}`}
                         onClick={() => toggleOwned(card)}
@@ -176,20 +179,20 @@ export default function Search() {
                         {card.owned ? '✓' : '○'}
                       </button>
                     </td>
-                    <td className="text-muted">{card.card_number}</td>
+                    <td className="text-muted col-sm-hide">{card.card_number}</td>
                     <td><strong>{card.description}</strong></td>
                     <td className="text-muted">{card.set_name}</td>
-                    <td className="text-muted">{formatTeam(card.team_city, card.team_name)}</td>
-                    <td className="text-muted">{card.year}</td>
-                    <td className="text-muted">{card.product}</td>
-                    <td>{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                    <td>{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
-                    <td className="text-muted">{card.mem || ''}</td>
-                    <td className="text-muted">
+                    <td className="text-muted col-sm-hide">{formatTeam(card.team_city, card.team_name)}</td>
+                    <td className="text-muted col-sm-hide">{card.year}</td>
+                    <td className="text-muted col-sm-hide">{card.product}</td>
+                    <td className="col-sm-hide">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
+                    <td className="col-sm-hide">{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
+                    <td className="text-muted col-sm-hide">{card.mem || ''}</td>
+                    <td className="text-muted col-sm-hide">
                       {card.serial && card.serial_of ? `${card.serial}/${card.serial_of}` : card.serial_of ? `/${card.serial_of}` : ''}
                     </td>
-                    <td className="text-muted">{card.grade || ''}</td>
-                    <td>
+                    <td className="text-muted col-sm-hide">{card.grade || ''}</td>
+                    <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
                       <button className="btn-icon" onClick={() => setEditCard(card)} title="Edit">✎</button>
                     </td>
                   </tr>
@@ -220,6 +223,25 @@ export default function Search() {
           <div className="empty-icon">🔍</div>
           <p>Type a player name, team, or card number to search your collection.</p>
         </div>
+      )}
+
+      {cardDetail && !editCard && (
+        <CardDetailModal
+          card={cardDetail}
+          onClose={() => setCardDetail(null)}
+          onEdit={(card) => { setCardDetail(null); setEditCard(card); }}
+          onToggleOwned={(card) => {
+            if (!card.owned && card.serial_of) {
+              setCardDetail(null);
+              setSerialPromptCard(card);
+              return;
+            }
+            const newOwned = !card.owned;
+            const updated = { ...card, owned: newOwned, serial: newOwned ? card.serial : null };
+            setCardDetail(updated);
+            doToggleOwned(card, newOwned, newOwned ? undefined : null);
+          }}
+        />
       )}
 
       {editCard && (

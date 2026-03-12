@@ -11,11 +11,15 @@ function compareValues(a, b, key) {
   if (bv == null) return -1;
 
   if (key === 'card_number') {
-    // Try numeric first, fall back to string
-    const an = parseInt(av, 10);
-    const bn = parseInt(bv, 10);
-    if (!isNaN(an) && !isNaN(bn)) return an - bn;
-    return String(av).localeCompare(String(bv));
+    const aStr = String(av);
+    const bStr = String(bv);
+    const aNum = /^\d+$/.test(aStr);
+    const bNum = /^\d+$/.test(bStr);
+    // pure numbers first, then alphanumeric
+    if (aNum && bNum) return Number(aStr) - Number(bStr);
+    if (aNum) return -1;
+    if (bNum) return 1;
+    return aStr.localeCompare(bStr, undefined, { numeric: true, sensitivity: 'base' });
   }
 
   if (NUMERIC_COLS.has(key)) return Number(av) - Number(bv);

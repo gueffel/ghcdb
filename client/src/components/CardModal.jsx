@@ -32,7 +32,7 @@ export default function CardModal({ card, onClose, onSaved, onDeleted }) {
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
+      <div className="modal card-edit-modal">
         <div className="modal-header">
           <h2>Edit Card</h2>
           <button className="modal-close" onClick={onClose}>✕</button>

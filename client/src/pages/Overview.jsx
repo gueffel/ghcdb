@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import CardDetailModal from '../components/CardDetailModal.jsx';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { api } from '../api.js';
@@ -86,6 +87,7 @@ export default function Overview() {
   const greeting = useMemo(() => getGreeting(user?.first_name || user?.username || 'there'), []);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cardDetail, setCardDetail] = useState(null);
 
   useEffect(() => {
     api.getStats().then(s => { setStats(s); setLoading(false); }).catch(() => setLoading(false));
@@ -204,24 +206,44 @@ export default function Overview() {
           <div className="table-wrap">
             <table className="data-table">
               <thead>
-                <tr><th>#</th><th>Player / Description</th><th>Team</th><th>Year</th><th>Product</th><th>Rookie</th><th>Auto</th></tr>
+                <tr>
+                  <th className="col-sm-hide">#</th>
+                  <th><span className="th-full">Player / Description</span><span className="th-short">Player</span></th>
+                  <th className="col-sm-hide">Team</th>
+                  <th className="col-sm-hide">Year</th>
+                  <th className="col-sm-hide">Product</th>
+                  <th className="col-sm-hide">Rookie</th>
+                  <th className="col-sm-hide">Auto</th>
+                </tr>
               </thead>
               <tbody>
                 {recentlyOwned.map(c => (
-                  <tr key={c.id}>
-                    <td className="text-muted">{c.card_number}</td>
+                  <tr key={c.id} className="row-clickable" onClick={() => setCardDetail(c)}>
+                    <td className="text-muted col-sm-hide">{c.card_number}</td>
                     <td>{c.description}</td>
-                    <td>{formatTeam(c.team_city, c.team_name)}</td>
-                    <td>{c.year}</td>
-                    <td>{c.product}</td>
-                    <td>{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                    <td>{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
+                    <td className="col-sm-hide">{formatTeam(c.team_city, c.team_name)}</td>
+                    <td className="col-sm-hide">{c.year}</td>
+                    <td className="col-sm-hide">{c.product}</td>
+                    <td className="col-sm-hide">{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
+                    <td className="col-sm-hide">{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+      )}
+
+      {cardDetail && (
+        <CardDetailModal
+          card={cardDetail}
+          onClose={() => setCardDetail(null)}
+          onToggleOwned={(card) => {
+            const newOwned = !card.owned;
+            setCardDetail(prev => prev ? { ...prev, owned: newOwned } : null);
+            api.toggleOwned(card.id, newOwned, newOwned ? undefined : null).catch(() => {});
+          }}
+        />
       )}
     </div>
   );

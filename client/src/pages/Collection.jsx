@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { api } from '../api.js';
 import CardModal from '../components/CardModal.jsx';
+import CardDetailModal from '../components/CardDetailModal.jsx';
 import SerialPromptModal from '../components/SerialPromptModal.jsx';
 import CatalogPickerModal from '../components/CatalogPickerModal.jsx';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
@@ -9,9 +10,10 @@ import { formatTeam } from '../utils.js';
 function deduplicateCards(cards, scopeBySet = false) {
   const map = new Map();
   for (const card of cards) {
+    const setSegment = card.set_name ? `::${card.set_name}` : '';
     const cardKey = card.card_number != null && card.card_number !== ''
-      ? String(card.card_number)
-      : `desc::${card.description}::${card.team_city}`;
+      ? `${card.card_number}${setSegment}`
+      : `desc::${card.description}::${card.team_city}${setSegment}`;
     const key = scopeBySet ? `${card.year}::${card.product}::${cardKey}` : cardKey;
     if (!map.has(key)) {
       map.set(key, { ...card, duplicates: card.duplicates || 0 });
@@ -48,6 +50,7 @@ export default function Collection() {
   const [serialPromptCard, setSerialPromptCard] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [cardDetail, setCardDetail] = useState(null);
 
   const loadProducts = useCallback(() => {
     api.getProducts().then(p => {
@@ -286,25 +289,25 @@ export default function Collection() {
                   <thead>
                     <tr>
                       <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`}>Owned {indicator('owned')}</th>
-                      <th onClick={() => onSort('card_number')} className={`sortable-th ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
-                      <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}>Player / Description {indicator('description')}</th>
+                      <th onClick={() => onSort('card_number')} className={`sortable-th col-sm-hide ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
+                      <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}><span className="th-full">Player / Description</span><span className="th-short">Player</span> {indicator('description')}</th>
                       <th onClick={() => onSort('set_name')} className={`sortable-th ${sortKey === 'set_name' ? 'sorted' : ''}`}>Set {indicator('set_name')}</th>
-                      <th onClick={() => onSort('team_city')} className={`sortable-th ${sortKey === 'team_city' ? 'sorted' : ''}`}>Team {indicator('team_city')}</th>
-                      {showAll && <th onClick={() => onSort('year')} className={`sortable-th ${sortKey === 'year' ? 'sorted' : ''}`}>Year {indicator('year')}</th>}
-                      {showAll && <th onClick={() => onSort('product')} className={`sortable-th ${sortKey === 'product' ? 'sorted' : ''}`}>Product {indicator('product')}</th>}
-                      <th onClick={() => onSort('rookie')} className={`sortable-th ${sortKey === 'rookie' ? 'sorted' : ''}`}>RC {indicator('rookie')}</th>
-                      <th onClick={() => onSort('auto')} className={`sortable-th ${sortKey === 'auto' ? 'sorted' : ''}`}>AUTO {indicator('auto')}</th>
-                      <th onClick={() => onSort('mem')} className={`sortable-th ${sortKey === 'mem' ? 'sorted' : ''}`}>Mem {indicator('mem')}</th>
-                      <th onClick={() => onSort('serial_of')} className={`sortable-th ${sortKey === 'serial_of' ? 'sorted' : ''}`}>Serial {indicator('serial_of')}</th>
-                      <th onClick={() => onSort('grade')} className={`sortable-th ${sortKey === 'grade' ? 'sorted' : ''}`}>Grade {indicator('grade')}</th>
-                      <th onClick={() => onSort('duplicates')} className={`sortable-th ${sortKey === 'duplicates' ? 'sorted' : ''}`}>Dups {indicator('duplicates')}</th>
-                      <th></th>
+                      <th onClick={() => onSort('team_city')} className={`sortable-th col-sm-hide ${sortKey === 'team_city' ? 'sorted' : ''}`}>Team {indicator('team_city')}</th>
+                      {showAll && <th onClick={() => onSort('year')} className={`sortable-th col-sm-hide ${sortKey === 'year' ? 'sorted' : ''}`}>Year {indicator('year')}</th>}
+                      {showAll && <th onClick={() => onSort('product')} className={`sortable-th col-sm-hide ${sortKey === 'product' ? 'sorted' : ''}`}>Product {indicator('product')}</th>}
+                      <th onClick={() => onSort('rookie')} className={`sortable-th col-sm-hide ${sortKey === 'rookie' ? 'sorted' : ''}`}>RC {indicator('rookie')}</th>
+                      <th onClick={() => onSort('auto')} className={`sortable-th col-sm-hide ${sortKey === 'auto' ? 'sorted' : ''}`}>AUTO {indicator('auto')}</th>
+                      <th onClick={() => onSort('mem')} className={`sortable-th col-sm-hide ${sortKey === 'mem' ? 'sorted' : ''}`}>Mem {indicator('mem')}</th>
+                      <th onClick={() => onSort('serial_of')} className={`sortable-th col-sm-hide ${sortKey === 'serial_of' ? 'sorted' : ''}`}>Serial {indicator('serial_of')}</th>
+                      <th onClick={() => onSort('grade')} className={`sortable-th col-sm-hide ${sortKey === 'grade' ? 'sorted' : ''}`}>Grade {indicator('grade')}</th>
+                      <th onClick={() => onSort('duplicates')} className={`sortable-th col-sm-hide ${sortKey === 'duplicates' ? 'sorted' : ''}`}>Dups {indicator('duplicates')}</th>
+                      <th className="col-sm-hide"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {displayCards.map(card => (
-                      <tr key={card.id} className={card.owned ? 'row-owned' : 'row-missing'}>
-                        <td>
+                      <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
+                        <td onClick={e => e.stopPropagation()}>
                           <button
                             className={`owned-toggle ${card.owned ? 'owned' : ''}`}
                             onClick={() => toggleOwned(card)}
@@ -313,21 +316,21 @@ export default function Collection() {
                             {card.owned ? '✓' : '○'}
                           </button>
                         </td>
-                        <td className="text-muted card-num">{card.card_number}</td>
+                        <td className="text-muted card-num col-sm-hide">{card.card_number}</td>
                         <td className="card-desc">{card.description}</td>
                         <td className="text-muted">{card.set_name}</td>
-                        <td className="text-muted">{formatTeam(card.team_city, card.team_name)}</td>
-                        {showAll && <td className="text-muted">{card.year}</td>}
-                        {showAll && <td className="text-muted">{card.product}</td>}
-                        <td>{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                        <td>{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
-                        <td className="text-muted">{card.mem || ''}</td>
-                        <td className="text-muted">
+                        <td className="text-muted col-sm-hide">{formatTeam(card.team_city, card.team_name)}</td>
+                        {showAll && <td className="text-muted col-sm-hide">{card.year}</td>}
+                        {showAll && <td className="text-muted col-sm-hide">{card.product}</td>}
+                        <td className="col-sm-hide">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
+                        <td className="col-sm-hide">{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
+                        <td className="text-muted col-sm-hide">{card.mem || ''}</td>
+                        <td className="text-muted col-sm-hide">
                           {card.serial && card.serial_of ? `${card.serial}/${card.serial_of}` : card.serial_of ? `/${card.serial_of}` : ''}
                         </td>
-                        <td className="text-muted">{card.grade || ''}</td>
-                        <td className="text-muted">{card.duplicates > 0 ? card.duplicates : ''}</td>
-                        <td>
+                        <td className="text-muted col-sm-hide">{card.grade || ''}</td>
+                        <td className="text-muted col-sm-hide">{card.duplicates > 0 ? card.duplicates : ''}</td>
+                        <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
                           <button className="btn-icon" onClick={() => setEditCard(card)} title="Edit">✎</button>
                         </td>
                       </tr>
@@ -342,6 +345,25 @@ export default function Collection() {
           </>
         )}
       </div>
+
+      {cardDetail && !editCard && (
+        <CardDetailModal
+          card={cardDetail}
+          onClose={() => setCardDetail(null)}
+          onEdit={(card) => { setCardDetail(null); setEditCard(card); }}
+          onToggleOwned={(card) => {
+            if (!card.owned && card.serial_of) {
+              setCardDetail(null);
+              setSerialPromptCard(card);
+              return;
+            }
+            const newOwned = !card.owned;
+            const updated = { ...card, owned: newOwned, serial: newOwned ? card.serial : null };
+            setCardDetail(updated);
+            doToggleOwned(card, newOwned, newOwned ? undefined : null);
+          }}
+        />
+      )}
 
       {editCard && (
         <CardModal

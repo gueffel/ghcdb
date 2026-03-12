@@ -10,7 +10,7 @@ export default function SerialPromptModal({ card, onConfirm, onCancel }) {
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal" style={{ maxWidth: 360 }} onClick={e => e.stopPropagation()}>
+      <div className="modal serial-prompt-modal" style={{ maxWidth: 360 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Enter Serial Number</h2>
           <button className="modal-close" onClick={onCancel}>✕</button>
