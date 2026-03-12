@@ -70,7 +70,40 @@ export const api = {
   importToCatalog: (cards, replaceExisting) => request('POST', '/catalog/import', { cards, replaceExisting }),
   deleteCatalogSet: (year, product) => request('DELETE', '/catalog/set', { year, product }),
   updateCatalogCard: (id, data) => request('PUT', `/catalog/card/${id}`, data),
-  addToCollection: (year, product, mode = 'add') => request('POST', '/catalog/add-to-collection', { year, product, mode }),
+  addToCollection: async (year, product, mode = 'add', onProgress) => {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${BASE}/catalog/add-to-collection`, {
+      method: 'POST', headers, body: JSON.stringify({ year, product, mode }),
+    });
+    if (res.status === 401) { localStorage.removeItem('token'); window.location.href = '/login'; return; }
+    if (!res.ok) {
+      const data = JSON.parse(await res.text());
+      throw new Error(data.error || 'Request failed');
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const data = JSON.parse(line);
+        if (data.error) throw new Error(data.error);
+        if (data.added !== undefined) return data;
+        if (data.progress !== undefined && onProgress) onProgress(data);
+      }
+    }
+    if (buf.trim()) {
+      const data = JSON.parse(buf);
+      if (data.error) throw new Error(data.error);
+      if (data.added !== undefined) return data;
+    }
+  },
 
   // Admin
   getAdminUsers: () => request('GET', '/admin/users'),

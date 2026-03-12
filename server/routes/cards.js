@@ -160,6 +160,7 @@ router.post('/', wrap(async (req, res) => {
 
 // POST /api/cards/import - bulk import array of cards
 const IMPORT_COLS = ['user_id', 'owned', 'card_number', 'set_name', 'description', 'team_city', 'team_name', 'rookie', 'auto', 'mem', 'serial', 'serial_of', 'thickness', 'year', 'product', 'grade', 'duplicates'];
+const IMPORT_CHUNK = Math.floor(65534 / IMPORT_COLS.length); // ~3855
 router.post('/import', async (req, res) => {
   const { cards } = req.body;
   if (!Array.isArray(cards) || cards.length === 0) return res.status(400).json({ error: 'No cards provided' });
@@ -167,7 +168,11 @@ router.post('/import', async (req, res) => {
 
   try {
     const normalized = cards.map(raw => normalizeCard(raw, req.user.id));
-    await db`INSERT INTO cards ${db(normalized, ...IMPORT_COLS)}`;
+    await db.begin(async sql => {
+      for (let i = 0; i < normalized.length; i += IMPORT_CHUNK) {
+        await sql`INSERT INTO cards ${sql(normalized.slice(i, i + IMPORT_CHUNK), ...IMPORT_COLS)}`;
+      }
+    });
     res.json({ imported: cards.length });
   } catch (err) {
     console.error('Card import error:', err);

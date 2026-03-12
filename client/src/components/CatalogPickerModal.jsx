@@ -34,6 +34,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
   const [sidebarGroup, setSidebarGroup] = useState('year');
   const [sidebarSearch, setSidebarSearch] = useState('');
   const [busy, setBusy] = useState('');
+  const [busyProgress, setBusyProgress] = useState({ pct: 0, done: 0, total: 0 });
   const [msg, setMsg] = useState(null);
   const [closing, setClosing] = useState(false);
   const close = () => { setClosing(true); setTimeout(onClose, 180); };
@@ -63,8 +64,12 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
   const addToCollection = async (year, product, mode = 'add') => {
     setMsg(null);
     setBusy(`${year}::${product}`);
+    const initTotal = sets.find(s => s.year === year && s.product === product)?.total ?? 0;
+    setBusyProgress({ pct: 0, done: 0, total: initTotal });
     try {
-      const result = await api.addToCollection(year, product, mode);
+      const result = await api.addToCollection(year, product, mode, ({ progress, done, total }) => {
+        setBusyProgress({ pct: progress, done, total });
+      });
       setMsg({ type: 'success', text: `Added ${result.added} cards from ${product} (${year}) to your collection.` });
       setUserProducts(prev => new Set([...prev, `${year}::${product}`]));
       onAdded();
@@ -76,6 +81,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
       }
     } finally {
       setBusy('');
+      setBusyProgress({ pct: 0, done: 0, total: 0 });
     }
   };
 
@@ -227,8 +233,17 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
                       {currentSet?.autos > 0 && ` · ${currentSet.autos} AU`}
                     </span>
                   </div>
-                  <div className="collection-controls">
-                    {alreadyOwned ? (
+                  <div className="collection-controls" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                    {busy === `${selectedYear}::${selectedProduct}` ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, minWidth: 220 }}>
+                        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                          Adding {busyProgress.done.toLocaleString()} / {busyProgress.total.toLocaleString()} cards ({busyProgress.pct}%)
+                        </span>
+                        <div className="import-progress-bar-wrap" style={{ width: '100%' }}>
+                          <div className="import-progress-bar" style={{ width: `${busyProgress.pct}%`, transition: 'width 0.4s ease' }} />
+                        </div>
+                      </div>
+                    ) : alreadyOwned ? (
                       <div className="catalog-in-collection">
                         <span className="badge badge-green">✓ In your collection</span>
                         <button className="btn-ghost" onClick={() => addToCollection(selectedYear, selectedProduct, 'replace')} disabled={!!busy}>
@@ -241,7 +256,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
                         onClick={() => addToCollection(selectedYear, selectedProduct)}
                         disabled={!!busy}
                       >
-                        {busy === `${selectedYear}::${selectedProduct}` ? 'Adding...' : '+ Add to Collection'}
+                        + Add to Collection
                       </button>
                     )}
                   </div>
