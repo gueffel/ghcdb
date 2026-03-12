@@ -1,6 +1,22 @@
-# Hockey Cards Tracker
+# GHCdb — Hockey Card Collection Tracker
 
-A full-stack web app to track your hockey card collection.
+A web app for tracking your hockey card collection. Import your cards from a spreadsheet, mark cards as owned as you pull or acquire them, and get an at-a-glance picture of what you have and what you're still missing across every set you collect.
+
+## What it does
+
+**Collection management** — Your cards are organized by year and product (e.g. *2023-24 Upper Deck Series 1*). Within each set you can see every card in the checklist, mark individual cards as owned or missing, track duplicates, and record serial numbers for numbered cards. A search bar and owned/missing filter let you quickly find specific cards within a large set.
+
+**CSV import & export** — The main way to get your cards in is by importing a CSV file — typically an export from a spreadsheet you already track your collection in. The importer accepts flexible column names, handles boolean fields like Rookie and Auto, and can either add to or fully replace an existing set. You can also export any product view back to CSV at any time, respecting whatever filter is active.
+
+**Catalog** — Admins can import a master checklist for a set into a shared catalog. Regular users can then add any catalog set to their own collection in one click, pre-populated with all the cards at zero owned — ready to start checking off.
+
+**Overview & stats** — A dashboard page shows your overall collection progress: total cards owned vs. total in your collection, a breakdown by team (pie chart), recently added cards, and per-set completion stats. Useful for seeing which sets you're close to finishing.
+
+**Search** — A global search across your entire collection. Search by player name, card number, team, set name, or product. Results show key card details at a glance and let you mark cards as owned directly from the results table.
+
+**Multi-user with accounts** — Each user has their own collection. Accounts require a username, password (minimum 8 characters), and email. Password reset via email is supported. Designated admin usernames (set via environment variable) get access to catalog management and a user admin panel.
+
+---
 
 ## Stack
 - **Backend**: Node.js + Express + PostgreSQL (`postgres` npm package)

@@ -1,5 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
+
+// Prevent unhandled async rejections from crashing the process in Express 4
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err);
+});
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'node:url';
@@ -68,6 +73,13 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(join(__dirname, '../client/dist')));
   app.get('*', (req, res) => res.sendFile(join(__dirname, '../client/dist/index.html')));
 }
+
+// Global error handler — catches errors passed via next(err) so the process doesn't crash
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

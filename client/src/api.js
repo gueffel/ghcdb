@@ -53,6 +53,7 @@ export const api = {
   addCard: (card) => request('POST', '/cards', card),
   updateCard: (id, card) => request('PUT', `/cards/${id}`, card),
   toggleOwned: (id, owned, serial) => request('PATCH', `/cards/${id}/owned`, serial !== undefined ? { owned, serial } : { owned }),
+  toggleWishlist: (id, wishlisted) => request('PATCH', `/cards/${id}/wishlist`, { wishlisted }),
   deleteCard: (id) => request('DELETE', `/cards/${id}`),
   importCards: (cards) => request('POST', '/cards/import', { cards }),
   deleteProduct: (year, product) => request('DELETE', '/cards/product/all', { year, product }),

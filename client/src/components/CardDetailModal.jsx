@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import TeamChip from './TeamChip.jsx';
 import { getTeamMeta } from '../nhlTeams.js';
 
-export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }) {
+export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned, onToggleWishlist }) {
   const teamMeta = getTeamMeta(card.team_city, card.team_name);
   const [justOwned, setJustOwned] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -54,19 +54,29 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned }
               {!!card.rookie && <span className="badge badge-orange">RC</span>}
               {!!card.auto && <span className="badge badge-purple">AUTO</span>}
             </div>
-            {onToggleOwned ? (
-              <button
-                className={`card-detail-owned-btn ${card.owned ? 'owned' : ''} ${justOwned ? 'just-owned' : ''}`}
-                onClick={() => { if (!card.owned) setJustOwned(true); onToggleOwned(card); }}
-                onAnimationEnd={() => setJustOwned(false)}
-              >
-                {card.owned ? '✓ Owned' : '○ Not owned'}
-              </button>
-            ) : (
-              <span className={`badge ${card.owned ? 'badge-green' : ''}`} style={!card.owned ? { color: 'var(--text-muted)', background: 'transparent', border: '1px solid var(--border)' } : {}}>
-                {card.owned ? '✓ Owned' : '○ Not owned'}
-              </span>
-            )}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {onToggleWishlist && (
+                <button
+                  className={`card-detail-owned-btn${card.wishlisted ? ' wishlisted' : ''}`}
+                  onClick={() => onToggleWishlist(card)}
+                >
+                  {card.wishlisted ? '♥ Wishlisted' : '♥ Add to wishlist'}
+                </button>
+              )}
+              {onToggleOwned ? (
+                <button
+                  className={`card-detail-owned-btn ${card.owned ? 'owned' : ''} ${justOwned ? 'just-owned' : ''}`}
+                  onClick={() => { if (!card.owned) setJustOwned(true); onToggleOwned(card); }}
+                  onAnimationEnd={() => setJustOwned(false)}
+                >
+                  {card.owned ? '✓ Owned' : '○ Not owned'}
+                </button>
+              ) : (
+                <span className={`badge ${card.owned ? 'badge-green' : ''}`} style={!card.owned ? { color: 'var(--text-muted)', background: 'transparent', border: '1px solid var(--border)' } : {}}>
+                  {card.owned ? '✓ Owned' : '○ Not owned'}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

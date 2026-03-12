@@ -80,10 +80,16 @@ export default function Search() {
   const { sorted: displayResults, onSort, sortKey, indicator } = useSortableTable(results, 'description', 'asc');
 
   const doToggleOwned = async (card, newOwned, serial) => {
-    const updated = { ...card, owned: newOwned, ...(serial !== undefined ? { serial } : {}) };
+    const updated = { ...card, owned: newOwned, ...(serial !== undefined ? { serial } : {}), ...(newOwned ? { wishlisted: 0 } : {}) };
     setResults(prev => prev.map(c => c.id === card.id ? updated : c));
     if (newOwned) setPoppingIds(prev => new Set([...prev, card.id]));
     await api.toggleOwned(card.id, newOwned, serial);
+  };
+
+  const toggleWishlist = async (card) => {
+    const newVal = card.wishlisted ? 0 : 1;
+    setResults(prev => prev.map(c => c.id === card.id ? { ...c, wishlisted: newVal } : c));
+    await api.toggleWishlist(card.id, newVal);
   };
 
   const toggleOwned = (card) => {
@@ -161,6 +167,7 @@ export default function Search() {
               <thead>
                 <tr>
                   <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`}>Owned {indicator('owned')}</th>
+                  <th className="col-sm-hide"></th>
                   <th onClick={() => onSort('card_number')} className={`sortable-th col-sm-hide ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
                   <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}><span className="th-full">Player / Description</span><span className="th-short">Player</span> {indicator('description')}</th>
                   <th onClick={() => onSort('set_name')} className={`sortable-th ${sortKey === 'set_name' ? 'sorted' : ''}`}>Set {indicator('set_name')}</th>
@@ -187,6 +194,13 @@ export default function Search() {
                       >
                         {card.owned ? '✓' : '○'}
                       </button>
+                    </td>
+                    <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
+                      <button
+                        className={`wishlist-btn${card.wishlisted ? ' wishlisted' : ''}`}
+                        onClick={() => toggleWishlist(card)}
+                        title={card.wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                      >♥</button>
                     </td>
                     <td className="text-muted col-sm-hide">{card.card_number}</td>
                     <td><strong>{card.description}</strong></td>
@@ -240,6 +254,12 @@ export default function Search() {
           card={cardDetail}
           onClose={() => setCardDetail(null)}
           onEdit={(card) => { setCardDetail(null); setEditCard(card); }}
+          onToggleWishlist={(card) => {
+            const newVal = card.wishlisted ? 0 : 1;
+            setCardDetail(prev => prev ? { ...prev, wishlisted: newVal } : null);
+            setResults(prev => prev.map(c => c.id === card.id ? { ...c, wishlisted: newVal } : c));
+            api.toggleWishlist(card.id, newVal).catch(() => {});
+          }}
           onToggleOwned={(card) => {
             if (!card.owned && card.serial_of) {
               setCardDetail(null);

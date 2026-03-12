@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import CardDetailModal from '../components/CardDetailModal.jsx';
 import TeamChip from '../components/TeamChip.jsx';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
-import { Pie, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import { NHL_TEAM_COLORS } from '../nhlTeams.js';
@@ -20,7 +20,7 @@ function getGreeting(name) {
   return `${phrase}, ${name}`;
 }
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 
 const FALLBACK_COLORS = [
@@ -47,20 +47,36 @@ function StatCard({ label, value, sub, gradient }) {
   );
 }
 
+const WISHLIST_PAGE_SIZE = 10;
+
 export default function Overview() {
   const { user } = useAuth();
   const greeting = useMemo(() => getGreeting(user?.first_name || user?.username || 'there'), []);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cardDetail, setCardDetail] = useState(null);
+  const [wishlistCards, setWishlistCards] = useState([]);
+  const [wishlistTotal, setWishlistTotal] = useState(0);
+  const [wishlistPage, setWishlistPage] = useState(1);
+  const [wishlistSearch, setWishlistSearch] = useState('');
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
   useEffect(() => {
     api.getStats().then(s => { setStats(s); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    setWishlistLoading(true);
+    api.getCards({ wishlisted: 1, search: wishlistSearch, page: wishlistPage, limit: WISHLIST_PAGE_SIZE })
+      .then(data => { setWishlistCards(data.cards); setWishlistTotal(data.total); })
+      .catch(() => {})
+      .finally(() => setWishlistLoading(false));
+  }, [wishlistPage, wishlistSearch]);
+
   if (loading) return <div className="page-loading"><div className="spinner large" />Loading stats...</div>;
   if (!stats) return <div className="page-error">Failed to load stats.</div>;
 
-  const { totals, byTeam, byYear, byProduct, recentlyOwned, topPlayer, topSet } = stats;
+  const { totals, byTeam, byProduct, recentlyOwned, topPlayer, topSet } = stats;
   const teamPieData = {
     labels: byTeam.map(t => t.team),
     datasets: [{
@@ -71,35 +87,9 @@ export default function Overview() {
     }],
   };
 
-  const yearBarData = {
-    labels: byYear.map(y => y.year).reverse(),
-    datasets: [
-      {
-        label: 'Owned',
-        data: byYear.map(y => y.owned).reverse(),
-        backgroundColor: '#4e79a7',
-        borderRadius: 4,
-      },
-      {
-        label: 'Not Owned',
-        data: byYear.map(y => y.total - y.owned).reverse(),
-        backgroundColor: '#2a3045',
-        borderRadius: 4,
-      },
-    ],
-  };
-
   const chartOptions = {
     responsive: true,
     plugins: { legend: { labels: { color: '#c8d0e0' } } },
-  };
-
-  const barOptions = {
-    ...chartOptions,
-    scales: {
-      x: { stacked: true, ticks: { color: '#8892a4' }, grid: { color: '#2a3045' } },
-      y: { stacked: true, ticks: { color: '#8892a4' }, grid: { color: '#2a3045' } },
-    },
   };
 
   return (
@@ -125,12 +115,63 @@ export default function Overview() {
             </div>
           </div>
         )}
-        {byYear.length > 0 && (
-          <div className="chart-card">
-            <h2 className="chart-title">Cards by Year</h2>
-            <Bar data={yearBarData} options={barOptions} />
+        <div className="chart-card wishlist-panel">
+          <div className="wishlist-panel-header">
+            <h2 className="chart-title">My Wishlist</h2>
+            <div className="search-input-wrap" style={{ flex: 1, maxWidth: 260 }}>
+              <input
+                className="collection-search"
+                placeholder="Search wishlist…"
+                value={wishlistSearch}
+                onChange={e => { setWishlistSearch(e.target.value); setWishlistPage(1); }}
+              />
+              {wishlistSearch && (
+                <button className="search-clear-btn" onClick={() => { setWishlistSearch(''); setWishlistPage(1); }}>✕</button>
+              )}
+            </div>
           </div>
-        )}
+          {wishlistLoading ? (
+            <div style={{ padding: '24px', textAlign: 'center' }}><div className="spinner" /></div>
+          ) : wishlistCards.length === 0 ? (
+            <div className="sidebar-empty" style={{ padding: '24px 16px' }}>
+              {wishlistSearch ? 'No matches.' : 'No wishlisted cards yet. Click ♡ on any card to add it.'}
+            </div>
+          ) : (
+            <>
+              <div className="table-wrap" style={{ flex: 1 }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Player / Description</th>
+                      <th className="ra-hide">Team</th>
+                      <th>Product</th>
+                      <th className="ra-hide">RC</th>
+                      <th className="ra-hide">AUTO</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {wishlistCards.map(c => (
+                      <tr key={c.id} className="row-clickable" onClick={() => setCardDetail(c)}>
+                        <td>{c.description}</td>
+                        <td className="ra-hide"><TeamChip team_city={c.team_city} team_name={c.team_name} /></td>
+                        <td className="text-muted">{[c.year, c.product].filter(Boolean).join(' ')}</td>
+                        <td className="ra-hide">{c.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
+                        <td className="ra-hide">{c.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {wishlistTotal > WISHLIST_PAGE_SIZE && (
+                <div className="pagination" style={{ padding: '8px 16px', borderTop: '1px solid var(--border)' }}>
+                  <button className="btn-ghost" disabled={wishlistPage === 1} onClick={() => setWishlistPage(p => p - 1)}>← Prev</button>
+                  <span>Page {wishlistPage} of {Math.ceil(wishlistTotal / WISHLIST_PAGE_SIZE)}</span>
+                  <button className="btn-ghost" disabled={wishlistPage >= Math.ceil(wishlistTotal / WISHLIST_PAGE_SIZE)} onClick={() => setWishlistPage(p => p + 1)}>Next →</button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {byProduct.length > 0 && (
@@ -194,9 +235,16 @@ export default function Overview() {
         <CardDetailModal
           card={cardDetail}
           onClose={() => setCardDetail(null)}
+          onToggleWishlist={(card) => {
+            const newVal = card.wishlisted ? 0 : 1;
+            setCardDetail(prev => prev ? { ...prev, wishlisted: newVal } : null);
+            setWishlistCards(prev => newVal ? prev : prev.filter(c => c.id !== card.id));
+            api.toggleWishlist(card.id, newVal).catch(() => {});
+          }}
           onToggleOwned={(card) => {
             const newOwned = !card.owned;
-            setCardDetail(prev => prev ? { ...prev, owned: newOwned } : null);
+            setCardDetail(prev => prev ? { ...prev, owned: newOwned, ...(newOwned ? { wishlisted: 0 } : {}) } : null);
+            if (newOwned) setWishlistCards(prev => prev.filter(c => c.id !== card.id));
             api.toggleOwned(card.id, newOwned, newOwned ? undefined : null).catch(() => {});
           }}
         />

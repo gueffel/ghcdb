@@ -43,12 +43,14 @@ await db`
 `;
 
 await db`ALTER TABLE cards ADD COLUMN IF NOT EXISTS owned_at TIMESTAMP`;
+await db`ALTER TABLE cards ADD COLUMN IF NOT EXISTS wishlisted INTEGER DEFAULT 0`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_user ON cards(user_id)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_year_product ON cards(year, product)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_description ON cards(description)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_team ON cards(team_city, team_name)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_user_owned ON cards(user_id, owned)`;
 await db`CREATE INDEX IF NOT EXISTS idx_cards_user_year_product ON cards(user_id, year, product)`;
+await db`CREATE INDEX IF NOT EXISTS idx_cards_user_wishlisted ON cards(user_id, wishlisted)`;
 
 await db`
   CREATE TABLE IF NOT EXISTS catalog_cards (

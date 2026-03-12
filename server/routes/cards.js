@@ -6,6 +6,9 @@ import { normalizeCard as _normalizeCard } from '../utils/normalizeCard.js';
 const router = Router();
 router.use(authenticate);
 
+// Wrap async route handlers so unhandled rejections become 500s instead of crashing the process
+const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 function normalizeCard(raw, userId) {
   const base = _normalizeCard(raw);
   const toBool = (v) => {
@@ -27,7 +30,7 @@ function normalizeCard(raw, userId) {
 const CARD_ORDER = `year DESC, product, (CASE WHEN card_number ~ '^[0-9]+$' THEN card_number::int ELSE NULL END) NULLS LAST, card_number`;
 
 // GET /api/cards - list with optional filters
-router.get('/', async (req, res) => {
+router.get('/', wrap(async (req, res) => {
   const { year, product, owned, search, page = 1, limit = 200 } = req.query;
   let i = 1;
   const where = [`user_id = $${i++}`];
@@ -38,6 +41,11 @@ router.get('/', async (req, res) => {
   if (owned !== undefined && owned !== '') {
     where.push(`owned = $${i++}`);
     params.push(owned === 'true' || owned === '1' ? 1 : 0);
+  }
+  const { wishlisted } = req.query;
+  if (wishlisted !== undefined && wishlisted !== '') {
+    where.push(`wishlisted = $${i++}`);
+    params.push(wishlisted === 'true' || wishlisted === '1' ? 1 : 0);
   }
   if (search) {
     const tokens = search.trim().split(/\s+/).filter(Boolean);
@@ -61,20 +69,20 @@ router.get('/', async (req, res) => {
   );
 
   res.json({ cards, total: Number(countRow.n), page: parsedPage, limit: parsedLimit });
-});
+}));
 
 // GET /api/cards/products - distinct year/product combos
-router.get('/products', async (req, res) => {
+router.get('/products', wrap(async (req, res) => {
   const rows = await db`
     SELECT DISTINCT year, product, COUNT(*) as total, SUM(owned) as owned
     FROM cards WHERE user_id = ${req.user.id}
     GROUP BY year, product ORDER BY year DESC, product
   `;
   res.json(rows);
-});
+}));
 
 // GET /api/cards/set-names?year=&product= - distinct set names for autocomplete
-router.get('/set-names', async (req, res) => {
+router.get('/set-names', wrap(async (req, res) => {
   const { year, product } = req.query;
   let rows;
   if (year && product) {
@@ -99,17 +107,17 @@ router.get('/set-names', async (req, res) => {
     `;
   }
   res.json(rows.map(r => r.set_name));
-});
+}));
 
 // GET /api/cards/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', wrap(async (req, res) => {
   const [card] = await db`SELECT * FROM cards WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
   if (!card) return res.status(404).json({ error: 'Card not found' });
   res.json(card);
-});
+}));
 
 // POST /api/cards - add single card (upsert: mark owned or increment duplicates if card exists)
-router.post('/', async (req, res) => {
+router.post('/', wrap(async (req, res) => {
   const card = normalizeCard(req.body, req.user.id);
 
   if (card.card_number) {
@@ -141,7 +149,7 @@ router.post('/', async (req, res) => {
     RETURNING id
   `;
   res.json({ id: row.id, action: 'inserted', ...card });
-});
+}));
 
 // POST /api/cards/import - bulk import array of cards
 const IMPORT_COLS = ['user_id', 'owned', 'card_number', 'set_name', 'description', 'team_city', 'team_name', 'rookie', 'auto', 'mem', 'serial', 'serial_of', 'thickness', 'year', 'product', 'grade', 'duplicates'];
@@ -161,16 +169,16 @@ router.post('/import', async (req, res) => {
 });
 
 // PATCH /api/cards/:id/owned - quick toggle owned, optionally update serial
-router.patch('/:id/owned', async (req, res) => {
+router.patch('/:id/owned', wrap(async (req, res) => {
   const { owned, serial } = req.body;
   const id = req.params.id;
   const uid = req.user.id;
   const serialVal = 'serial' in req.body ? (serial !== null && serial !== '' ? Number(serial) : null) : undefined;
   if (owned) {
     if (serialVal !== undefined) {
-      await db`UPDATE cards SET owned = 1, serial = ${serialVal}, owned_at = COALESCE(owned_at, NOW()) WHERE id = ${id} AND user_id = ${uid}`;
+      await db`UPDATE cards SET owned = 1, wishlisted = 0, serial = ${serialVal}, owned_at = COALESCE(owned_at, NOW()) WHERE id = ${id} AND user_id = ${uid}`;
     } else {
-      await db`UPDATE cards SET owned = 1, owned_at = COALESCE(owned_at, NOW()) WHERE id = ${id} AND user_id = ${uid}`;
+      await db`UPDATE cards SET owned = 1, wishlisted = 0, owned_at = COALESCE(owned_at, NOW()) WHERE id = ${id} AND user_id = ${uid}`;
     }
   } else {
     if (serialVal !== undefined) {
@@ -180,10 +188,17 @@ router.patch('/:id/owned', async (req, res) => {
     }
   }
   res.json({ ok: true });
-});
+}));
+
+// PATCH /api/cards/:id/wishlist - toggle wishlisted
+router.patch('/:id/wishlist', wrap(async (req, res) => {
+  const { wishlisted } = req.body;
+  await db`UPDATE cards SET wishlisted = ${wishlisted ? 1 : 0} WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
+  res.json({ ok: true });
+}));
 
 // PUT /api/cards/:id - full update
-router.put('/:id', async (req, res) => {
+router.put('/:id', wrap(async (req, res) => {
   const c = { ...normalizeCard(req.body, req.user.id), id: Number(req.params.id) };
   const result = await db`
     UPDATE cards SET owned=${c.owned}, card_number=${c.card_number}, set_name=${c.set_name},
@@ -195,20 +210,20 @@ router.put('/:id', async (req, res) => {
   `;
   if (result.count === '0') return res.status(404).json({ error: 'Card not found' });
   res.json({ ok: true });
-});
+}));
 
 // DELETE /api/cards/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', wrap(async (req, res) => {
   const result = await db`DELETE FROM cards WHERE id = ${req.params.id} AND user_id = ${req.user.id}`;
   if (result.count === '0') return res.status(404).json({ error: 'Card not found' });
   res.json({ ok: true });
-});
+}));
 
 // DELETE /api/cards/product/all - delete all cards in a product
-router.delete('/product/all', async (req, res) => {
+router.delete('/product/all', wrap(async (req, res) => {
   const { year, product } = req.body;
   const result = await db`DELETE FROM cards WHERE user_id = ${req.user.id} AND year = ${year} AND product = ${product}`;
   res.json({ deleted: Number(result.count) });
-});
+}));
 
 export default router;
