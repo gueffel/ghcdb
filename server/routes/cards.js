@@ -31,7 +31,7 @@ const CARD_ORDER = `year DESC, product, (CASE WHEN card_number ~ '^[0-9]+$' THEN
 
 // GET /api/cards - list with optional filters
 router.get('/', wrap(async (req, res) => {
-  const { year, product, owned, search, page = 1, limit = 200 } = req.query;
+  const { year, product, owned, wishlisted, rookie, auto, search, page = 1, limit = 200 } = req.query;
   let i = 1;
   const where = [`user_id = $${i++}`];
   const params = [req.user.id];
@@ -42,10 +42,17 @@ router.get('/', wrap(async (req, res) => {
     where.push(`owned = $${i++}`);
     params.push(owned === 'true' || owned === '1' ? 1 : 0);
   }
-  const { wishlisted } = req.query;
   if (wishlisted !== undefined && wishlisted !== '') {
     where.push(`wishlisted = $${i++}`);
     params.push(wishlisted === 'true' || wishlisted === '1' ? 1 : 0);
+  }
+  if (rookie !== undefined && rookie !== '') {
+    where.push(`rookie = $${i++}`);
+    params.push(rookie === '1' ? 1 : 0);
+  }
+  if (auto !== undefined && auto !== '') {
+    where.push(`auto = $${i++}`);
+    params.push(auto === '1' ? 1 : 0);
   }
   if (search) {
     const tokens = search.trim().split(/\s+/).filter(Boolean);
@@ -59,7 +66,7 @@ router.get('/', wrap(async (req, res) => {
 
   const whereSQL = where.join(' AND ');
   const parsedPage = Math.max(1, parseInt(page) || 1);
-  const parsedLimit = Math.min(1000, Math.max(1, parseInt(limit) || 200));
+  const parsedLimit = Math.min(10000, Math.max(1, parseInt(limit) || 200));
   const offset = (parsedPage - 1) * parsedLimit;
 
   const [countRow] = await db.unsafe(`SELECT COUNT(*) as n FROM cards WHERE ${whereSQL}`, params);

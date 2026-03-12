@@ -365,7 +365,7 @@ export default function Collection() {
                     </button>
                   ))}
                 </div>
-                <button className="btn-ghost btn-icon-text" onClick={exportCsv} title="Export to CSV">↓ Export CSV</button>
+                <button className="btn-ghost btn-icon-text col-sm-hide" onClick={exportCsv} title="Export to CSV">↓ Export CSV</button>
               </div>
             </div>
 
@@ -407,11 +407,13 @@ export default function Collection() {
                           </button>
                         </td>
                         <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
-                          <button
-                            className={`wishlist-btn${card.wishlisted ? ' wishlisted' : ''}`}
-                            onClick={() => toggleWishlist(card)}
-                            title={card.wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                          >♥</button>
+                          {!card.owned && (
+                            <button
+                              className={`wishlist-btn${card.wishlisted ? ' wishlisted' : ''}`}
+                              onClick={() => toggleWishlist(card)}
+                              title={card.wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                            >♥</button>
+                          )}
                         </td>
                         <td className="text-muted card-num col-sm-hide">{card.card_number}</td>
                         <td className="card-desc">{card.description}</td>

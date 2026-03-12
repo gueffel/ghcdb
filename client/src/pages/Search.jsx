@@ -53,12 +53,11 @@ export default function Search() {
     if (f.owned !== '') params.owned = f.owned;
     if (f.year) params.year = f.year;
     if (f.product) params.product = f.product;
+    if (f.rookie !== '') params.rookie = f.rookie;
+    if (f.auto !== '') params.auto = f.auto;
 
     api.getCards(params).then(data => {
-      let cards = data.cards;
-      if (f.rookie !== '') cards = cards.filter(c => Boolean(c.rookie) === (f.rookie === '1'));
-      if (f.auto !== '') cards = cards.filter(c => Boolean(c.auto) === (f.auto === '1'));
-      setResults(deduplicateCards(cards));
+      setResults(deduplicateCards(data.cards));
       setTotal(data.total);
     }).finally(() => setLoading(false));
   };
@@ -196,11 +195,13 @@ export default function Search() {
                       </button>
                     </td>
                     <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
-                      <button
-                        className={`wishlist-btn${card.wishlisted ? ' wishlisted' : ''}`}
-                        onClick={() => toggleWishlist(card)}
-                        title={card.wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                      >♥</button>
+                      {!card.owned && (
+                        <button
+                          className={`wishlist-btn${card.wishlisted ? ' wishlisted' : ''}`}
+                          onClick={() => toggleWishlist(card)}
+                          title={card.wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                        >♥</button>
+                      )}
                     </td>
                     <td className="text-muted col-sm-hide">{card.card_number}</td>
                     <td><strong>{card.description}</strong></td>

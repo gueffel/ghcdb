@@ -47,7 +47,7 @@ function StatCard({ label, value, sub, gradient }) {
   );
 }
 
-const WISHLIST_PAGE_SIZE = 10;
+const WISHLIST_PAGE_SIZE = 5;
 
 export default function Overview() {
   const { user } = useAuth();

@@ -55,7 +55,7 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned, 
               {!!card.auto && <span className="badge badge-purple">AUTO</span>}
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {onToggleWishlist && (
+              {onToggleWishlist && !card.owned && (
                 <button
                   className={`card-detail-owned-btn${card.wishlisted ? ' wishlisted' : ''}`}
                   onClick={() => onToggleWishlist(card)}
