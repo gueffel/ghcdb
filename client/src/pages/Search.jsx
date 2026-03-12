@@ -37,7 +37,7 @@ export default function Search() {
   const [products, setProducts] = useState([]);
   const [years, setYears] = useState([]);
   const debounceRef = useRef(null);
-  const LIMIT = 100;
+  const LIMIT = 35;
 
   useEffect(() => {
     api.getProducts().then(p => {

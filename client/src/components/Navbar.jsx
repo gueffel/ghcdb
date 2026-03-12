@@ -32,31 +32,29 @@ export default function Navbar() {
           </NavLink>
           <button className="btn-ghost" onClick={handleLogout}>Logout</button>
         </div>
-        <button className="nav-hamburger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
-          {menuOpen ? '✕' : '☰'}
+        <button className={`nav-hamburger${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+          <span className="ham-bar" />
+          <span className="ham-bar" />
+          <span className="ham-bar" />
         </button>
       </nav>
 
-      {menuOpen && (
-        <>
-          <div className="nav-backdrop" onClick={close} />
-          <div className="nav-mobile-menu">
-            <NavLink to="/overview" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Overview</NavLink>
-            <NavLink to="/collection" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Collection</NavLink>
-            <NavLink to="/search" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Search</NavLink>
-            <NavLink to="/add" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>+ Add Card</NavLink>
-            <NavLink to="/import" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Import CSV</NavLink>
-            <NavLink to="/help" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Help</NavLink>
-            {user?.is_admin && <NavLink to="/admin" className={({ isActive }) => isActive ? 'nav-link active nav-link-admin' : 'nav-link nav-link-admin'} onClick={close}>⚙ Admin</NavLink>}
-            <div className="nav-mobile-footer">
-              <NavLink to="/settings" className={({ isActive }) => `nav-username ${isActive ? 'active' : ''}`} onClick={close}>
-                {user?.first_name || user?.username}
-              </NavLink>
-              <button className="btn-ghost" onClick={handleLogout}>Logout</button>
-            </div>
-          </div>
-        </>
-      )}
+      <div className={`nav-backdrop${menuOpen ? ' open' : ''}`} onClick={close} />
+      <div className={`nav-mobile-menu${menuOpen ? ' open' : ''}`}>
+        <NavLink to="/overview" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Overview</NavLink>
+        <NavLink to="/collection" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Collection</NavLink>
+        <NavLink to="/search" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Search</NavLink>
+        <NavLink to="/add" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>+ Add Card</NavLink>
+        <NavLink to="/import" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Import CSV</NavLink>
+        <NavLink to="/help" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Help</NavLink>
+        {user?.is_admin && <NavLink to="/admin" className={({ isActive }) => isActive ? 'nav-link active nav-link-admin' : 'nav-link nav-link-admin'} onClick={close}>⚙ Admin</NavLink>}
+        <div className="nav-mobile-footer">
+          <NavLink to="/settings" className={({ isActive }) => `nav-username ${isActive ? 'active' : ''}`} onClick={close}>
+            {user?.first_name || user?.username}
+          </NavLink>
+          <button className="btn-ghost" onClick={handleLogout}>Logout</button>
+        </div>
+      </div>
     </>
   );
 }
