@@ -118,7 +118,7 @@ export default function Overview() {
         <div className="chart-card wishlist-panel">
           <div className="wishlist-panel-header">
             <h2 className="chart-title">My Wishlist</h2>
-            <div className="search-input-wrap" style={{ flex: 1, maxWidth: 260 }}>
+            <div className="search-input-wrap" style={{ maxWidth: 260, marginLeft: 'auto' }}>
               <input
                 className="collection-search"
                 placeholder="Search wishlist…"
