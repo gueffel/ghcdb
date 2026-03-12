@@ -359,7 +359,7 @@ export default function Collection() {
                     </button>
                   ))}
                 </div>
-                <button className="btn-ghost btn-icon-text" onClick={exportCsv} title="Export to CSV">↓ CSV</button>
+                <button className="btn-ghost btn-icon-text" onClick={exportCsv} title="Export to CSV">↓ Export CSV</button>
               </div>
             </div>
 
