@@ -13,7 +13,7 @@ import Admin from './pages/Admin.jsx';
 import Settings from './pages/Settings.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import Help from './pages/Help.jsx';
-import Contact from './pages/Contact.jsx';
+import About from './pages/About.jsx';
 import BugReport from './pages/BugReport.jsx';
 
 export const AuthContext = createContext(null);
@@ -33,7 +33,7 @@ const PAGE_TITLES = {
   '/admin': 'Admin',
   '/settings': 'Settings',
   '/help': 'Help',
-  '/contact': 'Contact',
+  '/about': 'About',
   '/report-bug': 'Report a Bug',
 };
 
@@ -87,7 +87,7 @@ export default function App() {
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
-            <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
+            <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
             <Route path="/report-bug" element={<ProtectedRoute><BugReport /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to={user ? '/overview' : '/login'} replace />} />
           </Routes>
