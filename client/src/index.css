@@ -482,7 +482,21 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Search ───────────────────────────────────────────────── */
 .search-bar-wrap { margin-bottom: 14px; }
-.search-input-wrap { position: relative; }
+.search-input-row { display: flex; gap: 8px; align-items: center; }
+.search-input-wrap { position: relative; flex: 1; }
+.filter-toggle-btn {
+  display: none; position: relative;
+  flex-shrink: 0; align-items: center; justify-content: center; align-self: stretch;
+  width: 44px; border-radius: var(--radius);
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text-muted); cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.filter-toggle-btn:hover { color: var(--text); background: var(--bg3); }
+.filter-toggle-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(59,130,246,0.08); }
+.filter-toggle-btn.has-active::after {
+  content: ''; position: absolute; top: 7px; right: 7px;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+}
 .search-input {
   width: 100%; background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius-lg); color: var(--text); padding: 12px 40px 12px 16px;
@@ -499,7 +513,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 .search-clear-btn:hover { color: var(--text); }
 
-.filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.filter-dropdowns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .filter-select {
   appearance: none; -webkit-appearance: none;
   background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
@@ -795,6 +810,20 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* Admin */
   .edit-set-header { flex-wrap: wrap; gap: 8px; }
+}
+
+@media (max-width: 640px) {
+  .filter-toggle-btn { display: flex; }
+  .filter-dropdowns {
+    overflow: hidden; width: 100%;
+    max-height: 0; opacity: 0; transform: translateY(-6px);
+    transition: max-height 0.25s ease, opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .filter-dropdowns.open {
+    max-height: 200px; opacity: 1; transform: translateY(0);
+    pointer-events: auto;
+  }
 }
 
 @media (max-width: 400px) {

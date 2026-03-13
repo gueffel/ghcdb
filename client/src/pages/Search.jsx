@@ -37,6 +37,7 @@ export default function Search() {
   const [products, setProducts] = useState([]);
   const [years, setYears] = useState([]);
   const [poppingIds, setPoppingIds] = useState(new Set());
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const debounceRef = useRef(null);
   const LIMIT = 35;
 
@@ -110,42 +111,61 @@ export default function Search() {
       <h1 className="page-title">Search Cards</h1>
 
       <div className="search-bar-wrap">
-        <div className="search-input-wrap">
-          <input
-            className="search-input"
-            placeholder="e.g. Pettersson, or Pettersson Red Parallel"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            autoFocus
-          />
-          {query && (
-            <button className="search-clear-btn" onClick={() => setQuery('')} aria-label="Clear search">✕</button>
-          )}
+        <div className="search-input-row">
+          <div className="search-input-wrap">
+            <input
+              className="search-input"
+              placeholder="e.g. Pettersson, or Pettersson Red Parallel"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              autoFocus
+            />
+            {query && (
+              <button className="search-clear-btn" onClick={() => setQuery('')} aria-label="Clear search">✕</button>
+            )}
+          </div>
+          <button
+            className={`filter-toggle-btn${filtersOpen ? ' active' : ''}${(filters.year || filters.product || filters.rookie || filters.auto) ? ' has-active' : ''}`}
+            onClick={() => setFiltersOpen(o => !o)}
+            aria-label="Toggle filters"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="1" y="2.5" width="14" height="1.5" rx="0.75"/>
+              <rect x="3" y="7" width="10" height="1.5" rx="0.75"/>
+              <rect x="5.5" y="11.5" width="5" height="1.5" rx="0.75"/>
+            </svg>
+          </button>
         </div>
       </div>
 
       <div className="filter-row">
-        <select value={filters.year} onChange={e => setFilter('year', e.target.value)} className="filter-select">
-          <option value="">All years</option>
-          {years.map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <select value={filters.product} onChange={e => setFilter('product', e.target.value)} className="filter-select">
-          <option value="">All products</option>
-          {products.map(p => <option key={p} value={p}>{p}</option>)}
-        </select>
-        <select value={filters.rookie} onChange={e => setFilter('rookie', e.target.value)} className="filter-select">
-          <option value="">All cards</option>
-          <option value="1">Rookies only</option>
-          <option value="0">Non-rookies</option>
-        </select>
-        <select value={filters.auto} onChange={e => setFilter('auto', e.target.value)} className="filter-select">
-          <option value="">Any type</option>
-          <option value="1">Autos only</option>
-          <option value="0">No autos</option>
-        </select>
-        <button className="btn-ghost" onClick={() => { setQuery(''); setFilters({ owned: '', year: '', product: '', rookie: '', auto: '' }); }}>
-          Clear
-        </button>
+        <div className={`filter-dropdowns${filtersOpen ? ' open' : ''}`}>
+          <select value={filters.year} onChange={e => setFilter('year', e.target.value)} className="filter-select">
+            <option value="">All years</option>
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <select value={filters.product} onChange={e => setFilter('product', e.target.value)} className="filter-select">
+            <option value="">All products</option>
+            {products.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <select value={filters.rookie} onChange={e => setFilter('rookie', e.target.value)} className="filter-select">
+            <option value="">All cards</option>
+            <option value="1">Rookies only</option>
+            <option value="0">Non-rookies</option>
+          </select>
+          <select value={filters.auto} onChange={e => setFilter('auto', e.target.value)} className="filter-select">
+            <option value="">Any type</option>
+            <option value="1">Autos only</option>
+            <option value="0">No autos</option>
+          </select>
+          <button className="btn-ghost" onClick={() => { setQuery(''); setFilters({ owned: '', year: '', product: '', rookie: '', auto: '' }); }}>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div className="search-meta">
+        <span>{loading ? <><div className="spinner" />Searching...</> : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`}</span>
         <div className="filter-tabs" style={{ marginLeft: 'auto' }}>
           {[['', 'All'], ['true', 'Owned'], ['false', 'Missing']].map(([val, label]) => (
             <button key={val} className={`tab ${filters.owned === val ? 'active' : ''}`} onClick={() => setFilter('owned', val)}>
@@ -153,10 +173,6 @@ export default function Search() {
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="search-meta">
-        {loading ? <><div className="spinner" />Searching...</> : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`}
       </div>
 
       {results.length > 0 && (
