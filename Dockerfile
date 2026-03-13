@@ -12,7 +12,9 @@ ENV CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 WORKDIR /app
 COPY . .
 
-# Build the frontend
+# Build the frontend — pass commit SHA so Vite can inject it at build time
+ARG RAILWAY_GIT_COMMIT_SHA
+ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
 RUN cd client && npm install && npm run build
 
 # Install server dependencies (no devDeps)
