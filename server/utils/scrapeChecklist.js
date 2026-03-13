@@ -23,17 +23,15 @@ export async function scrapeUDChecklist(url) {
   scrapeInProgress = true;
 
   // Dynamic imports so module load never fails on any platform.
-  // Production (Railway/Linux): puppeteer-core + @sparticuz/chromium (no OS deps needed).
+  // Docker/Railway: system Chromium via apt, path set in CHROMIUM_EXECUTABLE_PATH env var.
   // Development (Windows/Mac): puppeteer full package with bundled Chromium.
   let browser;
-  if (process.env.NODE_ENV === 'production') {
-    const { default: chromium } = await import('@sparticuz/chromium');
+  if (process.env.CHROMIUM_EXECUTABLE_PATH) {
     const { default: puppeteer } = await import('puppeteer-core');
     browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      executablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      headless: true,
     });
   } else {
     const { default: puppeteer } = await import('puppeteer');
