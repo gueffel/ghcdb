@@ -12,7 +12,7 @@ export default function Contact() {
         </p>
         <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginTop: 12 }}>
           <strong style={{ color: 'var(--text)' }}>Email:</strong>{' '}
-          <a href="mailto:contact@example.com" style={{ color: 'var(--accent)' }}>contact@example.com</a>
+          <a href="mailto:hi@ghcdb.ca" style={{ color: 'var(--accent)' }}>hi@ghcdb.ca</a>
         </p>
         <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginTop: 8 }}>
           Found a bug or technical issue?{' '}
