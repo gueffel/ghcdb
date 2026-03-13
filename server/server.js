@@ -16,6 +16,7 @@ import statsRoutes from './routes/stats.js';
 import catalogRoutes from './routes/catalog.js';
 import adminRoutes from './routes/admin.js';
 import bugRoutes from './routes/bugs.js';
+import announcementRoutes from './routes/announcements.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -82,6 +83,7 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/bugs', bugRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Serve built frontend in production
 // Vite outputs hashed filenames (e.g. index-CfwFAC3Y.js) so assets can be cached aggressively.

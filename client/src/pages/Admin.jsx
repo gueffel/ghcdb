@@ -201,7 +201,7 @@ function AdminBugRow({ bug, expanded, onExpand, onReply, onSetStatus, onDelete }
 }
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState('catalog'); // catalog | users | bugs
+  const [activeTab, setActiveTab] = useState('catalog'); // catalog | users | bugs | announcements
 
   // Catalog state
   const [sets, setSets] = useState([]);
@@ -234,6 +234,15 @@ export default function Admin() {
   const [bugsLoading, setBugsLoading] = useState(false);
   const [bugsError, setBugsError] = useState('');
   const [expandedBugId, setExpandedBugId] = useState(null);
+
+  // Announcements state
+  const [currentAnn, setCurrentAnn] = useState(undefined); // undefined = not loaded, null = none
+  const [annTitle, setAnnTitle] = useState('');
+  const [annText, setAnnText] = useState('');
+  const [annSaving, setAnnSaving] = useState(false);
+  const [annDeleting, setAnnDeleting] = useState(false);
+  const [annError, setAnnError] = useState('');
+  const [annConfirmDelete, setAnnConfirmDelete] = useState(false);
 
   // Web import state
   const [importMode, setImportMode] = useState('csv'); // 'csv' | 'web'
@@ -269,9 +278,16 @@ export default function Admin() {
 
   useEffect(() => { loadSets(); }, []);
 
+  const loadAnnouncement = () => {
+    api.getAnnouncement()
+      .then(ann => { setCurrentAnn(ann); setAnnTitle(ann?.title || ''); setAnnText(ann?.message || ''); })
+      .catch(() => setCurrentAnn(null));
+  };
+
   useEffect(() => {
     if (activeTab === 'users') loadUsers();
     if (activeTab === 'bugs') loadBugs();
+    if (activeTab === 'announcements' && currentAnn === undefined) loadAnnouncement();
   }, [activeTab]);
 
   const fetchFromWeb = async () => {
@@ -416,6 +432,38 @@ export default function Admin() {
     }
   };
 
+  const saveAnnouncement = async () => {
+    if (!annText.trim()) return;
+    setAnnSaving(true);
+    setAnnError('');
+    try {
+      const ann = await api.setAnnouncement(annTitle.trim(), annText.trim());
+      setCurrentAnn(ann);
+      setAnnTitle(ann.title || '');
+      setAnnText(ann.message);
+    } catch (err) {
+      setAnnError(err.message);
+    } finally {
+      setAnnSaving(false);
+    }
+  };
+
+  const deleteAnnouncement = async () => {
+    setAnnDeleting(true);
+    setAnnError('');
+    try {
+      await api.deleteAnnouncement();
+      setCurrentAnn(null);
+      setAnnTitle('');
+      setAnnText('');
+      setAnnConfirmDelete(false);
+    } catch (err) {
+      setAnnError(err.message);
+    } finally {
+      setAnnDeleting(false);
+    }
+  };
+
   const handleBugReply = async (id, message) => {
     const reply = await api.replyToBug(id, message);
     setBugsList(prev => prev.map(b => b.id === id ? { ...b, reply_count: b.reply_count + 1 } : b));
@@ -462,6 +510,9 @@ export default function Admin() {
         <button className={`tab ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>User Management</button>
         <button className={`tab ${activeTab === 'bugs' ? 'active' : ''}`} onClick={() => setActiveTab('bugs')}>
           Bug Reports{openCount > 0 && <span className="bug-tab-badge">{openCount}</span>}
+        </button>
+        <button className={`tab ${activeTab === 'announcements' ? 'active' : ''}`} onClick={() => setActiveTab('announcements')}>
+          Announcements{currentAnn && <span className="bug-tab-badge" style={{ background: 'var(--accent)' }}>1</span>}
         </button>
       </div>
 
@@ -819,6 +870,79 @@ export default function Admin() {
           <div className="import-progress-bar-wrap">
             <div className="import-progress-bar" style={{ width: `${Math.round((importCount / rows.length) * 100)}%` }} />
           </div>
+        </div>
+      )}
+
+      {activeTab === 'announcements' && (
+        <div style={{ maxWidth: 600 }}>
+          {currentAnn === undefined ? (
+            <div className="page-loading"><div className="spinner" /> Loading…</div>
+          ) : (
+            <>
+              {currentAnn && (
+                <div className="ann-preview">
+                  <div className="ann-preview-label">Current announcement</div>
+                  {currentAnn.title && <div className="ann-preview-title">{currentAnn.title}</div>}
+                  <p className="ann-preview-text">{currentAnn.message}</p>
+                  <div className="ann-preview-meta">
+                    Posted {new Date(currentAnn.updated_at).toLocaleString()}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ marginTop: currentAnn ? 20 : 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className="field">
+                  <label style={{ fontWeight: 600, marginBottom: 6, display: 'block' }}>
+                    {currentAnn ? 'Edit announcement' : 'New announcement'}
+                  </label>
+                  <input
+                    className="collection-search"
+                    value={annTitle}
+                    onChange={e => setAnnTitle(e.target.value)}
+                    placeholder="Title (optional) — e.g. Scheduled Maintenance"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div className="field">
+                  <textarea
+                    className="bug-reply-textarea"
+                    rows={4}
+                    value={annText}
+                    onChange={e => setAnnText(e.target.value)}
+                    placeholder="Write a short message for users… (news, downtime, etc.)"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              </div>
+
+              {annError && <div className="alert error" style={{ marginTop: 8 }}>{annError}</div>}
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
+                <button
+                  className="btn-primary"
+                  onClick={saveAnnouncement}
+                  disabled={annSaving || !annText.trim() || (annText.trim() === currentAnn?.message && annTitle.trim() === (currentAnn?.title || ''))}
+                >
+                  {annSaving ? 'Saving…' : currentAnn ? 'Update Message' : 'Post Announcement'}
+                </button>
+                {currentAnn && (
+                  annConfirmDelete ? (
+                    <>
+                      <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Remove for all users?</span>
+                      <button className="btn-danger btn-sm" onClick={deleteAnnouncement} disabled={annDeleting}>
+                        {annDeleting ? 'Removing…' : 'Confirm'}
+                      </button>
+                      <button className="btn-ghost btn-sm" onClick={() => setAnnConfirmDelete(false)}>Cancel</button>
+                    </>
+                  ) : (
+                    <button className="btn-danger btn-sm" onClick={() => setAnnConfirmDelete(true)}>
+                      Delete
+                    </button>
+                  )
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 

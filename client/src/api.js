@@ -112,6 +112,11 @@ export const api = {
   getAdminBugs: () => request('GET', '/admin/bugs'),
   scrapeChecklist: (url) => request('POST', '/admin/scrape-checklist', { url }),
 
+  // Announcements
+  getAnnouncement: () => request('GET', '/announcements'),
+  setAnnouncement: (title, message) => request('PUT', '/announcements', { title, message }),
+  deleteAnnouncement: () => request('DELETE', '/announcements'),
+
   // Bugs
   submitBug: (title, description) => request('POST', '/bugs', { title, description }),
   getMyBugs: () => request('GET', '/bugs/mine'),

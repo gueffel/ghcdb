@@ -56,6 +56,8 @@ export default function Overview() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cardDetail, setCardDetail] = useState(null);
+  const [announcement, setAnnouncement] = useState(null);
+  const [bannerClosing, setBannerClosing] = useState(false);
   const [wishlistCards, setWishlistCards] = useState([]);
   const [wishlistTotal, setWishlistTotal] = useState(0);
   const [wishlistPage, setWishlistPage] = useState(1);
@@ -65,6 +67,11 @@ export default function Overview() {
 
   useEffect(() => {
     api.getStats().then(s => { setStats(s); setLoading(false); }).catch(() => setLoading(false));
+    api.getAnnouncement().then(ann => {
+      if (!ann) return;
+      const dismissedId = localStorage.getItem('dismissedAnnouncementId');
+      if (String(ann.id) !== dismissedId) setAnnouncement(ann);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -77,6 +84,15 @@ export default function Overview() {
         .finally(() => setWishlistLoading(false));
     }, wishlistSearch ? 300 : 0); // debounce typing, but don't delay page changes
   }, [wishlistPage, wishlistSearch]);
+
+  const dismissBanner = () => {
+    setBannerClosing(true);
+    setTimeout(() => {
+      localStorage.setItem('dismissedAnnouncementId', String(announcement.id));
+      setAnnouncement(null);
+      setBannerClosing(false);
+    }, 320);
+  };
 
   if (loading) return <div className="page-loading"><div className="spinner large" />Loading stats...</div>;
   if (!stats) return <div className="page-error">Failed to load stats.</div>;
@@ -99,6 +115,21 @@ export default function Overview() {
 
   return (
     <div className="page">
+      {announcement && (
+        <div className={`announcement-banner${bannerClosing ? ' closing' : ''}`}>
+          <div className="announcement-icon">📣</div>
+          <div className="announcement-body">
+            {announcement.title && <div className="announcement-title">{announcement.title}</div>}
+            <span className="announcement-text">{announcement.message}</span>
+          </div>
+          <button
+            className="announcement-close"
+            onClick={dismissBanner}
+            title="Do not show this announcement again"
+            aria-label="Dismiss announcement"
+          >✕</button>
+        </div>
+      )}
       <h1 className="page-title">{greeting}</h1>
 
       <div className="stat-grid">

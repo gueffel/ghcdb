@@ -58,6 +58,7 @@ export default function Collection() {
   const [filter, setFilter] = useState('all'); // all | owned | missing
   const [search, setSearch] = useState('');
   const [serialPromptCard, setSerialPromptCard] = useState(null);
+  const [sidebarLoading, setSidebarLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [sidebarGroup, setSidebarGroup] = useState(() => localStorage.getItem('collection_sidebar_group') || 'year');
@@ -109,6 +110,7 @@ export default function Collection() {
     api.getProducts().then(p => {
       setProducts(p);
       setTree(buildTree(p));
+      setSidebarLoading(false);
 
       // Auto-select from navigation state (e.g. coming from Import page)
       const autoSelect = location.state?.autoSelect;
@@ -278,6 +280,10 @@ export default function Collection() {
           >By Product</button>
         </div>
 
+        {sidebarLoading ? (
+          <div className="sidebar-spinner"><div className="spinner" /></div>
+        ) : <>
+
         {/* All Collections entry */}
         {products.length > 0 && (
           <button
@@ -364,6 +370,7 @@ export default function Collection() {
         {Object.keys(tree).length === 0 && (
           <div className="sidebar-empty">No cards yet.<br />Import a CSV to get started.</div>
         )}
+        </>}
       </aside>
 
       {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}

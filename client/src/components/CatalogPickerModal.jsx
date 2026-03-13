@@ -33,6 +33,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
   const [userProducts, setUserProducts] = useState(new Set());
   const [sidebarGroup, setSidebarGroup] = useState('year');
   const [sidebarSearch, setSidebarSearch] = useState('');
+  const [sidebarLoading, setSidebarLoading] = useState(true);
   const [busy, setBusy] = useState('');
   const [busyProgress, setBusyProgress] = useState({ pct: 0, done: 0, total: 0 });
   const [msg, setMsg] = useState(null);
@@ -44,6 +45,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
       setSets(catalogSets);
       setTree(buildTree(catalogSets));
       setUserProducts(new Set(userProds.map(p => `${p.year}::${p.product}`)));
+      setSidebarLoading(false);
     });
   }, []);
 
@@ -122,7 +124,9 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
                 <button className="sidebar-search-clear" onClick={() => setSidebarSearch('')}>✕</button>
               )}
             </div>
-            {sidebarSearch ? (() => {
+            {sidebarLoading ? (
+              <div className="sidebar-spinner"><div className="spinner" /></div>
+            ) : sidebarSearch ? (() => {
               const tokens = sidebarSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
               const matches = sets.filter(s =>
                 tokens.every(t => s.year.toLowerCase().includes(t) || s.product.toLowerCase().includes(t))
@@ -196,7 +200,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
                 )}
               </div>
             ))}
-            {sets.length === 0 && (
+            {!sidebarLoading && sets.length === 0 && (
               <div className="sidebar-empty">No sets in catalog.<br />An admin needs to import sets first.</div>
             )}
           </div>
