@@ -58,11 +58,16 @@ export async function scrapeUDChecklist(url) {
 
     const result = await page.evaluate((colMap) => {
       const titleText = document.title || '';
-      const yearMatch = titleText.match(/^(\d{4}-\d{2})\s/);
-      const year = yearMatch ? yearMatch[1] : '';
+      // Match both 2025-26 and 2025-2026 formats
+      const yearMatch = titleText.match(/^(\d{4}-(?:\d{4}|\d{2}))\s/);
+      let year = yearMatch ? yearMatch[1] : '';
+      // Normalize 2025-2026 → 2025-26
+      year = year.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1-$2');
       const product = titleText
         .replace(yearMatch ? yearMatch[0] : '', '')
         .replace(/\s*checklist.*$/i, '')
+        .replace(/\bhockey\b/gi, '')
+        .replace(/\s{2,}/g, ' ')
         .trim();
 
       const cards = [];
