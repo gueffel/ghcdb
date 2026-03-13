@@ -625,6 +625,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   transition: border-color 0.15s;
 }
 .web-import-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.web-import-input:disabled { opacity: 0.6; cursor: not-allowed; }
+.web-progress-wrap { width: 100%; background: var(--bg3); border-radius: 99px; height: 6px; overflow: hidden; }
+.web-progress-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.3s ease-out; }
+.web-progress-label { font-size: 12px; color: var(--text-muted); margin-top: 6px; display: block; }
 .inline-error { color: #fca5a5; font-size: 13px; }
 
 /* ── Catalog inline edit ──────────────────────────────────── */

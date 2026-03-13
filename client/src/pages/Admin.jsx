@@ -239,11 +239,13 @@ export default function Admin() {
   const [importMode, setImportMode] = useState('csv'); // 'csv' | 'web'
   const [webUrl, setWebUrl] = useState('');
   const [webFetching, setWebFetching] = useState(false);
+  const [webProgress, setWebProgress] = useState(0);
   const [webError, setWebError] = useState('');
   const [webYear, setWebYear] = useState('');
   const [webProduct, setWebProduct] = useState('');
 
   const fileRef = useRef();
+  const webProgressRef = useRef(null);
 
   const loadSets = () => api.getCatalogSets().then(setSets);
 
@@ -275,15 +277,26 @@ export default function Admin() {
   const fetchFromWeb = async () => {
     setWebError('');
     setWebFetching(true);
+    setWebProgress(0);
     setError('');
+    // Simulate progress: ease toward 90% over ~20s, then snap to 100% on completion
+    let p = 0;
+    webProgressRef.current = setInterval(() => {
+      p += (90 - p) * 0.04;
+      setWebProgress(Math.min(p, 90));
+    }, 300);
     try {
       const data = await api.scrapeChecklist(webUrl);
+      clearInterval(webProgressRef.current);
+      setWebProgress(100);
       setRows(data.cards);
       setHeaders(data.cards.length ? Object.keys(data.cards[0]) : []);
       setWebYear(data.year || '');
       setWebProduct(data.product || '');
-      setStep('preview');
+      setTimeout(() => setStep('preview'), 300);
     } catch (err) {
+      clearInterval(webProgressRef.current);
+      setWebProgress(0);
       setWebError(err.message);
     } finally {
       setWebFetching(false);
@@ -599,6 +612,7 @@ export default function Admin() {
                   onChange={e => setWebUrl(e.target.value)}
                   placeholder="https://upperdeck.com/checklist/…"
                   onKeyDown={e => e.key === 'Enter' && webUrl && !webFetching && fetchFromWeb()}
+                  disabled={webFetching}
                 />
                 <button
                   className="btn-primary"
@@ -607,8 +621,14 @@ export default function Admin() {
                 >
                   {webFetching ? 'Fetching…' : 'Fetch Checklist'}
                 </button>
-                {webError && <span className="inline-error">{webError}</span>}
               </div>
+              {webFetching && (
+                <div className="web-progress-wrap">
+                  <div className="web-progress-bar" style={{ width: `${webProgress}%` }} />
+                  <span className="web-progress-label">Scraping page… this may take 15–30 seconds</span>
+                </div>
+              )}
+              {webError && <span className="inline-error">{webError}</span>}
             )}
           </div>
 

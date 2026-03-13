@@ -8,7 +8,7 @@ A web app for tracking your hockey card collection. Import your cards from a spr
 
 **CSV import & export** — The main way to get your cards in is by importing a CSV file — typically an export from a spreadsheet you already track your collection in. The importer accepts flexible column names, handles boolean fields like Rookie and Auto, and can either add to or fully replace an existing set. You can also export any product view back to CSV at any time, respecting whatever filter is active.
 
-**Catalog** — Admins can import a master checklist for a set into a shared catalog. Regular users can then add any catalog set to their own collection in one click, pre-populated with all the cards at zero owned — ready to start checking off.
+**Catalog** — Admins can import a master checklist for a set into a shared catalog via CSV or directly from an Upper Deck checklist URL (the page is scraped with a headless browser since UD renders its tables via JavaScript). Regular users can then add any catalog set to their own collection in one click, pre-populated with all the cards at zero owned — ready to start checking off.
 
 **Overview & stats** — A dashboard page shows your overall collection progress: total cards owned vs. total in your collection, a breakdown by team (pie chart), recently added cards, and per-set completion stats. Useful for seeing which sets you're close to finishing.
 
@@ -23,6 +23,7 @@ A web app for tracking your hockey card collection. Import your cards from a spr
 - **Frontend**: React + Vite + Chart.js
 - **Auth**: JWT + bcrypt
 - **Email**: Resend (signup notifications, welcome emails, password reset)
+- **Web scraping**: Puppeteer (dev) / `puppeteer-core` + `@sparticuz/chromium` (production) for UD checklist import
 
 ---
 
@@ -100,6 +101,40 @@ Make sure `DATABASE_URL`, `JWT_SECRET`, and `ALLOWED_ORIGIN` are set in your env
 | `EMAIL_FROM` | No | Sender address for outgoing emails (must be a verified domain in Resend) |
 
 Email features (welcome email, admin signup notification, password reset) are silently disabled if `RESEND_API_KEY` is not set.
+
+---
+
+## Upper Deck Checklist Import
+
+Admins can import catalog sets directly from an Upper Deck checklist URL (e.g. `https://upperdeck.com/checklist/2025-26-sp-game-used-hockey-checklist/`) instead of building a CSV manually. The scraper uses a headless browser to render the page (UD loads its tables via WordPress AJAX — a plain HTTP fetch returns no data), then maps UD's column headers to the app's schema.
+
+**Column mapping (UD → app schema):**
+
+| UD Column | App Field |
+|---|---|
+| Set Name | `set_name` |
+| Card | `card_number` |
+| Description | `description` |
+| Team City | `team_city` |
+| Team name | `team_name` |
+| Rookie | `rookie` |
+| Auto | `auto` |
+| Mem/Tech | `mem` |
+| Serial #'d | `serial_of` |
+| Point | `thickness` |
+
+Year and product are extracted from the page `<title>` (e.g. `"2025-26 SP Game Used Hockey Checklist - Upper Deck"`) and pre-filled in the preview step — you can edit them before confirming the import.
+
+### Puppeteer: dev vs. production
+
+The scraper uses different browser backends depending on the environment:
+
+| Environment | Package | Why |
+|---|---|---|
+| **Development** (Windows/Mac) | `puppeteer` (devDependency) | Bundles its own Chromium; works locally with no extra setup |
+| **Production** (Railway/Linux containers) | `puppeteer-core` + `@sparticuz/chromium` | Standard `puppeteer` requires OS libraries (`libglib`, `libnss3`, etc.) that aren't present in Nixpacks containers; `@sparticuz/chromium` ships a pre-compiled binary with no system deps |
+
+The switch happens automatically via `process.env.NODE_ENV`. No extra configuration is needed — just make sure `NODE_ENV=production` is set on your deployment platform (Railway sets this by default).
 
 ---
 
