@@ -30,7 +30,20 @@ export async function scrapeUDChecklist(url) {
     const { default: puppeteer } = await import('puppeteer-core');
     browser = await puppeteer.launch({
       executablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-zygote',
+        '--single-process',
+        '--disable-extensions',
+        '--disable-background-networking',
+        '--disable-default-apps',
+        '--disable-sync',
+        '--no-first-run',
+        '--mute-audio',
+      ],
       headless: true,
     });
   } else {

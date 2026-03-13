@@ -373,6 +373,19 @@ export default function Admin() {
     }
   };
 
+  const exportSetCsv = async (year, product) => {
+    const cards = await api.getCatalogCards(year, product);
+    const headers = ['year', 'product', 'card_number', 'set_name', 'description', 'team_city', 'team_name', 'rookie', 'auto', 'mem', 'serial_of', 'thickness'];
+    const escape = v => v == null ? '' : String(v).includes(',') || String(v).includes('"') || String(v).includes('\n') ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+    const rows = [headers.join(','), ...cards.map(c => headers.map(h => escape(c[h])).join(','))];
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${year}_${product.replace(/[^a-z0-9]/gi, '_')}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   const openEditSet = async (year, product) => {
     setEditError('');
     setEditSearch('');
@@ -709,6 +722,7 @@ export default function Admin() {
                                 </div>
                               ) : (
                                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                  <button className="btn-ghost btn-sm" onClick={() => exportSetCsv(s.year, s.product)}>Export CSV</button>
                                   <button className="btn-ghost btn-sm" onClick={() => openEditSet(s.year, s.product)}>Edit Cards</button>
                                   <button className="btn-danger" onClick={() => setConfirmDelete(key)}>Delete</button>
                                 </div>
