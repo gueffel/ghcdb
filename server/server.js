@@ -21,6 +21,9 @@ import announcementRoutes from './routes/announcements.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+// Trust Railway's reverse proxy so express-rate-limit can read the real client IP
+app.set('trust proxy', 1);
+
 // Security headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
