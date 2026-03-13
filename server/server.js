@@ -14,6 +14,7 @@ import cardRoutes from './routes/cards.js';
 import statsRoutes from './routes/stats.js';
 import catalogRoutes from './routes/catalog.js';
 import adminRoutes from './routes/admin.js';
+import bugRoutes from './routes/bugs.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -67,6 +68,7 @@ app.use('/api/cards', cardRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/bugs', bugRoutes);
 
 // Serve built frontend in production
 if (process.env.NODE_ENV === 'production') {

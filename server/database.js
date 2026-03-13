@@ -86,4 +86,26 @@ await db`
   )
 `;
 
+await db`
+  CREATE TABLE IF NOT EXISTS bug_reports (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
+await db`
+  CREATE TABLE IF NOT EXISTS bug_replies (
+    id SERIAL PRIMARY KEY,
+    bug_id INTEGER NOT NULL REFERENCES bug_reports(id) ON DELETE CASCADE,
+    admin_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
 export default db;

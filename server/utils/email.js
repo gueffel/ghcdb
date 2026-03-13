@@ -37,3 +37,34 @@ export async function sendPasswordResetEmail({ email, token }) {
     html: `<p>Click the link below to reset your password. The link is valid for 1 hour.</p><p><a href="${url}">${url}</a></p><p>If you did not request a password reset, you can ignore this email.</p>`,
   });
 }
+
+export async function sendBugReportNotification({ username, email, title, bugId }) {
+  if (!process.env.ADMIN_EMAIL || !process.env.RESEND_API_KEY) return;
+  await getClient().emails.send({
+    from: FROM(),
+    to: process.env.ADMIN_EMAIL,
+    subject: `New bug report from ${esc(username)} — GHCdb`,
+    html: `<p>User <strong>${esc(username)}</strong>${email ? ` (${esc(email)})` : ''} submitted a bug report:</p><p><strong>${esc(title)}</strong></p><p>Bug #${bugId}</p>`,
+  });
+}
+
+export async function sendBugReply({ to, username, title, message }) {
+  if (!process.env.RESEND_API_KEY || !to) return;
+  await getClient().emails.send({
+    from: FROM(),
+    to,
+    subject: 'Reply to your bug report — GHCdb',
+    html: `<p>Hi ${esc(username)},</p><p>An admin has replied to your bug report "<strong>${esc(title)}</strong>":</p><p>${esc(message).replace(/\n/g, '<br>')}</p>`,
+  });
+}
+
+export async function sendBugStatusUpdate({ to, username, title, status }) {
+  if (!process.env.RESEND_API_KEY || !to) return;
+  const label = status === 'fixed' ? 'marked as fixed' : 'closed';
+  await getClient().emails.send({
+    from: FROM(),
+    to,
+    subject: `Your bug report has been ${label} — GHCdb`,
+    html: `<p>Hi ${esc(username)},</p><p>Your bug report "<strong>${esc(title)}</strong>" has been ${label}.</p>`,
+  });
+}

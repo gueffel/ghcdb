@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db from '../database.js';
 import { authenticate, requireAdmin } from '../middleware/authenticate.js';
+import { scrapeUDChecklist } from '../utils/scrapeChecklist.js';
 
 const router = Router();
 router.use(authenticate, requireAdmin);
@@ -36,6 +37,34 @@ router.delete('/users/:id', async (req, res) => {
   const result = await db`DELETE FROM users WHERE id = ${id}`;
   if (result.count === '0') return res.status(404).json({ error: 'User not found' });
   res.json({ deleted: id });
+});
+
+// POST /api/admin/scrape-checklist — scrape a UD checklist page and return parsed cards
+router.post('/scrape-checklist', async (req, res) => {
+  const { url } = req.body;
+  if (!url || typeof url !== 'string') return res.status(400).json({ error: 'url required' });
+  try {
+    const data = await scrapeUDChecklist(url);
+    if (!data.cards.length) {
+      const hint = data.unknownHeaders?.length ? ` Detected columns: ${data.unknownHeaders.join(', ')}` : '';
+      return res.status(422).json({ error: `No checklist table found on that page.${hint}` });
+    }
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to scrape page' });
+  }
+});
+
+// GET /api/admin/bugs — list all bug reports
+router.get('/bugs', async (_req, res) => {
+  const bugs = await db`
+    SELECT b.*, u.username, u.email,
+      (SELECT COUNT(*) FROM bug_replies WHERE bug_id = b.id)::int as reply_count
+    FROM bug_reports b
+    JOIN users u ON u.id = b.user_id
+    ORDER BY b.created_at DESC
+  `;
+  res.json(bugs);
 });
 
 export default router;

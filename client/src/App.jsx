@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { api } from './api.js';
 import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
 import Login from './pages/Login.jsx';
 import Overview from './pages/Overview.jsx';
 import Collection from './pages/Collection.jsx';
@@ -12,6 +13,8 @@ import Admin from './pages/Admin.jsx';
 import Settings from './pages/Settings.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import Help from './pages/Help.jsx';
+import Contact from './pages/Contact.jsx';
+import BugReport from './pages/BugReport.jsx';
 
 export const AuthContext = createContext(null);
 export function useAuth() { return useContext(AuthContext); }
@@ -30,6 +33,8 @@ const PAGE_TITLES = {
   '/admin': 'Admin',
   '/settings': 'Settings',
   '/help': 'Help',
+  '/contact': 'Contact',
+  '/report-bug': 'Report a Bug',
 };
 
 function TitleUpdater() {
@@ -81,9 +86,12 @@ export default function App() {
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+            <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
+            <Route path="/report-bug" element={<ProtectedRoute><BugReport /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to={user ? '/overview' : '/login'} replace />} />
           </Routes>
         </main>
+        {user && <Footer />}
       </BrowserRouter>
     </AuthContext.Provider>
   );

@@ -109,4 +109,14 @@ export const api = {
   getAdminUsers: () => request('GET', '/admin/users'),
   toggleAdminUser: (id) => request('PATCH', `/admin/users/${id}/admin`),
   deleteAdminUser: (id) => request('DELETE', `/admin/users/${id}`),
+  getAdminBugs: () => request('GET', '/admin/bugs'),
+  scrapeChecklist: (url) => request('POST', '/admin/scrape-checklist', { url }),
+
+  // Bugs
+  submitBug: (title, description) => request('POST', '/bugs', { title, description }),
+  getMyBugs: () => request('GET', '/bugs/mine'),
+  getBug: (id) => request('GET', `/bugs/${id}`),
+  replyToBug: (id, message) => request('POST', `/bugs/${id}/reply`, { message }),
+  setBugStatus: (id, status) => request('PATCH', `/bugs/${id}/status`, { status }),
+  deleteBug: (id) => request('DELETE', `/bugs/${id}`),
 };

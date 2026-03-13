@@ -58,8 +58,150 @@ function EditableRow({ card, onSave, onCancel, saving }) {
   );
 }
 
+function BugStatusBadge({ status }) {
+  return <span className={`bug-status ${status}`}>{status}</span>;
+}
+
+function AdminBugRow({ bug, expanded, onExpand, onReply, onSetStatus, onDelete }) {
+  const [replyText, setReplyText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [detail, setDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const handleExpand = async () => {
+    onExpand(bug.id);
+    if (!detail && !loadingDetail) {
+      setLoadingDetail(true);
+      try {
+        const d = await api.getBug(bug.id);
+        setDetail(d);
+      } finally {
+        setLoadingDetail(false);
+      }
+    }
+  };
+
+  const submitReply = async () => {
+    if (!replyText.trim()) return;
+    setSubmitting(true);
+    try {
+      const newReply = await onReply(bug.id, replyText.trim());
+      setDetail(prev => prev ? { ...prev, replies: [...(prev.replies || []), newReply] } : prev);
+      setReplyText('');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSetStatus = async (status) => {
+    await onSetStatus(bug.id, status);
+    setDetail(prev => prev ? { ...prev, status } : prev);
+  };
+
+  return (
+    <>
+      <tr className={expanded ? 'bug-admin-row expanded' : 'bug-admin-row'} onClick={handleExpand} style={{ cursor: 'pointer' }}>
+        <td><BugStatusBadge status={bug.status} /></td>
+        <td><strong>{bug.title}</strong></td>
+        <td className="text-muted">{bug.username}</td>
+        <td className="text-muted">{bug.reply_count > 0 ? `💬 ${bug.reply_count}` : '—'}</td>
+        <td className="text-muted" style={{ fontSize: 12 }}>{new Date(bug.created_at).toLocaleDateString()}</td>
+        <td style={{ textAlign: 'right', color: 'var(--text-muted)', fontSize: 12 }}>{expanded ? '▲' : '▼'}</td>
+      </tr>
+      {expanded && (
+        <tr>
+          <td colSpan={6} style={{ padding: 0 }}>
+            <div className="bug-admin-detail">
+              {loadingDetail ? (
+                <div style={{ padding: 16, color: 'var(--text-muted)' }}>Loading…</div>
+              ) : (
+                <>
+                  <div className="bug-admin-desc">
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Description</div>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{detail?.description || bug.description}</p>
+                    {bug.email && <p style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 8 }}>User email: {bug.email}</p>}
+                  </div>
+
+                  {/* Replies */}
+                  {detail?.replies?.length > 0 && (
+                    <div className="bug-replies" style={{ margin: '12px 16px 0' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Replies</div>
+                      {detail.replies.map(r => (
+                        <div key={r.id} className="bug-reply">
+                          <div className="bug-reply-header">
+                            <span className="bug-reply-admin">{r.admin_username}</span>
+                            <span className="bug-reply-date">{new Date(r.created_at).toLocaleString()}</span>
+                          </div>
+                          <p className="bug-reply-text">{r.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reply form */}
+                  <div className="bug-reply-form" style={{ margin: '12px 16px 0' }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Send Reply</div>
+                    <textarea
+                      className="bug-reply-textarea"
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                      placeholder="Write a reply to the user…"
+                      rows={3}
+                      onClick={e => e.stopPropagation()}
+                    />
+                    <button className="btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); submitReply(); }} disabled={submitting || !replyText.trim()}>
+                      {submitting ? 'Sending…' : 'Send Reply'}
+                    </button>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="bug-actions" style={{ margin: '12px 16px 16px', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                    {(detail?.status || bug.status) !== 'fixed' && (
+                      <button className="btn-ghost btn-sm" style={{ color: 'var(--green)', borderColor: 'var(--green)' }}
+                        onClick={e => { e.stopPropagation(); handleSetStatus('fixed'); }}>
+                        Mark Fixed
+                      </button>
+                    )}
+                    {(detail?.status || bug.status) !== 'closed' && (
+                      <button className="btn-ghost btn-sm"
+                        onClick={e => { e.stopPropagation(); handleSetStatus('closed'); }}>
+                        Close
+                      </button>
+                    )}
+                    {(detail?.status || bug.status) !== 'open' && (
+                      <button className="btn-ghost btn-sm"
+                        onClick={e => { e.stopPropagation(); handleSetStatus('open'); }}>
+                        Reopen
+                      </button>
+                    )}
+                    {(detail?.status || bug.status) !== 'open' && (
+                      confirmDelete ? (
+                        <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+                          <span style={{ fontSize: 13, color: 'var(--text-muted)', alignSelf: 'center' }}>Delete this report?</span>
+                          <button className="btn-danger btn-sm" onClick={e => { e.stopPropagation(); onDelete(bug.id); }}>Confirm</button>
+                          <button className="btn-ghost btn-sm" onClick={e => { e.stopPropagation(); setConfirmDelete(false); }}>Cancel</button>
+                        </div>
+                      ) : (
+                        <button className="btn-danger btn-sm" style={{ marginLeft: 'auto' }}
+                          onClick={e => { e.stopPropagation(); setConfirmDelete(true); }}>
+                          Delete
+                        </button>
+                      )
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState('catalog'); // catalog | users
+  const [activeTab, setActiveTab] = useState('catalog'); // catalog | users | bugs
 
   // Catalog state
   const [sets, setSets] = useState([]);
@@ -87,6 +229,20 @@ export default function Admin() {
   const [togglingId, setTogglingId] = useState(null);
   const [deletingUserId, setDeletingUserId] = useState(null);
 
+  // Bugs state
+  const [bugsList, setBugsList] = useState([]);
+  const [bugsLoading, setBugsLoading] = useState(false);
+  const [bugsError, setBugsError] = useState('');
+  const [expandedBugId, setExpandedBugId] = useState(null);
+
+  // Web import state
+  const [importMode, setImportMode] = useState('csv'); // 'csv' | 'web'
+  const [webUrl, setWebUrl] = useState('');
+  const [webFetching, setWebFetching] = useState(false);
+  const [webError, setWebError] = useState('');
+  const [webYear, setWebYear] = useState('');
+  const [webProduct, setWebProduct] = useState('');
+
   const fileRef = useRef();
 
   const loadSets = () => api.getCatalogSets().then(setSets);
@@ -100,11 +256,39 @@ export default function Admin() {
       .finally(() => setUsersLoading(false));
   };
 
+  const loadBugs = () => {
+    setBugsLoading(true);
+    setBugsError('');
+    api.getAdminBugs()
+      .then(setBugsList)
+      .catch(err => setBugsError(err.message))
+      .finally(() => setBugsLoading(false));
+  };
+
   useEffect(() => { loadSets(); }, []);
 
   useEffect(() => {
     if (activeTab === 'users') loadUsers();
+    if (activeTab === 'bugs') loadBugs();
   }, [activeTab]);
+
+  const fetchFromWeb = async () => {
+    setWebError('');
+    setWebFetching(true);
+    setError('');
+    try {
+      const data = await api.scrapeChecklist(webUrl);
+      setRows(data.cards);
+      setHeaders(data.cards.length ? Object.keys(data.cards[0]) : []);
+      setWebYear(data.year || '');
+      setWebProduct(data.product || '');
+      setStep('preview');
+    } catch (err) {
+      setWebError(err.message);
+    } finally {
+      setWebFetching(false);
+    }
+  };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -128,11 +312,15 @@ export default function Admin() {
     setError('');
     const BATCH = 50;
     let imported = 0;
+    // For web imports, inject year/product into each row since the table doesn't have those columns
+    const effectiveRows = importMode === 'web'
+      ? rows.map(r => ({ ...r, year: webYear, product: webProduct }))
+      : rows;
     try {
-      for (let i = 0; i < rows.length; i += BATCH) {
+      for (let i = 0; i < effectiveRows.length; i += BATCH) {
         const isFirst = i === 0;
-        await api.importToCatalog(rows.slice(i, i + BATCH), isFirst && replaceExisting);
-        imported += Math.min(BATCH, rows.length - i);
+        await api.importToCatalog(effectiveRows.slice(i, i + BATCH), isFirst && replaceExisting);
+        imported += Math.min(BATCH, effectiveRows.length - i);
         setImportCount(imported);
       }
       setStep('done');
@@ -149,6 +337,10 @@ export default function Admin() {
     setHeaders([]);
     setImportCount(0);
     setError('');
+    setWebUrl('');
+    setWebError('');
+    setWebYear('');
+    setWebProduct('');
     if (fileRef.current) fileRef.current.value = '';
   };
 
@@ -222,6 +414,23 @@ export default function Admin() {
     }
   };
 
+  const handleBugReply = async (id, message) => {
+    const reply = await api.replyToBug(id, message);
+    setBugsList(prev => prev.map(b => b.id === id ? { ...b, reply_count: b.reply_count + 1 } : b));
+    return reply;
+  };
+
+  const handleBugStatus = async (id, status) => {
+    await api.setBugStatus(id, status);
+    setBugsList(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+  };
+
+  const handleBugDelete = async (id) => {
+    await api.deleteBug(id);
+    setBugsList(prev => prev.filter(b => b.id !== id));
+    setExpandedBugId(null);
+  };
+
   // Group sets by year
   const byYear = sets.reduce((acc, s) => {
     if (!acc[s.year]) acc[s.year] = [];
@@ -240,6 +449,8 @@ export default function Admin() {
       })
     : [];
 
+  const openCount = bugsList.filter(b => b.status === 'open').length;
+
   return (
     <div className="page">
       <h1 className="page-title">Admin</h1>
@@ -247,6 +458,9 @@ export default function Admin() {
       <div className="tab-row" style={{ marginBottom: 24 }}>
         <button className={`tab ${activeTab === 'catalog' ? 'active' : ''}`} onClick={() => setActiveTab('catalog')}>Catalog Management</button>
         <button className={`tab ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>User Management</button>
+        <button className={`tab ${activeTab === 'bugs' ? 'active' : ''}`} onClick={() => setActiveTab('bugs')}>
+          Bug Reports{openCount > 0 && <span className="bug-tab-badge">{openCount}</span>}
+        </button>
       </div>
 
       {activeTab === 'users' && (
@@ -312,14 +526,90 @@ export default function Admin() {
         </div>
       )}
 
+      {activeTab === 'bugs' && (
+        <div>
+          {bugsError && <div className="alert error" style={{ marginBottom: 12 }}>{bugsError}</div>}
+          {bugsLoading ? (
+            <div className="page-loading">Loading bug reports...</div>
+          ) : bugsList.length === 0 ? (
+            <div className="empty-state" style={{ paddingTop: 48 }}>
+              <div className="empty-icon">🐛</div>
+              <p>No bug reports yet.</p>
+            </div>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Title</th>
+                    <th>User</th>
+                    <th>Replies</th>
+                    <th>Submitted</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bugsList.map(bug => (
+                    <AdminBugRow
+                      key={bug.id}
+                      bug={bug}
+                      expanded={expandedBugId === bug.id}
+                      onExpand={(id) => setExpandedBugId(prev => prev === id ? null : id)}
+                      onReply={handleBugReply}
+                      onSetStatus={handleBugStatus}
+                      onDelete={handleBugDelete}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {activeTab === 'catalog' && step === 'list' && (
         <>
           <div className="admin-import-bar">
-            <label className="btn-primary" style={{ cursor: 'pointer' }}>
-              Import Set from CSV
-              <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} hidden />
-            </label>
-            {error && <span className="inline-error">{error}</span>}
+            <div className="import-mode-toggle">
+              <button
+                className={`tab ${importMode === 'csv' ? 'active' : ''}`}
+                onClick={() => { setImportMode('csv'); setWebError(''); setError(''); }}
+              >CSV File</button>
+              <button
+                className={`tab ${importMode === 'web' ? 'active' : ''}`}
+                onClick={() => { setImportMode('web'); setError(''); }}
+              >From Web</button>
+            </div>
+
+            {importMode === 'csv' ? (
+              <>
+                <label className="btn-primary" style={{ cursor: 'pointer' }}>
+                  Import Set from CSV
+                  <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} hidden />
+                </label>
+                {error && <span className="inline-error">{error}</span>}
+              </>
+            ) : (
+              <div className="web-import-row">
+                <input
+                  type="url"
+                  className="web-import-input"
+                  value={webUrl}
+                  onChange={e => setWebUrl(e.target.value)}
+                  placeholder="https://upperdeck.com/checklist/…"
+                  onKeyDown={e => e.key === 'Enter' && webUrl && !webFetching && fetchFromWeb()}
+                />
+                <button
+                  className="btn-primary"
+                  onClick={fetchFromWeb}
+                  disabled={webFetching || !webUrl.trim()}
+                >
+                  {webFetching ? 'Fetching…' : 'Fetch Checklist'}
+                </button>
+                {webError && <span className="inline-error">{webError}</span>}
+              </div>
+            )}
           </div>
 
           {sets.length === 0 ? (
@@ -466,6 +756,27 @@ export default function Admin() {
             <strong>{rows.length.toLocaleString()} rows</strong> · <strong>{headers.length} columns</strong>
           </div>
 
+          {importMode === 'web' && (
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              <div className="field" style={{ flex: '0 0 140px' }}>
+                <label>Year</label>
+                <input
+                  value={webYear}
+                  onChange={e => setWebYear(e.target.value)}
+                  placeholder="e.g. 2025-26"
+                />
+              </div>
+              <div className="field" style={{ flex: '1 1 240px' }}>
+                <label>Product</label>
+                <input
+                  value={webProduct}
+                  onChange={e => setWebProduct(e.target.value)}
+                  placeholder="e.g. SP Game Used Hockey"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="import-options">
             <label className="checkbox-label">
               <input type="checkbox" checked={replaceExisting} onChange={e => setReplaceExisting(e.target.checked)} />
@@ -488,7 +799,12 @@ export default function Admin() {
           {rows.length > 10 && <div className="preview-note">Showing first 10 of {rows.length.toLocaleString()} rows</div>}
 
           <div className="form-actions" style={{ marginTop: 16 }}>
-            <button className="btn-primary" onClick={doImport}>Import {rows.length.toLocaleString()} Cards to Catalog</button>
+            <button
+              className="btn-primary"
+              onClick={doImport}
+              disabled={importMode === 'web' && (!webYear.trim() || !webProduct.trim())}
+              title={importMode === 'web' && (!webYear.trim() || !webProduct.trim()) ? 'Year and Product are required' : undefined}
+            >Import {rows.length.toLocaleString()} Cards to Catalog</button>
             <button className="btn-ghost" onClick={reset}>Cancel</button>
           </div>
         </div>
