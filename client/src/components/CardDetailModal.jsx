@@ -46,6 +46,7 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned, 
             {serialDisplay && field('Serial', serialDisplay)}
             {card.grade && field('Grade', card.grade)}
             {card.mem && field('Mem', card.mem)}
+            {card.thickness && field('Thickness', `${card.thickness}pt`)}
             {card.duplicates > 0 && field('Duplicates', card.duplicates)}
           </div>
 
