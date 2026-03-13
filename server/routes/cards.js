@@ -2,6 +2,7 @@ import { Router } from 'express';
 import db from '../database.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { normalizeCard as _normalizeCard } from '../utils/normalizeCard.js';
+import { invalidateStatsCache } from './stats.js';
 
 const router = Router();
 router.use(authenticate);
@@ -194,6 +195,7 @@ router.patch('/:id/owned', wrap(async (req, res) => {
     } else {
       await db`UPDATE cards SET owned = 1, wishlisted = 0, owned_at = COALESCE(owned_at, NOW()) WHERE id = ${id} AND user_id = ${uid}`;
     }
+    invalidateStatsCache(uid);
   } else {
     if (serialVal !== undefined) {
       await db`UPDATE cards SET owned = 0, serial = ${serialVal}, owned_at = NULL WHERE id = ${id} AND user_id = ${uid}`;
