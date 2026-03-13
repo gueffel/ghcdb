@@ -1,0 +1,12 @@
+{
+  "name": "ghcdb",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "cd client && npm install && npm run build && cd ../server && npm install --omit=dev",
+    "start": "node --no-warnings server/server.js"
+  }
+}
