@@ -113,7 +113,7 @@ export default function Search() {
         <div className="search-input-wrap">
           <input
             className="search-input"
-            placeholder="e.g. Pettersson Red Parallel — each word narrows results"
+            placeholder="e.g. Pettersson, or Pettersson Red Parallel"
             value={query}
             onChange={e => setQuery(e.target.value)}
             autoFocus
