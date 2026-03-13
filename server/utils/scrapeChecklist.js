@@ -1,3 +1,8 @@
+// Puppeteer launches a full Chromium instance (~150-300 MB RAM).
+// Allowing concurrent scrapes on Railway would spike memory and risk OOM kills.
+// This flag serializes requests — only one scrape can run at a time.
+let scrapeInProgress = false;
+
 const UD_COLUMN_MAP = {
   'set name': 'set_name',
   'card': 'card_number',
@@ -12,6 +17,11 @@ const UD_COLUMN_MAP = {
 };
 
 export async function scrapeUDChecklist(url) {
+  if (scrapeInProgress) {
+    throw new Error('A checklist scrape is already in progress. Please wait and try again.');
+  }
+  scrapeInProgress = true;
+
   // Dynamic imports so module load never fails on any platform.
   // Production (Railway/Linux): puppeteer-core + @sparticuz/chromium (no OS deps needed).
   // Development (Windows/Mac): puppeteer full package with bundled Chromium.
@@ -78,6 +88,7 @@ export async function scrapeUDChecklist(url) {
 
     return result;
   } finally {
+    scrapeInProgress = false;
     await browser.close();
   }
 }

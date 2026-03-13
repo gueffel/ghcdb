@@ -6,6 +6,7 @@ process.on('unhandledRejection', (err) => {
   console.error('Unhandled rejection:', err);
 });
 import cors from 'cors';
+import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -27,6 +28,9 @@ app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
   next();
 });
+
+// Compress all API responses (JSON gzip: ~60-70% bandwidth reduction)
+app.use(compression());
 
 // CORS — in production, ALLOWED_ORIGIN must be set to your frontend domain
 const allowedOrigin = process.env.ALLOWED_ORIGIN;
@@ -58,10 +62,19 @@ const resetLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many password reset attempts, please try again later.' },
 });
+// General API limiter: 300 requests per minute per IP — prevents accidental or intentional hammering
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.' },
+});
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgot-password', resetLimiter);
 app.use('/api/auth/reset-password', resetLimiter);
+app.use('/api', apiLimiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cards', cardRoutes);
@@ -71,9 +84,18 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/bugs', bugRoutes);
 
 // Serve built frontend in production
+// Vite outputs hashed filenames (e.g. index-CfwFAC3Y.js) so assets can be cached aggressively.
+// index.html is served separately with no-cache so deploys propagate immediately.
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(join(__dirname, '../client/dist')));
-  app.get('*', (req, res) => res.sendFile(join(__dirname, '../client/dist/index.html')));
+  app.use(express.static(join(__dirname, '../client/dist'), {
+    maxAge: '1y',
+    immutable: true,
+    index: false, // don't auto-serve index.html so the catch-all below handles cache-busting
+  }));
+  app.get('*', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(join(__dirname, '../client/dist/index.html'));
+  });
 }
 
 // Global error handler — catches errors passed via next(err) so the process doesn't crash

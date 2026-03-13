@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import CardDetailModal from '../components/CardDetailModal.jsx';
 import TeamChip from '../components/TeamChip.jsx';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -60,17 +60,21 @@ export default function Overview() {
   const [wishlistPage, setWishlistPage] = useState(1);
   const [wishlistSearch, setWishlistSearch] = useState('');
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const wishlistDebounce = useRef(null);
 
   useEffect(() => {
     api.getStats().then(s => { setStats(s); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    setWishlistLoading(true);
-    api.getCards({ wishlisted: 1, search: wishlistSearch, page: wishlistPage, limit: WISHLIST_PAGE_SIZE })
-      .then(data => { setWishlistCards(data.cards); setWishlistTotal(data.total); })
-      .catch(() => {})
-      .finally(() => setWishlistLoading(false));
+    clearTimeout(wishlistDebounce.current);
+    wishlistDebounce.current = setTimeout(() => {
+      setWishlistLoading(true);
+      api.getCards({ wishlisted: 1, search: wishlistSearch, page: wishlistPage, limit: WISHLIST_PAGE_SIZE })
+        .then(data => { setWishlistCards(data.cards); setWishlistTotal(data.total); })
+        .catch(() => {})
+        .finally(() => setWishlistLoading(false));
+    }, wishlistSearch ? 300 : 0); // debounce typing, but don't delay page changes
   }, [wishlistPage, wishlistSearch]);
 
   if (loading) return <div className="page-loading"><div className="spinner large" />Loading stats...</div>;

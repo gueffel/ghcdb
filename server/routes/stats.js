@@ -5,8 +5,22 @@ import { authenticate } from '../middleware/authenticate.js';
 const router = Router();
 router.use(authenticate);
 
+// Per-user stats cache — avoids running 7 aggregation queries on every dashboard load.
+// TTL is 5 minutes; stale-on-expiry is acceptable for a counts dashboard.
+const statsCache = new Map(); // uid -> { data, expiresAt }
+const STATS_TTL = 5 * 60 * 1000;
+
+export function invalidateStatsCache(uid) {
+  statsCache.delete(uid);
+}
+
 router.get('/', async (req, res) => {
   const uid = req.user.id;
+
+  const cached = statsCache.get(uid);
+  if (cached && Date.now() < cached.expiresAt) {
+    return res.json(cached.data);
+  }
 
   const [[totalsRow], byTeam, byYear, byProduct, recentlyOwned, [topPlayerRow], [topSetRow]] = await Promise.all([
     db`
@@ -52,7 +66,7 @@ router.get('/', async (req, res) => {
 
   const { total, owned, rookies, owned_rookies, autos, owned_autos, serialized, graded, dup_sum } = totalsRow;
 
-  res.json({
+  const data = {
     totals: {
       total: Number(total), owned: Number(owned),
       rookies: Number(rookies), ownedRookies: Number(owned_rookies),
@@ -66,7 +80,10 @@ router.get('/', async (req, res) => {
     recentlyOwned,
     topPlayer: topPlayerRow ? { name: topPlayerRow.description, count: Number(topPlayerRow.n) } : null,
     topSet: topSetRow ? { name: topSetRow.product, count: Number(topSetRow.n) } : null,
-  });
+  };
+
+  statsCache.set(uid, { data, expiresAt: Date.now() + STATS_TTL });
+  res.json(data);
 });
 
 export default router;

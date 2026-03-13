@@ -1,7 +1,9 @@
 import postgres from 'postgres';
 
 const db = postgres(process.env.DATABASE_URL, {
-  ssl: /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL || '') ? false : { rejectUnauthorized: false }
+  ssl: /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL || '') ? false : { rejectUnauthorized: false },
+  max: 20,          // allow up to 20 concurrent connections (default is 10)
+  idle_timeout: 60, // release idle connections after 60s to avoid Railway pool exhaustion
 });
 
 await db`

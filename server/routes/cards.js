@@ -55,7 +55,9 @@ router.get('/', wrap(async (req, res) => {
     params.push(auto === '1' ? 1 : 0);
   }
   if (search) {
-    const tokens = search.trim().split(/\s+/).filter(Boolean);
+    // Cap tokens at 3 — each token generates 7 ILIKE conditions; more than 3 terms would
+    // hit 21+ conditions per query and is rarely useful vs. a more specific search.
+    const tokens = search.trim().split(/\s+/).filter(Boolean).slice(0, 3);
     const fields = ['description', 'team_city', 'team_name', 'card_number', 'set_name', 'product', 'year'];
     for (const token of tokens) {
       const s = `%${token}%`;
