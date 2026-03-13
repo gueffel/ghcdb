@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import CardDetailModal from '../components/CardDetailModal.jsx';
 import TeamChip from '../components/TeamChip.jsx';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -187,32 +188,9 @@ export default function Overview() {
         </div>
       </div>
 
-      {byProduct.length > 0 && (
-        <div className="table-card">
-          <h2 className="chart-title">Products</h2>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr><th>Year</th><th>Product</th><th>Owned</th><th>Total</th></tr>
-              </thead>
-              <tbody>
-                {byProduct.map((p, i) => (
-                  <tr key={i}>
-                    <td>{p.year}</td>
-                    <td>{p.product}</td>
-                    <td className="text-green">{p.owned}</td>
-                    <td>{p.total}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       {recentlyOwned.length > 0 && (
         <div className="table-card">
-          <h2 className="chart-title">Recently Added</h2>
+          <h2 className="chart-title">Last 10 cards added</h2>
           <div className="table-wrap">
             <table className="data-table recently-added-table">
               <thead>
@@ -247,6 +225,32 @@ export default function Overview() {
                   </tr>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {byProduct.length > 0 && (
+        <div className="table-card">
+          <div className="chart-title-row">
+            <h2 className="chart-title">My Products</h2>
+            <Link to="/collection" className="btn-ghost" style={{ fontSize: 13 }}>Full Collection →</Link>
+          </div>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr><th>Year</th><th>Product</th><th>Owned</th><th>Total</th></tr>
+              </thead>
+              <tbody>
+                {byProduct.map((p, i) => (
+                  <tr key={i}>
+                    <td>{p.year}</td>
+                    <td>{p.product}</td>
+                    <td className="text-green">{p.owned}</td>
+                    <td>{p.total}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
