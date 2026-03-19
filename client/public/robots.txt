@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Allow: /how-it-works
+
+# App pages require authentication — no useful content for crawlers
+Disallow: /overview
+Disallow: /collection
+Disallow: /search
+Disallow: /add
+Disallow: /import
+Disallow: /admin
+Disallow: /settings
+Disallow: /help
+Disallow: /about
+Disallow: /report-bug
+
+Sitemap: https://ghcdb.ca/sitemap.xml

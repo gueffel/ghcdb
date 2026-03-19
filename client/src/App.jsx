@@ -25,25 +25,41 @@ function ProtectedRoute({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
-const PAGE_TITLES = {
-  '/overview': 'Overview',
-  '/collection': 'Collection',
-  '/search': 'Search',
-  '/add': 'Add Card',
-  '/import': 'Import CSV',
-  '/admin': 'Admin',
-  '/settings': 'Settings',
-  '/help': 'Help',
-  '/about': 'About',
-  '/how-it-works': 'How It Works',
-  '/report-bug': 'Report a Bug',
+const DEFAULT_DESCRIPTION = 'Track your hockey card collection. Log what you own, find what you\'re missing, and see stats by player, team, year, and set.';
+
+const PAGE_META = {
+  '/overview':    { title: 'Overview',      description: 'Your collection at a glance — stats, charts, and progress across every set you track.' },
+  '/collection':  { title: 'Collection',    description: 'Browse and manage every card in your hockey card collection.' },
+  '/search':      { title: 'Search',        description: 'Search across your entire collection and catalog by player, team, year, set, and more.' },
+  '/add':         { title: 'Add Card',      description: 'Add a new card to your hockey card collection.' },
+  '/import':      { title: 'Import CSV',    description: 'Import a set into your catalog from a CSV file.' },
+  '/admin':       { title: 'Admin',         description: null },
+  '/settings':    { title: 'Settings',      description: 'Manage your GHCdb account settings.' },
+  '/help':        { title: 'Help',          description: 'Help and documentation for GHCdb.' },
+  '/about':       { title: 'About',         description: 'About GHCdb — the hockey card collection tracker.' },
+  '/how-it-works':{ title: 'How It Works',  description: 'See how GHCdb helps you track your hockey card collection — dashboard, sets, CSV import, and more.' },
+  '/report-bug':  { title: 'Report a Bug',  description: null },
 };
+
+function setMetaTag(name, content, property = false) {
+  const attr = property ? 'property' : 'name';
+  let el = document.querySelector(`meta[${attr}="${name}"]`);
+  if (!el) { el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
+  el.setAttribute('content', content);
+}
 
 function TitleUpdater() {
   const { pathname } = useLocation();
   useEffect(() => {
-    const page = PAGE_TITLES[pathname];
-    document.title = page ? `GHCdb — ${page}` : 'GHCdb';
+    const meta = PAGE_META[pathname];
+    const title = meta ? `GHCdb — ${meta.title}` : 'GHCdb — Hockey Card Collection Tracker';
+    const description = (meta?.description) ?? DEFAULT_DESCRIPTION;
+    document.title = title;
+    setMetaTag('description', description);
+    setMetaTag('og:title', title, true);
+    setMetaTag('og:description', description, true);
+    setMetaTag('twitter:title', title);
+    setMetaTag('twitter:description', description);
     window.scrollTo(0, 0);
   }, [pathname]);
   return null;

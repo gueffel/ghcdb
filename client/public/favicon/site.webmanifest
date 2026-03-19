@@ -1,6 +1,9 @@
 {
-  "name": "GHCdb",
+  "name": "GHCdb — Hockey Card Collection Tracker",
   "short_name": "GHCdb",
+  "description": "Track your hockey card collection. Log what you own, find what you're missing, and see stats by player, team, year, and set.",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/favicon/web-app-manifest-192x192.png",
@@ -15,7 +18,7 @@
       "purpose": "any"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "background_color": "#0f1117",
   "display": "standalone"
 }

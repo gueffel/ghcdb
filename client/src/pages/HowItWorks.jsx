@@ -50,9 +50,21 @@ function VideoPlaceholder({ label }) {
   );
 }
 
+const JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'GHCdb',
+  applicationCategory: 'SportsApplication',
+  operatingSystem: 'Web',
+  url: 'https://ghcdb.ca',
+  description: 'Track your hockey card collection. Log what you own, find what you\'re missing, and see stats by player, team, year, and set.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'CAD' },
+};
+
 export default function HowItWorks() {
   return (
     <div className="hiw-page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSONLD) }} />
       {/* Self-contained header for logged-out users */}
       <header className="hiw-header">
         <Link to="/login" className="hiw-logo-link">
