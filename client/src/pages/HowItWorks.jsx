@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../App.jsx';
 import logo from '../assets/logo_light.svg';
 
 const features = [
@@ -62,25 +63,31 @@ const JSONLD = {
 };
 
 export default function HowItWorks() {
-  return (
-    <div className="hiw-page">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSONLD) }} />
-      {/* Self-contained header for logged-out users */}
-      <header className="hiw-header">
-        <Link to="/login" className="hiw-logo-link">
-          <img src={logo} alt="GHCdb" className="hiw-logo" />
-        </Link>
-        <Link to="/login" className="btn-primary">Sign In</Link>
-      </header>
+  const { user } = useAuth();
 
-      {/* Hero */}
-      <section className="hiw-hero">
-        <h1 className="hiw-hero-title">Your Hockey Card Collection,<br />Finally Organized</h1>
-        <p className="hiw-hero-sub">
-          GHCdb lets you import sets, track what you own, and see stats on your entire collection — by player, team, year, and set.
-        </p>
-        <Link to="/login" className="btn-primary">Get Started Free</Link>
-      </section>
+  return (
+    <div className={`hiw-page${user ? ' hiw-page--logged-in' : ''}`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSONLD) }} />
+      {/* Self-contained header for logged-out users only */}
+      {!user && (
+        <header className="hiw-header">
+          <Link to="/login" className="hiw-logo-link">
+            <img src={logo} alt="GHCdb" className="hiw-logo" />
+          </Link>
+          <Link to="/login" className="btn-primary">Sign In</Link>
+        </header>
+      )}
+
+      {/* Hero — logged-out only */}
+      {!user && (
+        <section className="hiw-hero">
+          <h1 className="hiw-hero-title">Your Hockey Card Collection,<br />Finally Organized</h1>
+          <p className="hiw-hero-sub">
+            GHCdb lets you import sets, track what you own, and see stats on your entire collection — by player, team, year, and set.
+          </p>
+          <Link to="/login" className="btn-primary">Get Started Free</Link>
+        </section>
+      )}
 
       {/* Feature sections */}
       <section className="hiw-features">
@@ -96,17 +103,21 @@ export default function HowItWorks() {
         ))}
       </section>
 
-      {/* Bottom CTA */}
-      <section className="hiw-bottom-cta">
-        <h2>Ready to get started?</h2>
-        <p>Create your free account and start tracking your collection today.</p>
-        <Link to="/login" className="btn-primary">Create Account</Link>
-      </section>
+      {/* Bottom CTA — logged-out only */}
+      {!user && (
+        <section className="hiw-bottom-cta">
+          <h2>Ready to get started?</h2>
+          <p>Create your free account and start tracking your collection today.</p>
+          <Link to="/login" className="btn-primary">Create Account</Link>
+        </section>
+      )}
 
-      <footer className="hiw-footer">
-        © {new Date().getFullYear()} GHCdb &nbsp;·&nbsp;
-        <Link to="/login" className="hiw-footer-link">Sign In</Link>
-      </footer>
+      {!user && (
+        <footer className="hiw-footer">
+          © {new Date().getFullYear()} GHCdb &nbsp;·&nbsp;
+          <Link to="/login" className="hiw-footer-link">Sign In</Link>
+        </footer>
+      )}
     </div>
   );
 }
