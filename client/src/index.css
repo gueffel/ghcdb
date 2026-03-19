@@ -51,9 +51,9 @@ a:not([class]):hover {
 /* ── Layout ───────────────────────────────────────────────── */
 .with-nav {
   padding-top: var(--nav-h); flex: 1; min-height: 0; overflow-y: auto;
-  display: flex; flex-direction: column;
+  display: flex; flex-direction: column; scrollbar-gutter: stable;
 }
-.page { padding: 28px 32px; max-width: 1400px; margin: 0 auto; animation: fadeUp 0.25s ease; }
+.page { padding: 28px 32px; width: 100%; max-width: 1400px; margin: 0 auto; box-sizing: border-box; animation: fadeUp 0.25s ease; }
 .page-narrow { max-width: 820px; }
 .page-wide { max-width: 1800px; }
 .page-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 24px; }

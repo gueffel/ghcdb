@@ -888,7 +888,7 @@ export default function Admin() {
       )}
 
       {activeTab === 'announcements' && (
-        <div style={{ maxWidth: 600 }}>
+        <div>
           {currentAnn === undefined ? (
             <div className="page-loading"><div className="spinner" /> Loading…</div>
           ) : (
@@ -904,7 +904,7 @@ export default function Admin() {
                 </div>
               )}
 
-              <div style={{ marginTop: currentAnn ? 20 : 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ maxWidth: 600, marginTop: currentAnn ? 20 : 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div className="field">
                   <label style={{ fontWeight: 600, marginBottom: 6, display: 'block' }}>
                     {currentAnn ? 'Edit announcement' : 'New announcement'}
@@ -927,11 +927,10 @@ export default function Admin() {
                     style={{ width: '100%' }}
                   />
                 </div>
-              </div>
 
-              {annError && <div className="alert error" style={{ marginTop: 8 }}>{annError}</div>}
+                {annError && <div className="alert error" style={{ marginTop: 8 }}>{annError}</div>}
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <button
                   className="btn-primary"
                   onClick={saveAnnouncement}
@@ -954,6 +953,7 @@ export default function Admin() {
                     </button>
                   )
                 )}
+                </div>
               </div>
             </>
           )}

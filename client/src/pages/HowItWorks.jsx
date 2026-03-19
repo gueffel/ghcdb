@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../App.jsx';
 import logo from '../assets/logo_light.svg';
@@ -33,6 +32,12 @@ const features = [
     description:
       'Import any set into your catalog from a standard CSV file. Map your columns once and GHCdb pulls in all the card data — player names, teams, rookie flags, autos, serial numbers, and more.',
     videoLabel: 'Importing a set from CSV',
+  },
+  {
+    title: 'Add a Card',
+    description:
+      'Found a card at a show or pulled one from a pack? Add it to your collection instantly with the Add a Card page. Enter the player name, pick the set and card number, and fill in any extras — serial number, grade, auto, rookie flag, duplicate. No need to import a full set first; you can log individual cards at any time and they\'ll show up in your collection and stats right away.',
+    videoLabel: 'Adding a card walkthrough',
   },
   {
     title: 'Search',
