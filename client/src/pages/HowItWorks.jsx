@@ -5,6 +5,12 @@ import logo from '../assets/logo_light.svg';
 
 const features = [
   {
+    title: 'Getting Started',
+    description:
+      'Creating an account takes about 30 seconds — just a username, email, and password. Once you\'re in, the navigation bar at the top gives you access to everything: your Overview, Collection, Search, and Import pages. Your account settings — including your display name, email, and password — are always one click away from your name in the top right corner.',
+    videoLabel: 'Registration & navigation overview',
+  },
+  {
     title: 'Dashboard & Stats',
     description:
       'Get an instant overview of your entire collection. See how many cards you own vs. your total, track your rookie count, autos, serials, and graded cards at a glance. Charts break down your collection by team, year, and set.',
