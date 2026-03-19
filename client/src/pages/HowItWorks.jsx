@@ -85,7 +85,7 @@ export default function HowItWorks() {
           <p className="hiw-hero-sub">
             GHCdb lets you import sets, track what you own, and see stats on your entire collection — by player, team, year, and set.
           </p>
-          <Link to="/login" className="btn-primary">Get Started Free</Link>
+          <Link to="/login" className="btn-primary">Get Started</Link>
         </section>
       )}
 
@@ -107,7 +107,7 @@ export default function HowItWorks() {
       {!user && (
         <section className="hiw-bottom-cta">
           <h2>Ready to get started?</h2>
-          <p>Create your free account and start tracking your collection today.</p>
+          <p>Create your account and start tracking your collection today.</p>
           <Link to="/login" className="btn-primary">Create Account</Link>
         </section>
       )}
