@@ -181,7 +181,7 @@ export default function Search() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`}>Owned {indicator('owned')}</th>
+                  <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`}><span className="th-full">Owned</span><span className="th-short">✓</span> {indicator('owned')}</th>
                   <th className="col-sm-hide"></th>
                   <th onClick={() => onSort('card_number')} className={`sortable-th col-sm-hide ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
                   <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}><span className="th-full">Player / Description</span><span className="th-short">Player</span> {indicator('description')}</th>
