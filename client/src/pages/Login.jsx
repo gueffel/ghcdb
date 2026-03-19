@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import logoLight2 from '../assets/logo_light.svg';
 
 export default function Login() {
@@ -51,6 +51,14 @@ export default function Login() {
         <img src={logoLight2} alt="GHCdb" className="login-logo" />
         <p className="login-subtitle">Track your collection</p>
         <p className="login-desc">Log every card in your hockey card collection, track what you own vs. what you're still hunting for, and see stats on your progress — by team, year, and set.</p>
+
+        <Link to="/how-it-works" className="hiw-login-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M10 8.5l6 3.5-6 3.5V8.5z" fill="currentColor" />
+          </svg>
+          See how it works
+        </Link>
 
         {mode !== 'forgot' && (
           <div className="tab-row">

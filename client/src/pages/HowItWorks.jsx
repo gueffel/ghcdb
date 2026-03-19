@@ -1,0 +1,100 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import logo from '../assets/logo_light.svg';
+
+const features = [
+  {
+    title: 'Dashboard & Stats',
+    description:
+      'Get an instant overview of your entire collection. See how many cards you own vs. your total, track your rookie count, autos, serials, and graded cards at a glance. Charts break down your collection by team, year, and set.',
+    videoLabel: 'Dashboard walkthrough',
+  },
+  {
+    title: 'Collection Tracking',
+    description:
+      'Browse every card in your collection in a searchable, filterable table. Mark cards as owned, flag duplicates, record serial numbers and grades, and build your wishlist — all in one place.',
+    videoLabel: 'Collection management demo',
+  },
+  {
+    title: 'Set Catalog',
+    description:
+      'The catalog is a master list of every card in a set. Browse sets by year and product, see how many cards are in each set, and track your completion percentage — at a glance for every set you follow.',
+    videoLabel: 'Set catalog walkthrough',
+  },
+  {
+    title: 'CSV Import',
+    description:
+      'Import any set into your catalog from a standard CSV file. Map your columns once and GHCdb pulls in all the card data — player names, teams, rookie flags, autos, serial numbers, and more.',
+    videoLabel: 'Importing a set from CSV',
+  },
+  {
+    title: 'Search',
+    description:
+      "Search across every card in your collection or the entire catalog. Filter by player, team, year, set, rookie status, auto, serial number, grade, and more to quickly find exactly what you're looking for.",
+    videoLabel: 'Search & filter demo',
+  },
+];
+
+function VideoPlaceholder({ label }) {
+  return (
+    <div className="hiw-video">
+      <div className="hiw-video-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="11" stroke="rgba(99,102,241,0.5)" strokeWidth="1.5" />
+          <path d="M10 8.5l6 3.5-6 3.5V8.5z" fill="rgba(99,102,241,0.7)" />
+        </svg>
+      </div>
+      <p className="hiw-video-label">{label}</p>
+      <span className="hiw-video-badge">Video coming soon</span>
+    </div>
+  );
+}
+
+export default function HowItWorks() {
+  return (
+    <div className="hiw-page">
+      {/* Self-contained header for logged-out users */}
+      <header className="hiw-header">
+        <Link to="/login" className="hiw-logo-link">
+          <img src={logo} alt="GHCdb" className="hiw-logo" />
+        </Link>
+        <Link to="/login" className="btn-primary">Sign In</Link>
+      </header>
+
+      {/* Hero */}
+      <section className="hiw-hero">
+        <h1 className="hiw-hero-title">Your Hockey Card Collection,<br />Finally Organized</h1>
+        <p className="hiw-hero-sub">
+          GHCdb lets you import sets, track what you own, and see stats on your entire collection — by player, team, year, and set.
+        </p>
+        <Link to="/login" className="btn-primary">Get Started Free</Link>
+      </section>
+
+      {/* Feature sections */}
+      <section className="hiw-features">
+        {features.map((f, i) => (
+          <div key={f.title} className={`hiw-feature ${i % 2 === 1 ? 'hiw-feature--reverse' : ''}`}>
+            <div className="hiw-feature-text">
+              <span className="hiw-feature-number">0{i + 1}</span>
+              <h2 className="hiw-feature-title">{f.title}</h2>
+              <p className="hiw-feature-desc">{f.description}</p>
+            </div>
+            <VideoPlaceholder label={f.videoLabel} />
+          </div>
+        ))}
+      </section>
+
+      {/* Bottom CTA */}
+      <section className="hiw-bottom-cta">
+        <h2>Ready to get started?</h2>
+        <p>Create your free account and start tracking your collection today.</p>
+        <Link to="/login" className="btn-primary">Create Account</Link>
+      </section>
+
+      <footer className="hiw-footer">
+        © {new Date().getFullYear()} GHCdb &nbsp;·&nbsp;
+        <Link to="/login" className="hiw-footer-link">Sign In</Link>
+      </footer>
+    </div>
+  );
+}
