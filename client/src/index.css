@@ -800,6 +800,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .scroll-top-btn { display: none; }
 
+  /* Admin tabs → 2×2 grid on mobile */
+  .tab-row { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; border-radius: var(--radius); }
+  .tab { padding: 10px 8px; font-size: 13px; text-align: center; }
+
   /* Collection/Catalog sidebar → left drawer */
   .collection-layout { height: auto; overflow: visible; min-height: calc(100vh - var(--nav-h)); }
   .collection-sidebar {

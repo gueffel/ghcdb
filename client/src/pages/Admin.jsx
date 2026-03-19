@@ -525,7 +525,7 @@ export default function Admin() {
           Bug Reports{openCount > 0 && <span className="bug-tab-badge">{openCount}</span>}
         </button>
         <button className={`tab ${activeTab === 'announcements' ? 'active' : ''}`} onClick={() => setActiveTab('announcements')}>
-          Announcements{currentAnn && <span className="bug-tab-badge" style={{ background: 'var(--accent)' }}>1</span>}
+          Announcements
         </button>
       </div>
 
