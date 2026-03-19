@@ -137,6 +137,7 @@ a:not([class]):hover {
   color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.05em;
   transition: color 0.15s, background 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
 }
 .nav-link:hover {
   color: var(--text);
@@ -787,7 +788,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   }
   .nav-mobile-menu.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
   .nav-mobile-menu .nav-link {
-    padding: 14px 20px; font-size: 14px; border-radius: 0; display: block;
+    padding: 14px 20px; font-size: 14px; border-radius: 0; display: flex; align-items: center; gap: 10px;
     border-bottom: 1px solid var(--border);
   }
   .nav-mobile-menu .nav-link.active { background: var(--bg3); color: var(--text); }
