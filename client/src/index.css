@@ -1034,6 +1034,7 @@ tr.row-clickable:active { background: var(--bg4); }
 
 /* ── How It Works page ─────────────────────────────────────────────────── */
 .hiw-page { min-height: 100vh; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+.hiw-page--logged-in { min-height: unset; padding-top: 32px; }
 
 .hiw-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 40px; border-bottom: 1px solid rgba(99,102,241,0.15); background: rgba(15,18,30,0.95); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 50; }
 .hiw-logo-link { display: flex; text-decoration: none; }

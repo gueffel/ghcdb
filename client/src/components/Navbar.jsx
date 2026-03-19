@@ -23,7 +23,7 @@ export default function Navbar() {
           <NavLink to="/search" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Search</NavLink>
           <NavLink to="/add" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>+ Add Card</NavLink>
           <NavLink to="/import" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Import CSV</NavLink>
-          <NavLink to="/help" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Help</NavLink>
+          <NavLink to="/how-it-works" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>How It Works</NavLink>
           {user?.is_admin ? <NavLink to="/admin" className={({ isActive }) => isActive ? 'nav-link active nav-link-admin' : 'nav-link nav-link-admin'}>⚙ Admin</NavLink> : null}
         </div>
         <div className="nav-user">
@@ -50,7 +50,7 @@ export default function Navbar() {
         <NavLink to="/search" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Search</NavLink>
         <NavLink to="/add" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>+ Add Card</NavLink>
         <NavLink to="/import" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Import CSV</NavLink>
-        <NavLink to="/help" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>Help</NavLink>
+        <NavLink to="/how-it-works" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={close}>How It Works</NavLink>
         {user?.is_admin && <NavLink to="/admin" className={({ isActive }) => isActive ? 'nav-link active nav-link-admin' : 'nav-link nav-link-admin'} onClick={close}>⚙ Admin</NavLink>}
         <div className="nav-mobile-footer">
           <NavLink to="/settings" className={({ isActive }) => `nav-username ${isActive ? 'active' : ''}`} onClick={close}>
