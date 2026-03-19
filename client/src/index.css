@@ -221,7 +221,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .login-logo { height: 72px; width: auto; margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto; }
 .login-title { font-size: 24px; font-weight: 700; color: var(--text); }
 .login-subtitle { color: var(--text-muted); margin-top: 4px; margin-bottom: 10px; }
-.login-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 20px; text-align: left; }
+.login-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 8px; text-align: left; }
 .login-form { text-align: left; display: flex; flex-direction: column; gap: 16px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .field-optional { font-weight: 400; text-transform: none; letter-spacing: 0; opacity: 0.6; }
@@ -1065,7 +1065,7 @@ tr.row-clickable:active { background: var(--bg4); }
 .hiw-footer-link:hover { color: var(--text); }
 
 /* Login page "How it works" link */
-.hiw-login-link { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; padding: 9px 0; margin-bottom: 4px; opacity: 0.85; transition: opacity 0.15s; }
+.hiw-login-link { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; padding: 0 0 9px; margin-bottom: 4px; opacity: 0.85; transition: opacity 0.15s; }
 .hiw-login-link:hover { opacity: 1; }
 
 @media (max-width: 700px) {
