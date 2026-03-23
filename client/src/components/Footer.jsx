@@ -5,7 +5,7 @@ import logo from '../assets/logo_light.svg';
 export default function Footer() {
   return (
     <footer className="app-footer">
-      <span className="footer-copy">© {new Date().getFullYear()} GHCdb · Beta 0.1 ({__COMMIT_HASH__})</span>
+      <span className="footer-copy">© {new Date().getFullYear()} GHCdb · Beta 0.2 ({__COMMIT_HASH__})</span>
       <div className="footer-logo-wrap">
         <img src={logo} alt="GHCdb" className="footer-logo" />
       </div>
