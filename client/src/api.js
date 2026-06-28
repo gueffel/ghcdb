@@ -290,21 +290,6 @@ export const api = {
     return data;
   },
 
-  // Scrape checklist — still calls the separate Edge Function
-  // Set VITE_SCRAPER_URL in .env to point to your deployed function
-  scrapeChecklist: async (url) => {
-    const scraperUrl = import.meta.env.VITE_SCRAPER_URL;
-    if (!scraperUrl) throw new Error('Scraper not configured (VITE_SCRAPER_URL missing)');
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`${scraperUrl}/scrape`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ url }),
-    });
-    if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Scrape failed'); }
-    return res.json();
-  },
-
   // ── Announcements ──────────────────────────────────────────
 
   getAnnouncement: async () => {
