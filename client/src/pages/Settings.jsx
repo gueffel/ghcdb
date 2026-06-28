@@ -55,6 +55,7 @@ function BugItem({ bug, onExpand, expanded, detail, loadingDetail }) {
 
 export default function Settings() {
   const { user, profile, updateProfile } = useAuth();
+  const isOAuthUser = user?.app_metadata?.provider && user.app_metadata.provider !== 'email';
 
   const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '' });
   const [profileStatus, setProfileStatus] = useState(null);
@@ -156,27 +157,29 @@ export default function Settings() {
           </form>
         </div>
 
-        <div className="settings-card">
-          <h2 className="settings-section-title">Change Password</h2>
-          <form onSubmit={savePassword} className="settings-form">
-            <div className="field">
-              <label>Current Password</label>
-              <input type="password" value={passwords.current_password} onChange={e => setPasswords(p => ({ ...p, current_password: e.target.value }))} autoComplete="current-password" required />
-            </div>
-            <div className="field">
-              <label>New Password</label>
-              <input type="password" value={passwords.new_password} onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))} autoComplete="new-password" required minLength={6} />
-            </div>
-            <div className="field">
-              <label>Confirm New Password</label>
-              <input type="password" value={passwords.confirm_password} onChange={e => setPasswords(p => ({ ...p, confirm_password: e.target.value }))} autoComplete="new-password" required />
-            </div>
-            {passwordStatus && <div className={`alert ${passwordStatus.type}`}>{passwordStatus.msg}</div>}
-            <button type="submit" className="btn-primary" disabled={passwordLoading}>
-              {passwordLoading ? 'Saving…' : 'Change Password'}
-            </button>
-          </form>
-        </div>
+        {!isOAuthUser && (
+          <div className="settings-card">
+            <h2 className="settings-section-title">Change Password</h2>
+            <form onSubmit={savePassword} className="settings-form">
+              <div className="field">
+                <label>Current Password</label>
+                <input type="password" value={passwords.current_password} onChange={e => setPasswords(p => ({ ...p, current_password: e.target.value }))} autoComplete="current-password" required />
+              </div>
+              <div className="field">
+                <label>New Password</label>
+                <input type="password" value={passwords.new_password} onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))} autoComplete="new-password" required minLength={6} />
+              </div>
+              <div className="field">
+                <label>Confirm New Password</label>
+                <input type="password" value={passwords.confirm_password} onChange={e => setPasswords(p => ({ ...p, confirm_password: e.target.value }))} autoComplete="new-password" required />
+              </div>
+              {passwordStatus && <div className={`alert ${passwordStatus.type}`}>{passwordStatus.msg}</div>}
+              <button type="submit" className="btn-primary" disabled={passwordLoading}>
+                {passwordLoading ? 'Saving…' : 'Change Password'}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
 
       <div style={{ marginTop: 32 }}>

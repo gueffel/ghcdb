@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { supabase } from './lib/supabase.js';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
+import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Overview from './pages/Overview.jsx';
 import Collection from './pages/Collection.jsx';
@@ -92,6 +93,7 @@ export default function App() {
         {user && <Navbar />}
         <main className={user ? 'with-nav' : ''}>
           <Routes>
+            <Route path="/" element={user ? <Navigate to="/overview" replace /> : <Landing />} />
             <Route path="/login" element={user ? <Navigate to="/overview" replace /> : <Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/overview" element={<ProtectedRoute><Overview /></ProtectedRoute>} />
@@ -104,7 +106,7 @@ export default function App() {
             <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
             <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
             <Route path="/report-bug" element={<ProtectedRoute><BugReport /></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to={user ? '/overview' : '/login'} replace />} />
+            <Route path="*" element={<Navigate to={user ? '/overview' : '/'} replace />} />
           </Routes>
         </main>
         {user && <Footer />}
