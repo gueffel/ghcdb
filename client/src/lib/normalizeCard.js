@@ -1,26 +1,22 @@
 export function normalizeCard(raw) {
   const get = (...keys) => {
-    for (const k of keys) {
-      for (const rk of Object.keys(raw)) {
+    for (const k of keys)
+      for (const rk of Object.keys(raw))
         if (rk.trim().toLowerCase() === k.toLowerCase()) return raw[rk];
-      }
-    }
     return null;
   };
 
   const toBool = (v, keywords = []) => {
-    if (v === null || v === undefined || v === '') return 0;
-    if (typeof v === 'number') return v ? 1 : 0;
+    if (v === null || v === undefined || v === '') return false;
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v !== 0;
     const s = String(v).trim().toLowerCase();
-    if (['true', 'yes', 'y', '1', 'x'].includes(s)) return 1;
-    if (keywords.some(k => s.includes(k.toLowerCase()))) return 1;
-    return 0;
+    if (['true', 'yes', 'y', '1', 'x'].includes(s)) return true;
+    if (keywords.some(k => s.includes(k.toLowerCase()))) return true;
+    return false;
   };
 
-  const toInt = (v) => {
-    const n = parseInt(v, 10);
-    return isNaN(n) ? null : n;
-  };
+  const toInt = (v) => { const n = parseInt(v, 10); return isNaN(n) ? null : n; };
 
   return {
     card_number: get('card #', 'card#', 'card number', 'cardnumber', 'card_number', 'card') || null,

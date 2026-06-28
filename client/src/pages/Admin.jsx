@@ -244,17 +244,7 @@ export default function Admin() {
   const [annError, setAnnError] = useState('');
   const [annConfirmDelete, setAnnConfirmDelete] = useState(false);
 
-  // Web import state
-  const [importMode, setImportMode] = useState('csv'); // 'csv' | 'web'
-  const [webUrl, setWebUrl] = useState('');
-  const [webFetching, setWebFetching] = useState(false);
-  const [webProgress, setWebProgress] = useState(0);
-  const [webError, setWebError] = useState('');
-  const [webYear, setWebYear] = useState('');
-  const [webProduct, setWebProduct] = useState('');
-
   const fileRef = useRef();
-  const webProgressRef = useRef(null);
 
   const loadSets = () => api.getCatalogSets().then(setSets);
 
@@ -290,24 +280,6 @@ export default function Admin() {
     if (activeTab === 'announcements' && currentAnn === undefined) loadAnnouncement();
   }, [activeTab]);
 
-  const fetchFromWeb = async () => {
-    setWebError('');
-    setWebFetching(true);
-    setError('');
-    try {
-      const data = await api.scrapeChecklist(webUrl);
-      setRows(data.cards);
-      setHeaders(data.cards.length ? Object.keys(data.cards[0]) : []);
-      setWebYear(data.year || '');
-      setWebProduct(data.product || '');
-      setStep('preview');
-    } catch (err) {
-      setWebError(err.message);
-    } finally {
-      setWebFetching(false);
-    }
-  };
-
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -331,9 +303,7 @@ export default function Admin() {
     const BATCH = 50;
     let imported = 0;
     // For web imports, inject year/product into each row since the table doesn't have those columns
-    const effectiveRows = importMode === 'web'
-      ? rows.map(r => ({ ...r, year: webYear, product: webProduct }))
-      : rows;
+    const effectiveRows = rows;
     try {
       for (let i = 0; i < effectiveRows.length; i += BATCH) {
         const isFirst = i === 0;
@@ -355,10 +325,6 @@ export default function Admin() {
     setHeaders([]);
     setImportCount(0);
     setError('');
-    setWebUrl('');
-    setWebError('');
-    setWebYear('');
-    setWebProduct('');
     if (fileRef.current) fileRef.current.value = '';
   };
 
@@ -637,45 +603,16 @@ export default function Admin() {
       {activeTab === 'catalog' && step === 'list' && (
         <>
           <div className="admin-import-bar">
-            <div className="import-mode-toggle">
-              <button
-                className={`tab ${importMode === 'csv' ? 'active' : ''}`}
-                onClick={() => { setImportMode('csv'); setWebError(''); setError(''); }}
-              >CSV File</button>
-              <button
-                className={`tab ${importMode === 'web' ? 'active' : ''}`}
-                onClick={() => { setImportMode('web'); setError(''); }}
-              >From Web</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <label className="btn-primary" style={{ cursor: 'pointer' }}>
+                Import Set from CSV
+                <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} hidden />
+              </label>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                To scrape a UD checklist: <code style={{ background: 'var(--bg3)', padding: '2px 6px', borderRadius: 4 }}>node scrape.mjs &lt;url&gt;</code>
+              </span>
+              {error && <span className="inline-error">{error}</span>}
             </div>
-
-            {importMode === 'csv' ? (
-              <>
-                <label className="btn-primary" style={{ cursor: 'pointer' }}>
-                  Import Set from CSV
-                  <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleFile} hidden />
-                </label>
-                {error && <span className="inline-error">{error}</span>}
-              </>
-            ) : (
-              <div className="web-import-row">
-                <input
-                  type="url"
-                  className="web-import-input"
-                  value={webUrl}
-                  onChange={e => setWebUrl(e.target.value)}
-                  placeholder="https://upperdeck.com/checklist/…"
-                  onKeyDown={e => e.key === 'Enter' && webUrl && !webFetching && fetchFromWeb()}
-                />
-                <button
-                  className="btn-primary"
-                  onClick={fetchFromWeb}
-                  disabled={webFetching || !webUrl.trim()}
-                >
-                  {webFetching ? 'Fetching…' : 'Fetch Checklist'}
-                </button>
-                {webError && <span className="inline-error">{webError}</span>}
-              </div>
-            )}
           </div>
 
           {sets.length === 0 ? (
@@ -823,27 +760,6 @@ export default function Admin() {
             <strong>{rows.length.toLocaleString()} rows</strong> · <strong>{headers.length} columns</strong>
           </div>
 
-          {importMode === 'web' && (
-            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-              <div className="field" style={{ flex: '0 0 140px' }}>
-                <label>Year</label>
-                <input
-                  value={webYear}
-                  onChange={e => setWebYear(e.target.value)}
-                  placeholder="e.g. 2025-26"
-                />
-              </div>
-              <div className="field" style={{ flex: '1 1 240px' }}>
-                <label>Product</label>
-                <input
-                  value={webProduct}
-                  onChange={e => setWebProduct(e.target.value)}
-                  placeholder="e.g. SP Game Used Hockey"
-                />
-              </div>
-            </div>
-          )}
-
           <div className="import-options">
             <label className="checkbox-label">
               <input type="checkbox" checked={replaceExisting} onChange={e => setReplaceExisting(e.target.checked)} />
@@ -869,8 +785,6 @@ export default function Admin() {
             <button
               className="btn-primary"
               onClick={doImport}
-              disabled={importMode === 'web' && (!webYear.trim() || !webProduct.trim())}
-              title={importMode === 'web' && (!webYear.trim() || !webProduct.trim()) ? 'Year and Product are required' : undefined}
             >Import {rows.length.toLocaleString()} Cards to Catalog</button>
             <button className="btn-ghost" onClick={reset}>Cancel</button>
           </div>

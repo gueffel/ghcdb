@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
+import { supabase } from '../lib/supabase.js';
 
 function BugStatusBadge({ status }) {
   return <span className={`bug-status ${status}`}>{status}</span>;
@@ -53,32 +54,28 @@ function BugItem({ bug, onExpand, expanded, detail, loadingDetail }) {
 }
 
 export default function Settings() {
-  const { user, updateUser } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
 
-  const [profile, setProfile] = useState({ first_name: '', last_name: '', email: '' });
-  const [profileStatus, setProfileStatus] = useState(null); // { type: 'success'|'error', msg }
+  const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '' });
+  const [profileStatus, setProfileStatus] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '', confirm_password: '' });
   const [passwordStatus, setPasswordStatus] = useState(null);
-
-  const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // Bug reports
   const [bugs, setBugs] = useState([]);
   const [bugsLoading, setBugsLoading] = useState(true);
   const [expandedBugId, setExpandedBugId] = useState(null);
-  const [bugDetails, setBugDetails] = useState({}); // id → full detail object
+  const [bugDetails, setBugDetails] = useState({});
   const [loadingDetailId, setLoadingDetailId] = useState(null);
 
   useEffect(() => {
-    api.me().then(u => setProfile({
-      first_name: u.first_name || '',
-      last_name: u.last_name || '',
-      email: u.email || '',
-    }));
+    if (profile) {
+      setProfileForm({ first_name: profile.first_name || '', last_name: profile.last_name || '' });
+    }
     api.getMyBugs().then(setBugs).finally(() => setBugsLoading(false));
-  }, []);
+  }, [profile]);
 
   const toggleBug = async (id) => {
     if (expandedBugId === id) { setExpandedBugId(null); return; }
@@ -98,14 +95,8 @@ export default function Settings() {
     setProfileStatus(null);
     setProfileLoading(true);
     try {
-      const res = await api.updateProfile({
-        first_name: profile.first_name || null,
-        last_name: profile.last_name || null,
-        email: profile.email || null,
-      });
-      // Update token so greeting refreshes on next load
-      if (res.token) localStorage.setItem('token', res.token);
-      updateUser({ first_name: res.first_name || null });
+      await api.updateProfile({ first_name: profileForm.first_name || null, last_name: profileForm.last_name || null });
+      updateProfile({ first_name: profileForm.first_name || null, last_name: profileForm.last_name || null });
       setProfileStatus({ type: 'success', msg: 'Profile updated.' });
     } catch (err) {
       setProfileStatus({ type: 'error', msg: err.message });
@@ -124,9 +115,6 @@ export default function Settings() {
     setPasswordLoading(true);
     try {
       await api.updateProfile({
-        first_name: profile.first_name || null,
-        last_name: profile.last_name || null,
-        email: profile.email || null,
         current_password: passwords.current_password,
         new_password: passwords.new_password,
       });
@@ -144,90 +132,46 @@ export default function Settings() {
       <h1 className="page-title">Account Settings</h1>
 
       <div className="settings-grid">
-        {/* Profile section */}
         <div className="settings-card">
           <h2 className="settings-section-title">Profile</h2>
-          <p className="settings-section-sub">Logged in as <strong>{user?.username}</strong></p>
+          <p className="settings-section-sub">
+            Logged in as <strong>{profile?.username}</strong>
+            {user?.email && <> · {user.email}</>}
+          </p>
           <form onSubmit={saveProfile} className="settings-form">
             <div className="field-row">
               <div className="field">
                 <label>First Name <span className="field-optional">(optional)</span></label>
-                <input
-                  value={profile.first_name}
-                  onChange={e => setProfile(p => ({ ...p, first_name: e.target.value }))}
-                  autoComplete="given-name"
-                  placeholder="First name"
-                />
+                <input value={profileForm.first_name} onChange={e => setProfileForm(p => ({ ...p, first_name: e.target.value }))} autoComplete="given-name" placeholder="First name" />
               </div>
               <div className="field">
                 <label>Last Name <span className="field-optional">(optional)</span></label>
-                <input
-                  value={profile.last_name}
-                  onChange={e => setProfile(p => ({ ...p, last_name: e.target.value }))}
-                  autoComplete="family-name"
-                  placeholder="Last name"
-                />
+                <input value={profileForm.last_name} onChange={e => setProfileForm(p => ({ ...p, last_name: e.target.value }))} autoComplete="family-name" placeholder="Last name" />
               </div>
             </div>
-            <div className="field">
-              <label>Email</label>
-              <input
-                type="email"
-                value={profile.email}
-                onChange={e => setProfile(p => ({ ...p, email: e.target.value }))}
-                autoComplete="email"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
-            {profileStatus && (
-              <div className={`alert ${profileStatus.type}`}>{profileStatus.msg}</div>
-            )}
+            {profileStatus && <div className={`alert ${profileStatus.type}`}>{profileStatus.msg}</div>}
             <button type="submit" className="btn-primary" disabled={profileLoading}>
               {profileLoading ? 'Saving…' : 'Save Profile'}
             </button>
           </form>
         </div>
 
-        {/* Password section */}
         <div className="settings-card">
           <h2 className="settings-section-title">Change Password</h2>
-          <p className="settings-section-sub">Leave blank if you don't want to change your password.</p>
           <form onSubmit={savePassword} className="settings-form">
             <div className="field">
               <label>Current Password</label>
-              <input
-                type="password"
-                value={passwords.current_password}
-                onChange={e => setPasswords(p => ({ ...p, current_password: e.target.value }))}
-                autoComplete="current-password"
-                required
-              />
+              <input type="password" value={passwords.current_password} onChange={e => setPasswords(p => ({ ...p, current_password: e.target.value }))} autoComplete="current-password" required />
             </div>
             <div className="field">
               <label>New Password</label>
-              <input
-                type="password"
-                value={passwords.new_password}
-                onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))}
-                autoComplete="new-password"
-                required
-                minLength={6}
-              />
+              <input type="password" value={passwords.new_password} onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))} autoComplete="new-password" required minLength={6} />
             </div>
             <div className="field">
               <label>Confirm New Password</label>
-              <input
-                type="password"
-                value={passwords.confirm_password}
-                onChange={e => setPasswords(p => ({ ...p, confirm_password: e.target.value }))}
-                autoComplete="new-password"
-                required
-              />
+              <input type="password" value={passwords.confirm_password} onChange={e => setPasswords(p => ({ ...p, confirm_password: e.target.value }))} autoComplete="new-password" required />
             </div>
-            {passwordStatus && (
-              <div className={`alert ${passwordStatus.type}`}>{passwordStatus.msg}</div>
-            )}
+            {passwordStatus && <div className={`alert ${passwordStatus.type}`}>{passwordStatus.msg}</div>}
             <button type="submit" className="btn-primary" disabled={passwordLoading}>
               {passwordLoading ? 'Saving…' : 'Change Password'}
             </button>
@@ -235,32 +179,19 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* My Bug Reports */}
       <div style={{ marginTop: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>My Bug Reports</h2>
-          <Link to="/report-bug" className="btn-primary" style={{ textDecoration: 'none', padding: '7px 16px', fontSize: 13 }}>
-            + New Report
-          </Link>
+          <Link to="/report-bug" className="btn-primary" style={{ textDecoration: 'none', padding: '7px 16px', fontSize: 13 }}>+ New Report</Link>
         </div>
         {bugsLoading ? (
           <div className="page-loading">Loading…</div>
         ) : bugs.length === 0 ? (
-          <div className="bug-empty">
-            No bug reports yet.{' '}
-            <Link to="/report-bug" style={{ color: 'var(--accent)' }}>Submit one</Link> if you find something broken.
-          </div>
+          <div className="bug-empty">No bug reports yet. <Link to="/report-bug" style={{ color: 'var(--accent)' }}>Submit one</Link> if you find something broken.</div>
         ) : (
           <div className="bug-list">
             {bugs.map(bug => (
-              <BugItem
-                key={bug.id}
-                bug={bug}
-                expanded={expandedBugId === bug.id}
-                detail={bugDetails[bug.id]}
-                loadingDetail={loadingDetailId === bug.id}
-                onExpand={toggleBug}
-              />
+              <BugItem key={bug.id} bug={bug} expanded={expandedBugId === bug.id} detail={bugDetails[bug.id]} loadingDetail={loadingDetailId === bug.id} onExpand={toggleBug} />
             ))}
           </div>
         )}

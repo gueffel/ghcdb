@@ -1,127 +1,391 @@
-const BASE = '/api';
+import { supabase } from './lib/supabase.js';
+import { normalizeCard } from './lib/normalizeCard.js';
 
-function getToken() {
-  return localStorage.getItem('token');
-}
-
-async function request(method, path, body) {
-  const headers = { 'Content-Type': 'application/json' };
-  const token = getToken();
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (res.status === 401) {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
-    return;
-  }
-
-  const text = await res.text();
-  let data;
-  try { data = text ? JSON.parse(text) : {}; } catch { throw new Error(`Server error (status ${res.status})`); }
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
-}
+// ── Auth ──────────────────────────────────────────────────────
 
 export const api = {
-  // Auth
-  login: (username, password) => request('POST', '/auth/login', { username, password }),
-  register: (username, password, first_name, last_name, email) => request('POST', '/auth/register', { username, password, first_name, last_name, email }),
-  me: () => request('GET', '/auth/me'),
-  updateProfile: (data) => request('PUT', '/auth/profile', data),
-  forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
-  resetPassword: (token, password) => request('POST', '/auth/reset-password', { token, password }),
+  register: (email, password, username, first_name, last_name) =>
+    supabase.auth.signUp({
+      email, password,
+      options: { data: { username, first_name: first_name || null, last_name: last_name || null } },
+    }),
 
-  // Cards
-  getCards: (params = {}) => {
-    const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v !== undefined));
-    return request('GET', `/cards?${q}`);
-  },
-  getProducts: () => request('GET', '/cards/products'),
-  getSetNames: (year, product) => {
-    const q = new URLSearchParams();
-    if (year) q.set('year', year);
-    if (product) q.set('product', product);
-    return request('GET', `/cards/set-names?${q}`);
-  },
-  getCard: (id) => request('GET', `/cards/${id}`),
-  addCard: (card) => request('POST', '/cards', card),
-  updateCard: (id, card) => request('PUT', `/cards/${id}`, card),
-  toggleOwned: (id, owned, serial) => request('PATCH', `/cards/${id}/owned`, serial !== undefined ? { owned, serial } : { owned }),
-  toggleWishlist: (id, wishlisted) => request('PATCH', `/cards/${id}/wishlist`, { wishlisted }),
-  deleteCard: (id) => request('DELETE', `/cards/${id}`),
-  importCards: (cards) => request('POST', '/cards/import', { cards }),
-  deleteProduct: (year, product) => request('DELETE', '/cards/product/all', { year, product }),
+  login: (email, password) =>
+    supabase.auth.signInWithPassword({ email, password }),
 
-  // Stats
-  getStats: () => request('GET', '/stats'),
+  forgotPassword: (email) =>
+    supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    }),
 
-  // Catalog
-  getCatalogSets: () => request('GET', '/catalog'),
-  getCatalogCards: (year, product) => {
-    const q = new URLSearchParams({ year, product });
-    return request('GET', `/catalog/cards?${q}`);
+  resetPassword: (password) =>
+    supabase.auth.updateUser({ password }),
+
+  // ── Profile ────────────────────────────────────────────────
+
+  getProfile: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (error) throw error;
+    return data;
   },
-  importToCatalog: (cards, replaceExisting) => request('POST', '/catalog/import', { cards, replaceExisting }),
-  deleteCatalogSet: (year, product) => request('DELETE', '/catalog/set', { year, product }),
-  updateCatalogCard: (id, data) => request('PUT', `/catalog/card/${id}`, data),
-  addToCollection: async (year, product, mode = 'add', onProgress) => {
-    const headers = { 'Content-Type': 'application/json' };
-    const token = getToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`${BASE}/catalog/add-to-collection`, {
-      method: 'POST', headers, body: JSON.stringify({ year, product, mode }),
-    });
-    if (res.status === 401) { localStorage.removeItem('token'); window.location.href = '/login'; return; }
-    if (!res.ok) {
-      const data = JSON.parse(await res.text());
-      throw new Error(data.error || 'Request failed');
+
+  updateProfile: async ({ first_name, last_name, current_password, new_password }) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    if (new_password) {
+      const { error: reAuthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: current_password,
+      });
+      if (reAuthError) throw new Error('Current password is incorrect');
+      const { error: pwError } = await supabase.auth.updateUser({ password: new_password });
+      if (pwError) throw pwError;
     }
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n'); buf = lines.pop();
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        const data = JSON.parse(line);
-        if (data.error) throw new Error(data.error);
-        if (data.added !== undefined) return data;
-        if (data.progress !== undefined && onProgress) onProgress(data);
+
+    const { error } = await supabase.from('profiles')
+      .update({ first_name: first_name || null, last_name: last_name || null })
+      .eq('id', user.id);
+    if (error) throw error;
+
+    return { ok: true };
+  },
+
+  // ── Cards ──────────────────────────────────────────────────
+
+  getCards: async (params = {}) => {
+    const { year, product, owned, wishlisted, rookie, auto, search, page = 1, limit = 200 } = params;
+    const parsedPage = Math.max(1, parseInt(page) || 1);
+    const parsedLimit = Math.min(10000, Math.max(1, parseInt(limit) || 200));
+    const from = (parsedPage - 1) * parsedLimit;
+    const to = from + parsedLimit - 1;
+
+    let q = supabase.from('cards').select('*', { count: 'exact' }).range(from, to);
+
+    if (year) q = q.eq('year', year);
+    if (product) q = q.eq('product', product);
+    const toBoolFilter = v => v === true || v === 1 || v === 'true' || v === '1';
+    if (owned !== undefined && owned !== '') q = q.eq('owned', toBoolFilter(owned));
+    if (wishlisted !== undefined && wishlisted !== '') q = q.eq('wishlisted', toBoolFilter(wishlisted));
+    if (rookie !== undefined && rookie !== '') q = q.eq('rookie', toBoolFilter(rookie));
+    if (auto !== undefined && auto !== '') q = q.eq('auto', toBoolFilter(auto));
+    if (search) {
+      const tokens = search.trim().split(/\s+/).filter(Boolean).slice(0, 3);
+      const cols = ['description', 'team_city', 'team_name', 'card_number', 'set_name', 'product', 'year'];
+      for (const token of tokens) {
+        q = q.or(cols.map(c => `${c}.ilike.%${token}%`).join(','));
       }
     }
-    if (buf.trim()) {
-      const data = JSON.parse(buf);
-      if (data.error) throw new Error(data.error);
-      if (data.added !== undefined) return data;
-    }
+
+    q = q.order('year', { ascending: false }).order('product').order('card_number');
+
+    const { data: cards, count, error } = await q;
+    if (error) throw error;
+    return { cards, total: count, page: parsedPage, limit: parsedLimit };
   },
 
-  // Admin
-  getAdminUsers: () => request('GET', '/admin/users'),
-  toggleAdminUser: (id) => request('PATCH', `/admin/users/${id}/admin`),
-  deleteAdminUser: (id) => request('DELETE', `/admin/users/${id}`),
-  getAdminBugs: () => request('GET', '/admin/bugs'),
-  scrapeChecklist: (url) => request('POST', '/admin/scrape-checklist', { url }),
+  getProducts: async () => {
+    const { data, error } = await supabase
+      .from('cards')
+      .select('year, product, owned')
+      .order('year', { ascending: false })
+      .order('product');
+    if (error) throw error;
 
-  // Announcements
-  getAnnouncement: () => request('GET', '/announcements'),
-  setAnnouncement: (title, message) => request('PUT', '/announcements', { title, message }),
-  deleteAnnouncement: () => request('DELETE', '/announcements'),
+    const map = new Map();
+    for (const row of data) {
+      const key = `${row.year}||${row.product}`;
+      if (!map.has(key)) map.set(key, { year: row.year, product: row.product, total: 0, owned: 0 });
+      const entry = map.get(key);
+      entry.total++;
+      if (row.owned) entry.owned++;
+    }
+    return [...map.values()];
+  },
 
-  // Bugs
-  submitBug: (title, description) => request('POST', '/bugs', { title, description }),
-  getMyBugs: () => request('GET', '/bugs/mine'),
-  getBug: (id) => request('GET', `/bugs/${id}`),
-  replyToBug: (id, message) => request('POST', `/bugs/${id}/reply`, { message }),
-  setBugStatus: (id, status) => request('PATCH', `/bugs/${id}/status`, { status }),
-  deleteBug: (id) => request('DELETE', `/bugs/${id}`),
+  getSetNames: async (year, product) => {
+    let q = supabase.from('cards').select('set_name').not('set_name', 'is', null).neq('set_name', '').order('set_name').limit(500);
+    if (year) q = q.eq('year', year);
+    if (product) q = q.eq('product', product);
+    const { data, error } = await q;
+    if (error) throw error;
+    return [...new Set(data.map(r => r.set_name))];
+  },
+
+  getCard: async (id) => {
+    const { data, error } = await supabase.from('cards').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data;
+  },
+
+  addCard: async (card) => {
+    const c = normalizeCard(card);
+
+    if (c.card_number) {
+      const { data: { user } } = await supabase.auth.getUser();
+      let q = supabase.from('cards').select('id, owned').eq('year', c.year).eq('product', c.product).eq('card_number', c.card_number);
+      q = c.set_name ? q.eq('set_name', c.set_name) : q.is('set_name', null);
+      const { data: existing } = await q.maybeSingle();
+
+      if (existing) {
+        if (!existing.owned) {
+          const { error } = await supabase.from('cards').update({ owned: true, owned_at: new Date().toISOString() }).eq('id', existing.id);
+          if (error) throw error;
+          return { id: existing.id, action: 'marked_owned' };
+        } else {
+          const { error } = await supabase.from('cards').update({ duplicates: existing.duplicates + 1 }).eq('id', existing.id);
+          if (error) throw error;
+          return { id: existing.id, action: 'duplicated' };
+        }
+      }
+    }
+
+    const { data, error } = await supabase.from('cards').insert(c).select('id').single();
+    if (error) throw error;
+    return { id: data.id, action: 'inserted', ...c };
+  },
+
+  updateCard: async (id, card) => {
+    const { error } = await supabase.from('cards').update(normalizeCard(card)).eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  },
+
+  toggleOwned: async (id, owned, serial) => {
+    const update = { owned, wishlisted: owned ? false : undefined };
+    if (owned) update.owned_at = new Date().toISOString();
+    else { update.owned_at = null; delete update.wishlisted; }
+    if (serial !== undefined) update.serial = serial !== null && serial !== '' ? Number(serial) : null;
+    const { error } = await supabase.from('cards').update(update).eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  },
+
+  toggleWishlist: async (id, wishlisted) => {
+    const { error } = await supabase.from('cards').update({ wishlisted }).eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  },
+
+  deleteCard: async (id) => {
+    const { error } = await supabase.from('cards').delete().eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  },
+
+  importCards: async (cards) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const normalized = cards.map(raw => ({ ...normalizeCard(raw), user_id: user.id }));
+    const CHUNK = 500;
+    for (let i = 0; i < normalized.length; i += CHUNK) {
+      const { error } = await supabase.from('cards').insert(normalized.slice(i, i + CHUNK));
+      if (error) throw error;
+    }
+    return { imported: cards.length };
+  },
+
+  deleteProduct: async (year, product) => {
+    const { error, count } = await supabase.from('cards').delete({ count: 'exact' }).eq('year', year).eq('product', product);
+    if (error) throw error;
+    return { deleted: count };
+  },
+
+  // ── Stats ──────────────────────────────────────────────────
+
+  getStats: async () => {
+    const { data, error } = await supabase.rpc('get_stats');
+    if (error) throw error;
+    return data;
+  },
+
+  // ── Catalog ────────────────────────────────────────────────
+
+  getCatalogSets: async () => {
+    const { data, error } = await supabase.rpc('get_catalog_sets');
+    if (error) throw error;
+    return data;
+  },
+
+  getCatalogCards: async (year, product) => {
+    const { data, error } = await supabase
+      .from('catalog_cards')
+      .select('*')
+      .eq('year', year)
+      .eq('product', product)
+      .order('card_number')
+      .limit(5000);
+    if (error) throw error;
+    return data;
+  },
+
+  importToCatalog: async (cards, replaceExisting) => {
+    const normalized = cards.map(normalizeCard);
+    const first = normalized[0];
+    if (!first?.year || !first?.product) throw new Error('Cards must have year and product columns');
+
+    if (replaceExisting) {
+      const { error } = await supabase.from('catalog_cards').delete().eq('year', first.year).eq('product', first.product);
+      if (error) throw error;
+    }
+
+    const CHUNK = 500;
+    for (let i = 0; i < normalized.length; i += CHUNK) {
+      const { error } = await supabase.from('catalog_cards').insert(normalized.slice(i, i + CHUNK));
+      if (error) throw error;
+    }
+    return { imported: cards.length, year: first.year, product: first.product };
+  },
+
+  deleteCatalogSet: async (year, product) => {
+    const { error } = await supabase.from('catalog_cards').delete().eq('year', year).eq('product', product);
+    if (error) throw error;
+    return { ok: true };
+  },
+
+  updateCatalogCard: async (id, data) => {
+    const { error } = await supabase.from('catalog_cards').update(normalizeCard(data)).eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  },
+
+  addToCollection: async (year, product, mode = 'add') => {
+    const { data, error } = await supabase.rpc('add_catalog_to_collection', {
+      p_year: year, p_product: product, p_mode: mode,
+    });
+    if (error) throw error;
+    if (data?.error === 'already_exists') {
+      const err = new Error('already_exists');
+      err.count = data.count;
+      throw err;
+    }
+    if (data?.error) throw new Error(data.error);
+    return data;
+  },
+
+  // ── Admin ──────────────────────────────────────────────────
+
+  getAdminUsers: async () => {
+    const { data, error } = await supabase.rpc('admin_get_users');
+    if (error) throw error;
+    return data;
+  },
+
+  toggleAdminUser: async (id) => {
+    const { data, error } = await supabase.rpc('admin_toggle_admin', { target_id: id });
+    if (error) throw error;
+    return data;
+  },
+
+  deleteAdminUser: async (id) => {
+    const { data, error } = await supabase.rpc('admin_delete_user', { target_id: id });
+    if (error) throw error;
+    return data;
+  },
+
+  getAdminBugs: async () => {
+    const { data, error } = await supabase.rpc('admin_get_bugs');
+    if (error) throw error;
+    return data;
+  },
+
+  // Scrape checklist — still calls the separate Edge Function
+  // Set VITE_SCRAPER_URL in .env to point to your deployed function
+  scrapeChecklist: async (url) => {
+    const scraperUrl = import.meta.env.VITE_SCRAPER_URL;
+    if (!scraperUrl) throw new Error('Scraper not configured (VITE_SCRAPER_URL missing)');
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${scraperUrl}/scrape`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Scrape failed'); }
+    return res.json();
+  },
+
+  // ── Announcements ──────────────────────────────────────────
+
+  getAnnouncement: async () => {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('*')
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  setAnnouncement: async (title, message) => {
+    await supabase.from('announcements').delete().neq('id', 0);
+    const { data, error } = await supabase.from('announcements').insert({ title: title.trim(), message: message.trim() }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  deleteAnnouncement: async () => {
+    const { error } = await supabase.from('announcements').delete().neq('id', 0);
+    if (error) throw error;
+    return { deleted: true };
+  },
+
+  // ── Bug Reports ────────────────────────────────────────────
+
+  submitBug: async (title, description) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase.from('bug_reports')
+      .insert({ user_id: user.id, title: title.trim(), description: description.trim() })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  getMyBugs: async () => {
+    const { data, error } = await supabase
+      .from('bug_reports')
+      .select('*, bug_replies(count)')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data.map(b => ({ ...b, reply_count: b.bug_replies?.[0]?.count ?? 0 }));
+  },
+
+  getBug: async (id) => {
+    const { data, error } = await supabase
+      .from('bug_reports')
+      .select('*, bug_replies(*, profiles(username))')
+      .eq('id', id)
+      .single();
+    if (error) throw error;
+    const replies = (data.bug_replies || []).map(r => ({
+      ...r, admin_username: r.profiles?.username,
+    }));
+    return { ...data, replies };
+  },
+
+  replyToBug: async (id, message) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase.from('bug_replies')
+      .insert({ bug_id: id, admin_id: user.id, message: message.trim() })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  setBugStatus: async (id, status) => {
+    const { error } = await supabase.from('bug_reports')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+    return { ok: true, status };
+  },
+
+  deleteBug: async (id) => {
+    const { error } = await supabase.from('bug_reports').delete().eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  },
 };

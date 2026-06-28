@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import { api } from '../api.js';
-import { useAuth } from '../App.jsx';
 import { useNavigate } from 'react-router-dom';
 import logoLight2 from '../assets/logo_light.svg';
 
 export default function Login() {
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'forgot'
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
+  const [registerSent, setRegisterSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const switchMode = (m) => { setMode(m); setError(''); setForgotSent(false); };
+  const switchMode = (m) => { setMode(m); setError(''); setForgotSent(false); setRegisterSent(false); };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -26,20 +24,19 @@ export default function Login() {
     setLoading(true);
     try {
       if (mode === 'forgot') {
-        await api.forgotPassword(forgotEmail);
+        await api.forgotPassword(email);
         setForgotSent(true);
+      } else if (mode === 'register') {
+        const { error: err } = await api.register(email, password, username, firstName || null, lastName || null);
+        if (err) throw err;
+        setRegisterSent(true);
       } else {
-        let data;
-        if (mode === 'login') {
-          data = await api.login(username, password);
-        } else {
-          data = await api.register(username, password, firstName || null, lastName || null, email);
-        }
-        login(data.token, data.username, data.is_admin, data.first_name || null);
+        const { error: err } = await api.login(email, password);
+        if (err) throw err;
         navigate('/overview');
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -52,7 +49,7 @@ export default function Login() {
         <p className="login-subtitle">Track your collection</p>
         <p className="login-desc">Log every card in your hockey card collection, track what you own vs. what you're still hunting for, and see stats on your progress — by team, year, and set.</p>
 
-        {mode !== 'forgot' && (
+        {mode !== 'forgot' && !registerSent && (
           <div className="tab-row">
             <button className={`tab ${mode === 'login' ? 'active' : ''}`} onClick={() => switchMode('login')}>Sign In</button>
             <button className={`tab ${mode === 'register' ? 'active' : ''}`} onClick={() => switchMode('register')}>Register</button>
@@ -69,7 +66,7 @@ export default function Login() {
                 {error && <div className="alert error">{error}</div>}
                 <div className="field">
                   <label>Email</label>
-                  <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} required autoFocus autoComplete="email" />
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus autoComplete="email" />
                 </div>
                 <button type="submit" className="btn-primary btn-full" disabled={loading}>
                   {loading ? 'Sending...' : 'Send Reset Link'}
@@ -78,30 +75,35 @@ export default function Login() {
             )}
             <button type="button" className="btn-ghost btn-full" style={{ marginTop: 10 }} onClick={() => switchMode('login')}>Back to Sign In</button>
           </div>
+        ) : registerSent ? (
+          <div className="login-form">
+            <div className="alert success">Account created! Check your email to confirm your address, then sign in.</div>
+            <button type="button" className="btn-ghost btn-full" style={{ marginTop: 10 }} onClick={() => switchMode('login')}>Back to Sign In</button>
+          </div>
         ) : (
           <form onSubmit={submit} className="login-form">
             {error && <div className="alert error">{error}</div>}
             {mode === 'register' && (
-              <div className="field-row">
-                <div className="field">
-                  <label>First Name <span className="field-optional">(optional)</span></label>
-                  <input value={firstName} onChange={e => setFirstName(e.target.value)} autoComplete="given-name" />
+              <>
+                <div className="field-row">
+                  <div className="field">
+                    <label>First Name <span className="field-optional">(optional)</span></label>
+                    <input value={firstName} onChange={e => setFirstName(e.target.value)} autoComplete="given-name" />
+                  </div>
+                  <div className="field">
+                    <label>Last Name <span className="field-optional">(optional)</span></label>
+                    <input value={lastName} onChange={e => setLastName(e.target.value)} autoComplete="family-name" />
+                  </div>
                 </div>
                 <div className="field">
-                  <label>Last Name <span className="field-optional">(optional)</span></label>
-                  <input value={lastName} onChange={e => setLastName(e.target.value)} autoComplete="family-name" />
+                  <label>Username</label>
+                  <input value={username} onChange={e => setUsername(e.target.value)} required autoComplete="username" />
                 </div>
-              </div>
-            )}
-            {mode === 'register' && (
-              <div className="field">
-                <label>Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
-              </div>
+              </>
             )}
             <div className="field">
-              <label>Username</label>
-              <input value={username} onChange={e => setUsername(e.target.value)} autoFocus required autoComplete="username" />
+              <label>Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus={mode === 'login'} autoComplete="email" />
             </div>
             <div className="field">
               <label>Password</label>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { api } from './api.js';
+import { supabase } from './lib/supabase.js';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import Login from './pages/Login.jsx';
@@ -49,29 +49,44 @@ function TitleUpdater() {
 
 export default function App() {
   const [user, setUser] = useState(undefined); // undefined = loading
+  const [profile, setProfile] = useState(null);
+
+  async function loadProfile(supabaseUser) {
+    if (!supabaseUser) { setProfile(null); return; }
+    const { data } = await supabase
+      .from('profiles')
+      .select('username, first_name, last_name, is_admin')
+      .eq('id', supabaseUser.id)
+      .single();
+    setProfile(data);
+  }
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { setUser(null); return; }
-    api.me().then(u => setUser({ username: u.username, is_admin: u.is_admin, first_name: u.first_name || null })).catch(() => { localStorage.removeItem('token'); setUser(null); });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      loadProfile(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      loadProfile(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (token, username, is_admin, first_name = null) => {
-    localStorage.setItem('token', token);
-    setUser({ username, is_admin, first_name });
-  };
-  const updateUser = (fields) => setUser(prev => ({ ...prev, ...fields }));
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-  };
+  const logout = () => supabase.auth.signOut();
+
+  const updateProfile = (fields) => setProfile(prev => ({ ...prev, ...fields }));
 
   if (user === undefined) {
     return <div className="loading-screen"><div className="spinner" /><span>Loading...</span></div>;
   }
 
+  const authValue = { user, profile, logout, updateProfile };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+    <AuthContext.Provider value={authValue}>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <TitleUpdater />
         {user && <Navbar />}

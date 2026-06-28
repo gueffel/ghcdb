@@ -51,8 +51,8 @@ function StatCard({ label, value, sub, gradient }) {
 const WISHLIST_PAGE_SIZE = 5;
 
 export default function Overview() {
-  const { user } = useAuth();
-  const greeting = useMemo(() => getGreeting(user?.first_name || user?.username || 'there'), []);
+  const { profile } = useAuth();
+  const greeting = useMemo(() => getGreeting(profile?.first_name || profile?.username || 'there'), [profile]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cardDetail, setCardDetail] = useState(null);
@@ -133,11 +133,11 @@ export default function Overview() {
       <h1 className="page-title">{greeting}</h1>
 
       <div className="stat-grid">
-        <StatCard label="Owned" value={totals.owned.toLocaleString()} gradient="linear-gradient(135deg, #22c55e, #0d9488)" />
-        <StatCard label="Rookies" value={totals.ownedRookies.toLocaleString()} gradient="linear-gradient(135deg, #f97316, #eab308)" />
-        <StatCard label="Autos" value={totals.ownedAutos.toLocaleString()} gradient="linear-gradient(135deg, #a855f7, #ec4899)" />
-        <StatCard label="Graded" value={totals.graded.toLocaleString()} gradient="linear-gradient(135deg, #eab308, #f59e0b)" />
-        <StatCard label="Duplicates" value={totals.duplicates.toLocaleString()} gradient="linear-gradient(135deg, #78716c, #ef4444)" />
+        <StatCard label="Owned" value={(totals.owned ?? 0).toLocaleString()} gradient="linear-gradient(135deg, #22c55e, #0d9488)" />
+        <StatCard label="Rookies" value={(totals.ownedRookies ?? 0).toLocaleString()} gradient="linear-gradient(135deg, #f97316, #eab308)" />
+        <StatCard label="Autos" value={(totals.ownedAutos ?? 0).toLocaleString()} gradient="linear-gradient(135deg, #a855f7, #ec4899)" />
+        <StatCard label="Graded" value={(totals.graded ?? 0).toLocaleString()} gradient="linear-gradient(135deg, #eab308, #f59e0b)" />
+        <StatCard label="Duplicates" value={(totals.duplicates ?? 0).toLocaleString()} gradient="linear-gradient(135deg, #78716c, #ef4444)" />
         {topPlayer && <StatCard label="Most Owned Player" value={topPlayer.name} sub={`${topPlayer.count} cards`} gradient="linear-gradient(135deg, #0d9488, #3b82f6)" />}
         {topSet && <StatCard label="Most Owned Product" value={topSet.name} sub={`${topSet.count} cards`} gradient="linear-gradient(135deg, #ef4444, #ec4899)" />}
       </div>
@@ -293,14 +293,14 @@ export default function Overview() {
           card={cardDetail}
           onClose={() => setCardDetail(null)}
           onToggleWishlist={(card) => {
-            const newVal = card.wishlisted ? 0 : 1;
+            const newVal = !card.wishlisted;
             setCardDetail(prev => prev ? { ...prev, wishlisted: newVal } : null);
             setWishlistCards(prev => newVal ? prev : prev.filter(c => c.id !== card.id));
             api.toggleWishlist(card.id, newVal).catch(() => {});
           }}
           onToggleOwned={(card) => {
             const newOwned = !card.owned;
-            setCardDetail(prev => prev ? { ...prev, owned: newOwned, ...(newOwned ? { wishlisted: 0 } : {}) } : null);
+            setCardDetail(prev => prev ? { ...prev, owned: newOwned, ...(newOwned ? { wishlisted: false } : {}) } : null);
             if (newOwned) setWishlistCards(prev => prev.filter(c => c.id !== card.id));
             api.toggleOwned(card.id, newOwned, newOwned ? undefined : null).catch(() => {});
           }}

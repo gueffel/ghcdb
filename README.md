@@ -8,61 +8,45 @@ A web app for tracking your hockey card collection. Import your cards from a spr
 
 **CSV import & export** — The main way to get your cards in is by importing a CSV file — typically an export from a spreadsheet you already track your collection in. The importer accepts flexible column names, handles boolean fields like Rookie and Auto, and can either add to or fully replace an existing set. You can also export any product view back to CSV at any time, respecting whatever filter is active.
 
-**Catalog** — Admins can import a master checklist for a set into a shared catalog via CSV or directly from an Upper Deck checklist URL (the page is scraped with a headless browser since UD renders its tables via JavaScript). Regular users can then add any catalog set to their own collection in one click, pre-populated with all the cards at zero owned — ready to start checking off.
+**Catalog** — Admins can import a master checklist for a set into a shared catalog via CSV or by running the local scraper tool against an Upper Deck checklist URL. Regular users can then add any catalog set to their own collection in one click, pre-populated with all the cards at zero owned — ready to start checking off.
 
 **Overview & stats** — A dashboard page shows your overall collection progress: total cards owned vs. total in your collection, a breakdown by team (pie chart), recently added cards, and per-set completion stats. Useful for seeing which sets you're close to finishing.
 
 **Search** — A global search across your entire collection. Search by player name, card number, team, set name, or product. Results show key card details at a glance and let you mark cards as owned directly from the results table.
 
-**Multi-user with accounts** — Each user has their own collection. Accounts require a username, password (minimum 8 characters), and email. Password reset via email is supported. Designated admin usernames (set via environment variable) get access to catalog management and a user admin panel.
+**Multi-user with accounts** — Each user has their own collection. Accounts require a username, email, and password. Password reset via email is supported. Admin users get access to catalog management and a user admin panel.
 
 ---
 
 ## Stack
-- **Backend**: Node.js + Express + PostgreSQL (`postgres` npm package)
-- **Frontend**: React + Vite + Chart.js
-- **Auth**: JWT + bcrypt
-- **Email**: Resend (signup notifications, welcome emails, password reset)
-- **Web scraping**: Puppeteer (dev) / `puppeteer-core` + `@sparticuz/chromium` (production) for UD checklist import
+
+- **Frontend**: React 18 + Vite + Chart.js
+- **Backend & Database**: [Supabase](https://supabase.com) (PostgreSQL + Row Level Security + Auth)
+- **Styling**: Custom CSS + Tailwind CSS 3
+- **Deployment**: Static SPA (build `client/`, deploy `dist/` anywhere)
+- **Web scraping**: Puppeteer (local CLI tool — see below)
 
 ---
 
 ## Quick Start (Development)
 
-### 1. Set up the database
+### 1. Set up Supabase
 
-You need a PostgreSQL database. Options:
-- **Cloud (free):** [neon.tech](https://neon.tech) — sign up, create a project, copy the connection string
-- **Local:** Install PostgreSQL, then run `psql -U postgres -c "CREATE DATABASE hockey_cards;"`
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to the SQL Editor and run the full schema from `schema.sql`
+3. Go to **Settings → API** and copy your **Project URL** and **anon (public)** key
 
 ### 2. Configure environment variables
 
-Copy the example file and fill it in:
-```bash
-cp server/.env.example server/.env
+Create `client/.env`:
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Edit `server/.env`:
-```
-DATABASE_URL=postgresql://user:password@host/dbname
-JWT_SECRET=your-long-random-secret-here
-```
+### 3. Start the dev server
 
-See `server/.env.example` for all available options.
-
-### 3. Start the servers
-
-Open **two terminals**:
-
-**Terminal 1 — Backend:**
-```bash
-cd server
-npm install
-npm run dev
-# Runs on http://localhost:3001
-```
-
-**Terminal 2 — Frontend:**
 ```bash
 cd client
 npm install
@@ -70,19 +54,20 @@ npm run dev
 # Open http://localhost:5173
 ```
 
-The database schema (tables + indexes) is created automatically on first startup.
-
 ---
 
 ## Production Deployment
 
+Build the frontend and deploy the `dist/` folder to any static host (Netlify, Vercel, Cloudflare Pages, S3, etc.):
+
 ```bash
-cd client && npm run build
-cd ../server && node server.js
-# Serves everything on http://localhost:3001
+cd client
+npm install
+npm run build
+# Deploy dist/ to your host
 ```
 
-Make sure `DATABASE_URL`, `JWT_SECRET`, and `ALLOWED_ORIGIN` are set in your environment.
+Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables on your host.
 
 ---
 
@@ -90,25 +75,47 @@ Make sure `DATABASE_URL`, `JWT_SECRET`, and `ALLOWED_ORIGIN` are set in your env
 
 | Variable | Required | Description |
 |---|---|---|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | Secret for signing JWTs — use a long random string |
-| `ADMIN_USERNAMES` | No | Comma-separated usernames that get admin on register/login |
-| `ALLOWED_ORIGIN` | No | Restrict CORS to your frontend URL in production |
-| `PORT` | No | Port to listen on (default: `3001`) |
-| `RESEND_API_KEY` | No | API key from [resend.com](https://resend.com) — required for email features |
-| `ADMIN_EMAIL` | No | Email address to notify when a new user registers |
-| `APP_URL` | No | Base URL of your frontend — used in password reset links (e.g. `https://yourdomain.com`) |
-| `EMAIL_FROM` | No | Sender address for outgoing emails (must be a verified domain in Resend) |
-
-Email features (welcome email, admin signup notification, password reset) are silently disabled if `RESEND_API_KEY` is not set.
+| `VITE_SUPABASE_URL` | Yes | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Yes | Your Supabase anon (public) key |
+| `VITE_SCRAPER_URL` | No | URL of a deployed scraper function (optional — local CLI is the default) |
 
 ---
 
-## Upper Deck Checklist Import
+## Upper Deck Checklist Scraper
 
-Admins can import catalog sets directly from an Upper Deck checklist URL (e.g. `https://upperdeck.com/checklist/2025-26-sp-game-used-hockey-checklist/`) instead of building a CSV manually. The scraper uses a headless browser to render the page (UD loads its tables via WordPress AJAX — a plain HTTP fetch returns no data), then maps UD's column headers to the app's schema.
+Since Upper Deck renders its checklist tables via JavaScript, scraping requires a headless browser. The scraper runs locally as a CLI tool — it's an occasional admin utility, not part of the deployed app.
 
-**Column mapping (UD → app schema):**
+### Setup
+
+Create a `.env` file in the project root (not `client/`):
+
+```
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-role-key
+```
+
+Install dependencies from the project root (one time):
+
+```bash
+npm install
+```
+
+### Usage
+
+```bash
+# Scrape a checklist and import it to the catalog
+node scrape.mjs https://upperdeck.com/checklists/your-set-checklist/
+
+# Preview what would be imported without writing anything
+node scrape.mjs https://upperdeck.com/checklists/your-set-checklist/ --dry-run
+
+# Replace an existing set in the catalog
+node scrape.mjs https://upperdeck.com/checklists/your-set-checklist/ --replace
+```
+
+Year and product are detected automatically from the page `<title>`. The script prints a preview of the first few cards before importing.
+
+### Column mapping (UD → app schema)
 
 | UD Column | App Field |
 |---|---|
@@ -116,25 +123,12 @@ Admins can import catalog sets directly from an Upper Deck checklist URL (e.g. `
 | Card | `card_number` |
 | Description | `description` |
 | Team City | `team_city` |
-| Team name | `team_name` |
+| Team Name | `team_name` |
 | Rookie | `rookie` |
 | Auto | `auto` |
 | Mem/Tech | `mem` |
 | Serial #'d | `serial_of` |
 | Point | `thickness` |
-
-Year and product are extracted from the page `<title>` (e.g. `"2025-26 SP Game Used Hockey Checklist - Upper Deck"`) and pre-filled in the preview step — you can edit them before confirming the import.
-
-### Puppeteer: dev vs. production
-
-The scraper uses different browser backends depending on the environment:
-
-| Environment | Package | Why |
-|---|---|---|
-| **Development** (Windows/Mac) | `puppeteer` (devDependency) | Bundles its own Chromium; works locally with no extra setup |
-| **Production** (Railway/Linux containers) | `puppeteer-core` + `@sparticuz/chromium` | Standard `puppeteer` requires OS libraries (`libglib`, `libnss3`, etc.) that aren't present in Nixpacks containers; `@sparticuz/chromium` ships a pre-compiled binary with no system deps |
-
-The switch happens automatically via `process.env.NODE_ENV`. No extra configuration is needed — just make sure `NODE_ENV=production` is set on your deployment platform (Railway sets this by default).
 
 ---
 
