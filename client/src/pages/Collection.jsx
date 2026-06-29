@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { api } from '../api.js';
@@ -70,6 +70,7 @@ export default function Collection() {
   const [poppingIds, setPoppingIds] = useState(new Set());
   const [sidebarSearch, setSidebarSearch] = useState('');
   const mainRef = useRef(null);
+  const tbodyRef = useRef(null);
   const location = useLocation();
 
   const loadProducts = useCallback(() => {
@@ -243,11 +244,22 @@ export default function Collection() {
 
   const shouldVirtualize = displayCards.length > VIRTUALIZE_THRESHOLD;
 
+  // Distance from top of collection-main to top of tbody — tells the virtualizer
+  // how much non-virtual content (header, controls, thead) sits above the list.
+  const [scrollMargin, setScrollMargin] = useState(0);
+  useLayoutEffect(() => {
+    if (!shouldVirtualize || !tbodyRef.current || !mainRef.current) return;
+    const tbodyTop = tbodyRef.current.getBoundingClientRect().top;
+    const containerTop = mainRef.current.getBoundingClientRect().top;
+    setScrollMargin(tbodyTop - containerTop + mainRef.current.scrollTop);
+  }, [shouldVirtualize, displayCards.length]);
+
   const rowVirtualizer = useVirtualizer({
     count: shouldVirtualize ? displayCards.length : 0,
     getScrollElement: () => mainRef.current,
     estimateSize: () => 38,
     overscan: 10,
+    scrollMargin,
   });
 
   const exportCsv = () => {
@@ -463,11 +475,11 @@ export default function Collection() {
                       <th className="col-sm-hide"></th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody ref={shouldVirtualize ? tbodyRef : null}>
                     {shouldVirtualize ? (() => {
                       const vItems = rowVirtualizer.getVirtualItems();
                       const colSpan = showAll ? 15 : 13;
-                      const paddingTop = vItems.length > 0 ? vItems[0].start : 0;
+                      const paddingTop = vItems.length > 0 ? Math.max(0, vItems[0].start - scrollMargin) : 0;
                       const paddingBottom = vItems.length > 0 ? rowVirtualizer.getTotalSize() - vItems[vItems.length - 1].end : 0;
                       return (<>
                         {paddingTop > 0 && <tr style={{ height: paddingTop }}><td colSpan={colSpan} style={{ padding: 0, border: 0 }} /></tr>}
