@@ -895,7 +895,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 /* ── Bug Reports ──────────────────────────────────────────── */
-.bug-status { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+.bug-status { display: inline-block; flex-shrink: 0; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
 .bug-status.open { background: rgba(59,130,246,0.15); color: #93c5fd; }
 .bug-status.fixed { background: rgba(34,197,94,0.15); color: #86efac; }
 .bug-status.closed { background: rgba(122,136,168,0.15); color: var(--text-muted); }

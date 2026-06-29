@@ -12,7 +12,7 @@ function BugItem({ bug, onExpand, expanded, detail, loadingDetail }) {
   const date = new Date(bug.created_at).toLocaleDateString();
   return (
     <div className="bug-item">
-      <div className="bug-item-header" onClick={() => onExpand(bug.id)}>
+      <div className="bug-item-header" onClick={() => onExpand(bug.id)} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <BugStatusBadge status={bug.status} />
         <span className="bug-item-title">{bug.title}</span>
         <span className="bug-item-meta">
