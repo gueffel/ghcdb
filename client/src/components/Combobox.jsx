@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 
 export default function Combobox({ value, onChange, options = [], placeholder, required, className }) {
   const [open, setOpen] = useState(false);
@@ -6,9 +6,9 @@ export default function Combobox({ value, onChange, options = [], placeholder, r
   const wrapRef = useRef(null);
   const listRef = useRef(null);
 
-  const filtered = value
-    ? options.filter(o => o.toLowerCase().includes(value.toLowerCase()))
-    : options;
+  const filtered = useMemo(() =>
+    value ? options.filter(o => o.toLowerCase().includes(value.toLowerCase())) : options,
+  [value, options]);
 
   useEffect(() => {
     if (!open) return;

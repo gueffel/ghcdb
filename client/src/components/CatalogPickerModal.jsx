@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { api } from '../api.js';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
 import { formatTeam } from '../utils.js';
@@ -40,6 +40,16 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
   const [closing, setClosing] = useState(false);
   const close = () => { setClosing(true); setTimeout(onClose, 180); };
 
+  const sidebarSearchResults = useMemo(() => {
+    if (!sidebarSearch) return null;
+    const tokens = sidebarSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    return sets
+      .filter(s => tokens.every(t => s.year.toLowerCase().includes(t) || s.product.toLowerCase().includes(t)))
+      .sort((a, b) => b.year.localeCompare(a.year) || a.product.localeCompare(b.product));
+  }, [sidebarSearch, sets]);
+
+  const productTree = useMemo(() => buildProductTree(sets), [sets]);
+
   useEffect(() => {
     Promise.all([api.getCatalogSets(), api.getProducts()]).then(([catalogSets, userProds]) => {
       setSets(catalogSets);
@@ -72,9 +82,9 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
       const result = await api.addToCollection(year, product, mode, ({ progress, done, total }) => {
         setBusyProgress({ pct: progress, done, total });
       });
-      setMsg({ type: 'success', text: `Added ${result.added} cards from ${product} (${year}) to your collection.` });
+      setMsg({ type: 'success', text: `Added ${result.count ?? result.added ?? 0} cards from ${product} (${year}) to your collection.` });
       setUserProducts(prev => new Set([...prev, `${year}::${product}`]));
-      onAdded();
+      onAdded(year, product);
     } catch (err) {
       if (err.message === 'already_exists') {
         setMsg({ type: 'confirm', text: `You already have ${product} (${year}) in your collection. Replace it with the catalog version?`, year, product });
@@ -127,10 +137,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
             {sidebarLoading ? (
               <div className="sidebar-spinner"><div className="spinner" /></div>
             ) : sidebarSearch ? (() => {
-              const tokens = sidebarSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
-              const matches = sets.filter(s =>
-                tokens.every(t => s.year.toLowerCase().includes(t) || s.product.toLowerCase().includes(t))
-              ).sort((a, b) => b.year.localeCompare(a.year) || a.product.localeCompare(b.product));
+              const matches = sidebarSearchResults;
               return matches.length === 0
                 ? <div className="sidebar-empty">No matches.</div>
                 : matches.map(s => (
@@ -147,7 +154,7 @@ export default function CatalogPickerModal({ onClose, onAdded }) {
                   </button>
                 ));
             })() : sidebarGroup === 'product' ? (() => {
-              const ptree = buildProductTree(sets);
+              const ptree = productTree;
               return Object.keys(ptree).sort((a, b) => a.localeCompare(b)).map(prod => (
                 <div key={prod} className="year-group">
                   <button className="year-toggle" onClick={() => toggleProduct(prod)}>

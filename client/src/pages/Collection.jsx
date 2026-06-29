@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { api } from '../api.js';
 import CardModal from '../components/CardModal.jsx';
 import CardDetailModal from '../components/CardDetailModal.jsx';
@@ -7,6 +8,8 @@ import SerialPromptModal from '../components/SerialPromptModal.jsx';
 import CatalogPickerModal from '../components/CatalogPickerModal.jsx';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
 import TeamChip from '../components/TeamChip.jsx';
+
+const VIRTUALIZE_THRESHOLD = 300;
 
 function deduplicateCards(cards, scopeBySet = false) {
   const map = new Map();
@@ -67,10 +70,11 @@ export default function Collection() {
   const [poppingIds, setPoppingIds] = useState(new Set());
   const [sidebarSearch, setSidebarSearch] = useState('');
   const mainRef = useRef(null);
+  const tableScrollRef = useRef(null);
   const location = useLocation();
 
   const loadProducts = useCallback(() => {
-    api.getProducts().then(p => {
+    return api.getProducts().then(p => {
       setProducts(p);
       setTree(buildTree(p));
     });
@@ -209,7 +213,7 @@ export default function Collection() {
     loadProducts();
   };
 
-  const filteredCards = cards.filter(c => {
+  const filteredCards = useMemo(() => cards.filter(c => {
     if (filter === 'owned' && !c.owned) return false;
     if (filter === 'missing' && c.owned) return false;
     if (search) {
@@ -221,7 +225,7 @@ export default function Collection() {
           || (c.set_name || '').toLowerCase().includes(q);
     }
     return true;
-  });
+  }), [cards, filter, search]);
 
   const { sorted: displayCards, onSort, sortKey, indicator } = useSortableTable(
     filteredCards,
@@ -229,12 +233,23 @@ export default function Collection() {
     showAll ? 'desc' : 'asc'
   );
 
-  const currentProduct = selectedYear && selectedProduct
-    ? products.find(p => p.year === selectedYear && p.product === selectedProduct)
-    : null;
+  const currentProduct = useMemo(() =>
+    selectedYear && selectedProduct
+      ? products.find(p => p.year === selectedYear && p.product === selectedProduct)
+      : null,
+  [selectedYear, selectedProduct, products]);
 
-  const totalOwned = products.reduce((s, p) => s + Number(p.owned), 0);
-  const totalCards = products.reduce((s, p) => s + Number(p.total), 0);
+  const totalOwned = useMemo(() => products.reduce((s, p) => s + Number(p.owned), 0), [products]);
+  const totalCards = useMemo(() => products.reduce((s, p) => s + Number(p.total), 0), [products]);
+
+  const shouldVirtualize = displayCards.length > VIRTUALIZE_THRESHOLD;
+
+  const rowVirtualizer = useVirtualizer({
+    count: shouldVirtualize ? displayCards.length : 0,
+    getScrollElement: () => tableScrollRef.current,
+    estimateSize: () => 38,
+    overscan: 10,
+  });
 
   const exportCsv = () => {
     const cols = ['owned','card_number','set_name','description','team_city','team_name','rookie','auto','mem','serial','serial_of','thickness','year','product','grade','duplicates'];
@@ -428,12 +443,16 @@ export default function Collection() {
             {loadingCards ? (
               <div className="page-loading"><div className="spinner large" />Loading cards...</div>
             ) : (
-              <div className="table-wrap">
+              <div
+                className="table-wrap"
+                ref={shouldVirtualize ? tableScrollRef : null}
+                style={shouldVirtualize ? { overflowY: 'auto', maxHeight: 'calc(100vh - 220px)' } : undefined}
+              >
                 <table className="data-table collection-table">
                   <thead>
                     <tr>
-                      <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`}>Owned {indicator('owned')}</th>
-                      <th className="col-sm-hide"></th>
+                      <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`} title="Owned">✓ {indicator('owned')}</th>
+                      <th onClick={() => onSort('wishlisted')} className={`sortable-th col-sm-hide ${sortKey === 'wishlisted' ? 'sorted' : ''}`} title="Wishlist">♥ {indicator('wishlisted')}</th>
                       <th onClick={() => onSort('card_number')} className={`sortable-th col-sm-hide ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
                       <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}><span className="th-full">Player / Description</span><span className="th-short">Player</span> {indicator('description')}</th>
                       <th onClick={() => onSort('set_name')} className={`sortable-th ${sortKey === 'set_name' ? 'sorted' : ''}`}>Set {indicator('set_name')}</th>
@@ -449,8 +468,47 @@ export default function Collection() {
                       <th className="col-sm-hide"></th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {displayCards.map(card => (
+                  <tbody style={shouldVirtualize ? { height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' } : undefined}>
+                    {shouldVirtualize ? rowVirtualizer.getVirtualItems().map(vRow => {
+                      const card = displayCards[vRow.index];
+                      return (
+                        <tr
+                          key={card.id}
+                          data-index={vRow.index}
+                          ref={rowVirtualizer.measureElement}
+                          className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`}
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${vRow.start}px)` }}
+                          onClick={() => setCardDetail(card)}
+                        >
+                          <td onClick={e => e.stopPropagation()}>
+                            <button
+                              className={`owned-toggle ${card.owned ? 'owned' : ''} ${poppingIds.has(card.id) ? 'just-owned' : ''}`}
+                              onClick={() => toggleOwned(card)}
+                              title={card.owned ? 'Mark as not owned' : 'Mark as owned'}
+                              onAnimationEnd={() => setPoppingIds(prev => { const s = new Set(prev); s.delete(card.id); return s; })}
+                            >{card.owned ? '✓' : '○'}</button>
+                          </td>
+                          <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
+                            {!card.owned && <button className={`wishlist-btn${card.wishlisted ? ' wishlisted' : ''}`} onClick={() => toggleWishlist(card)} title={card.wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}>♥</button>}
+                          </td>
+                          <td className="text-muted card-num col-sm-hide">{card.card_number}</td>
+                          <td className="card-desc">{card.description}</td>
+                          <td className="text-muted">{card.set_name}</td>
+                          <td className="text-muted col-sm-hide"><TeamChip team_city={card.team_city} team_name={card.team_name} /></td>
+                          {showAll && <td className="text-muted col-sm-hide">{card.year}</td>}
+                          {showAll && <td className="text-muted col-sm-hide">{card.product}</td>}
+                          <td className="col-sm-hide">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
+                          <td className="col-sm-hide">{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
+                          <td className="text-muted col-sm-hide">{card.mem || ''}</td>
+                          <td className="text-muted col-sm-hide">{card.serial && card.serial_of ? `${card.serial}/${card.serial_of}` : card.serial_of ? `/${card.serial_of}` : ''}</td>
+                          <td className="text-muted col-sm-hide">{card.grade || ''}</td>
+                          <td className="text-muted col-sm-hide">{card.duplicates > 0 ? card.duplicates : ''}</td>
+                          <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
+                            <button className="btn-icon" onClick={() => setEditCard(card)} title="Edit">✎</button>
+                          </td>
+                        </tr>
+                      );
+                    }) : displayCards.map(card => (
                       <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
                         <td onClick={e => e.stopPropagation()}>
                           <button
@@ -554,7 +612,12 @@ export default function Collection() {
       {catalogOpen && (
         <CatalogPickerModal
           onClose={() => setCatalogOpen(false)}
-          onAdded={loadProducts}
+          onAdded={(year, product) => {
+            loadProducts().then(() => {
+              setCatalogOpen(false);
+              if (year && product) selectProduct(year, product);
+            });
+          }}
         />
       )}
     </div>

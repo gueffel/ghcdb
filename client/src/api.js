@@ -87,22 +87,9 @@ export const api = {
   },
 
   getProducts: async () => {
-    const { data, error } = await supabase
-      .from('cards')
-      .select('year, product, owned')
-      .order('year', { ascending: false })
-      .order('product');
+    const { data, error } = await supabase.rpc('get_user_products');
     if (error) throw error;
-
-    const map = new Map();
-    for (const row of data) {
-      const key = `${row.year}||${row.product}`;
-      if (!map.has(key)) map.set(key, { year: row.year, product: row.product, total: 0, owned: 0 });
-      const entry = map.get(key);
-      entry.total++;
-      if (row.owned) entry.owned++;
-    }
-    return [...map.values()];
+    return data.map(r => ({ year: r.year, product: r.product, total: Number(r.total), owned: Number(r.owned) }));
   },
 
   getSetNames: async (year, product) => {

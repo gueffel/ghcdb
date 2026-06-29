@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Papa from 'papaparse';
 import { api } from '../api.js';
 
@@ -59,7 +59,7 @@ function EditableRow({ card, onSave, onCancel, saving }) {
 }
 
 function BugStatusBadge({ status }) {
-  return <span className={`bug-status ${status}`}>{status}</span>;
+  return <span className={`bug-status bug-status--${status}`}>{status}</span>;
 }
 
 function AdminBugRow({ bug, expanded, onExpand, onReply, onSetStatus, onDelete }) {
@@ -460,23 +460,23 @@ export default function Admin() {
     setExpandedBugId(null);
   };
 
-  // Group sets by year
-  const byYear = sets.reduce((acc, s) => {
+  const byYear = useMemo(() => sets.reduce((acc, s) => {
     if (!acc[s.year]) acc[s.year] = [];
     acc[s.year].push(s);
     return acc;
-  }, {});
+  }, {}), [sets]);
 
-  const filteredCards = editSet
-    ? editSet.cards.filter(c => {
-        if (!editSearch) return true;
-        const q = editSearch.toLowerCase();
-        return (c.card_number || '').toLowerCase().includes(q)
-          || (c.description || '').toLowerCase().includes(q)
-          || (c.team_city || '').toLowerCase().includes(q)
-          || (c.team_name || '').toLowerCase().includes(q);
-      })
-    : [];
+  const filteredCards = useMemo(() => {
+    if (!editSet) return [];
+    if (!editSearch) return editSet.cards;
+    const q = editSearch.toLowerCase();
+    return editSet.cards.filter(c =>
+      (c.card_number || '').toLowerCase().includes(q)
+      || (c.description || '').toLowerCase().includes(q)
+      || (c.team_city || '').toLowerCase().includes(q)
+      || (c.team_name || '').toLowerCase().includes(q)
+    );
+  }, [editSet, editSearch]);
 
   const openCount = bugsList.filter(b => b.status === 'open').length;
 

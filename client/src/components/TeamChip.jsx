@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { getTeamMeta } from '../nhlTeams.js';
 import { formatTeam } from '../utils.js';
 
 const CDN = 'https://assets.nhle.com/logos/nhl/svg';
 
-export default function TeamChip({ team_city, team_name }) {
+const TeamChip = memo(function TeamChip({ team_city, team_name }) {
   if (!team_city && !team_name) return null;
   const meta = getTeamMeta(team_city, team_name);
   const label = formatTeam(team_city, team_name);
@@ -21,4 +21,6 @@ export default function TeamChip({ team_city, team_name }) {
       {label}
     </span>
   );
-}
+});
+
+export default TeamChip;
