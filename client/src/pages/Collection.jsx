@@ -468,47 +468,50 @@ export default function Collection() {
                       <th className="col-sm-hide"></th>
                     </tr>
                   </thead>
-                  <tbody style={shouldVirtualize ? { height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' } : undefined}>
-                    {shouldVirtualize ? rowVirtualizer.getVirtualItems().map(vRow => {
-                      const card = displayCards[vRow.index];
-                      return (
-                        <tr
-                          key={card.id}
-                          data-index={vRow.index}
-                          ref={rowVirtualizer.measureElement}
-                          className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`}
-                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${vRow.start}px)` }}
-                          onClick={() => setCardDetail(card)}
-                        >
-                          <td onClick={e => e.stopPropagation()}>
-                            <button
-                              className={`owned-toggle ${card.owned ? 'owned' : ''} ${poppingIds.has(card.id) ? 'just-owned' : ''}`}
-                              onClick={() => toggleOwned(card)}
-                              title={card.owned ? 'Mark as not owned' : 'Mark as owned'}
-                              onAnimationEnd={() => setPoppingIds(prev => { const s = new Set(prev); s.delete(card.id); return s; })}
-                            >{card.owned ? '✓' : '○'}</button>
-                          </td>
-                          <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
-                            {!card.owned && <button className={`wishlist-btn${card.wishlisted ? ' wishlisted' : ''}`} onClick={() => toggleWishlist(card)} title={card.wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}>♥</button>}
-                          </td>
-                          <td className="text-muted card-num col-sm-hide">{card.card_number}</td>
-                          <td className="card-desc">{card.description}</td>
-                          <td className="text-muted">{card.set_name}</td>
-                          <td className="text-muted col-sm-hide"><TeamChip team_city={card.team_city} team_name={card.team_name} /></td>
-                          {showAll && <td className="text-muted col-sm-hide">{card.year}</td>}
-                          {showAll && <td className="text-muted col-sm-hide">{card.product}</td>}
-                          <td className="col-sm-hide">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
-                          <td className="col-sm-hide">{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
-                          <td className="text-muted col-sm-hide">{card.mem || ''}</td>
-                          <td className="text-muted col-sm-hide">{card.serial && card.serial_of ? `${card.serial}/${card.serial_of}` : card.serial_of ? `/${card.serial_of}` : ''}</td>
-                          <td className="text-muted col-sm-hide">{card.grade || ''}</td>
-                          <td className="text-muted col-sm-hide">{card.duplicates > 0 ? card.duplicates : ''}</td>
-                          <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
-                            <button className="btn-icon" onClick={() => setEditCard(card)} title="Edit">✎</button>
-                          </td>
-                        </tr>
-                      );
-                    }) : displayCards.map(card => (
+                  <tbody>
+                    {shouldVirtualize ? (() => {
+                      const vItems = rowVirtualizer.getVirtualItems();
+                      const colSpan = showAll ? 15 : 13;
+                      const paddingTop = vItems.length > 0 ? vItems[0].start : 0;
+                      const paddingBottom = vItems.length > 0 ? rowVirtualizer.getTotalSize() - vItems[vItems.length - 1].end : 0;
+                      return (<>
+                        {paddingTop > 0 && <tr style={{ height: paddingTop }}><td colSpan={colSpan} style={{ padding: 0, border: 0 }} /></tr>}
+                        {vItems.map(vRow => {
+                          const card = displayCards[vRow.index];
+                          return (
+                            <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
+                              <td onClick={e => e.stopPropagation()}>
+                                <button
+                                  className={`owned-toggle ${card.owned ? 'owned' : ''} ${poppingIds.has(card.id) ? 'just-owned' : ''}`}
+                                  onClick={() => toggleOwned(card)}
+                                  title={card.owned ? 'Mark as not owned' : 'Mark as owned'}
+                                  onAnimationEnd={() => setPoppingIds(prev => { const s = new Set(prev); s.delete(card.id); return s; })}
+                                >{card.owned ? '✓' : '○'}</button>
+                              </td>
+                              <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
+                                {!card.owned && <button className={`wishlist-btn${card.wishlisted ? ' wishlisted' : ''}`} onClick={() => toggleWishlist(card)} title={card.wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}>♥</button>}
+                              </td>
+                              <td className="text-muted card-num col-sm-hide">{card.card_number}</td>
+                              <td className="card-desc">{card.description}</td>
+                              <td className="text-muted">{card.set_name}</td>
+                              <td className="text-muted col-sm-hide"><TeamChip team_city={card.team_city} team_name={card.team_name} /></td>
+                              {showAll && <td className="text-muted col-sm-hide">{card.year}</td>}
+                              {showAll && <td className="text-muted col-sm-hide">{card.product}</td>}
+                              <td className="col-sm-hide">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
+                              <td className="col-sm-hide">{card.auto ? <span className="badge badge-purple">AUTO</span> : ''}</td>
+                              <td className="text-muted col-sm-hide">{card.mem || ''}</td>
+                              <td className="text-muted col-sm-hide">{card.serial && card.serial_of ? `${card.serial}/${card.serial_of}` : card.serial_of ? `/${card.serial_of}` : ''}</td>
+                              <td className="text-muted col-sm-hide">{card.grade || ''}</td>
+                              <td className="text-muted col-sm-hide">{card.duplicates > 0 ? card.duplicates : ''}</td>
+                              <td className="col-sm-hide" onClick={e => e.stopPropagation()}>
+                                <button className="btn-icon" onClick={() => setEditCard(card)} title="Edit">✎</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {paddingBottom > 0 && <tr style={{ height: paddingBottom }}><td colSpan={colSpan} style={{ padding: 0, border: 0 }} /></tr>}
+                      </>);
+                    })() : displayCards.map(card => (
                       <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
                         <td onClick={e => e.stopPropagation()}>
                           <button
