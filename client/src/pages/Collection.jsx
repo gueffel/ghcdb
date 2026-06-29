@@ -69,6 +69,7 @@ export default function Collection() {
   const [poppingIds, setPoppingIds] = useState(new Set());
   const [sidebarSearch, setSidebarSearch] = useState('');
   const mainRef = useRef(null);
+  const tableWrapRef = useRef(null);
   const tbodyRef = useRef(null);
   const location = useLocation();
 
@@ -250,18 +251,18 @@ export default function Collection() {
   const vtViewportH = useRef(800);
   const vtTbodyOffset = useRef(0);
 
-  // Attach scroll listener to collection-main
+  // table-wrap (not collection-main) is the actual scroll container because
+  // overflow-x:auto implicitly makes overflow-y:auto too (CSS spec)
   useEffect(() => {
-    const el = mainRef.current;
+    const el = tableWrapRef.current;
     if (!el) return;
     const onScroll = () => setVtScrollTop(el.scrollTop);
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Measure viewport height and tbody offset whenever virtualization activates
   useLayoutEffect(() => {
-    const el = mainRef.current;
+    const el = tableWrapRef.current;
     if (!el) return;
     vtViewportH.current = el.clientHeight;
     if (shouldVirtualize && tbodyRef.current) {
@@ -475,7 +476,7 @@ export default function Collection() {
             {loadingCards ? (
               <div className="page-loading"><div className="spinner large" />Loading cards...</div>
             ) : (
-              <div className="table-wrap">
+              <div className="table-wrap" ref={tableWrapRef}>
                 <table className="data-table collection-table">
                   <thead>
                     <tr>

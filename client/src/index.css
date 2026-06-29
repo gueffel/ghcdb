@@ -470,7 +470,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .product-delete:hover { background: #c0112233; color: #e05; }
 .product-item:hover .product-delete { display: block; }
 
-.collection-main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.collection-main { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 .collection-sidebar-toggle { display: none; }
 .collection-header {
   padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
@@ -485,7 +485,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   border-radius: 6px; padding: 5px 32px 5px 10px; font-size: 13px; width: 200px; font-family: inherit;
 }
 .collection-search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
-.collection-main .table-wrap { padding: 0 0 20px; flex: 1; }
+.collection-main .table-wrap { padding: 0 0 20px; flex: 1; min-height: 0; overflow-y: auto; }
 .collection-main .data-table th { position: sticky; top: 0; background: var(--bg3); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); border-bottom: 1px solid var(--accent); z-index: 2; }
 .search-table-wrap .data-table th { background: var(--bg3); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); border-bottom: 1px solid var(--accent); z-index: 2; }
 
