@@ -1,6 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { api } from '../api.js';
 import CardModal from '../components/CardModal.jsx';
 import CardDetailModal from '../components/CardDetailModal.jsx';
@@ -244,23 +243,45 @@ export default function Collection() {
 
   const shouldVirtualize = displayCards.length > VIRTUALIZE_THRESHOLD;
 
-  // Distance from top of collection-main to top of tbody — tells the virtualizer
-  // how much non-virtual content (header, controls, thead) sits above the list.
-  const [scrollMargin, setScrollMargin] = useState(0);
+  // Manual scroll-driven virtualization
+  const VT_ITEM_H = 38;
+  const VT_OVERSCAN = 8;
+  const [vtScrollTop, setVtScrollTop] = useState(0);
+  const vtViewportH = useRef(800);
+  const vtTbodyOffset = useRef(0);
+
+  // Attach scroll listener to collection-main
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const onScroll = () => setVtScrollTop(el.scrollTop);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Measure viewport height and tbody offset whenever virtualization activates
   useLayoutEffect(() => {
-    if (!shouldVirtualize || !tbodyRef.current || !mainRef.current) return;
-    const tbodyTop = tbodyRef.current.getBoundingClientRect().top;
-    const containerTop = mainRef.current.getBoundingClientRect().top;
-    setScrollMargin(tbodyTop - containerTop + mainRef.current.scrollTop);
+    const el = mainRef.current;
+    if (!el) return;
+    vtViewportH.current = el.clientHeight;
+    if (shouldVirtualize && tbodyRef.current) {
+      const cr = el.getBoundingClientRect();
+      const tr = tbodyRef.current.getBoundingClientRect();
+      vtTbodyOffset.current = tr.top - cr.top + el.scrollTop;
+    }
   }, [shouldVirtualize, displayCards.length]);
 
-  const rowVirtualizer = useVirtualizer({
-    count: shouldVirtualize ? displayCards.length : 0,
-    getScrollElement: () => mainRef.current,
-    estimateSize: () => 38,
-    overscan: 10,
-    scrollMargin,
-  });
+  // Compute visible slice
+  const vtOffset = vtTbodyOffset.current;
+  const vtViewport = vtViewportH.current;
+  const vtFirst = shouldVirtualize
+    ? Math.max(0, Math.floor((vtScrollTop - vtOffset) / VT_ITEM_H) - VT_OVERSCAN)
+    : 0;
+  const vtLast = shouldVirtualize
+    ? Math.min(displayCards.length - 1, Math.ceil((vtScrollTop - vtOffset + vtViewport) / VT_ITEM_H) + VT_OVERSCAN)
+    : displayCards.length - 1;
+  const vtPaddingTop = shouldVirtualize ? Math.max(0, vtFirst * VT_ITEM_H) : 0;
+  const vtPaddingBottom = shouldVirtualize ? Math.max(0, (displayCards.length - vtLast - 1) * VT_ITEM_H) : 0;
 
   const exportCsv = () => {
     const cols = ['owned','card_number','set_name','description','team_city','team_name','rookie','auto','mem','serial','serial_of','thickness','year','product','grade','duplicates'];
@@ -477,14 +498,10 @@ export default function Collection() {
                   </thead>
                   <tbody ref={shouldVirtualize ? tbodyRef : null}>
                     {shouldVirtualize ? (() => {
-                      const vItems = rowVirtualizer.getVirtualItems();
                       const colSpan = showAll ? 15 : 13;
-                      const paddingTop = vItems.length > 0 ? Math.max(0, vItems[0].start - scrollMargin) : 0;
-                      const paddingBottom = vItems.length > 0 ? rowVirtualizer.getTotalSize() - vItems[vItems.length - 1].end : 0;
                       return (<>
-                        {paddingTop > 0 && <tr><td colSpan={colSpan} style={{ height: paddingTop, padding: 0, border: 0 }} /></tr>}
-                        {vItems.map(vRow => {
-                          const card = displayCards[vRow.index];
+                        {vtPaddingTop > 0 && <tr><td colSpan={colSpan} style={{ height: vtPaddingTop, padding: 0, border: 0 }} /></tr>}
+                        {displayCards.slice(vtFirst, vtLast + 1).map(card => {
                           return (
                             <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
                               <td onClick={e => e.stopPropagation()}>
@@ -516,7 +533,7 @@ export default function Collection() {
                             </tr>
                           );
                         })}
-                        {paddingBottom > 0 && <tr><td colSpan={colSpan} style={{ height: paddingBottom, padding: 0, border: 0 }} /></tr>}
+                        {vtPaddingBottom > 0 && <tr><td colSpan={colSpan} style={{ height: vtPaddingBottom, padding: 0, border: 0 }} /></tr>}
                       </>);
                     })() : displayCards.map(card => (
                       <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
