@@ -70,7 +70,6 @@ export default function Collection() {
   const [poppingIds, setPoppingIds] = useState(new Set());
   const [sidebarSearch, setSidebarSearch] = useState('');
   const mainRef = useRef(null);
-  const tableScrollRef = useRef(null);
   const location = useLocation();
 
   const loadProducts = useCallback(() => {
@@ -246,7 +245,7 @@ export default function Collection() {
 
   const rowVirtualizer = useVirtualizer({
     count: shouldVirtualize ? displayCards.length : 0,
-    getScrollElement: () => tableScrollRef.current,
+    getScrollElement: () => mainRef.current,
     estimateSize: () => 38,
     overscan: 10,
   });
@@ -443,11 +442,7 @@ export default function Collection() {
             {loadingCards ? (
               <div className="page-loading"><div className="spinner large" />Loading cards...</div>
             ) : (
-              <div
-                className="table-wrap"
-                ref={shouldVirtualize ? tableScrollRef : null}
-                style={shouldVirtualize ? { overflowY: 'auto', maxHeight: 'calc(100vh - 220px)' } : undefined}
-              >
+              <div className="table-wrap">
                 <table className="data-table collection-table">
                   <thead>
                     <tr>
