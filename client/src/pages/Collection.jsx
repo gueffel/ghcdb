@@ -482,7 +482,7 @@ export default function Collection() {
                       const paddingTop = vItems.length > 0 ? Math.max(0, vItems[0].start - scrollMargin) : 0;
                       const paddingBottom = vItems.length > 0 ? rowVirtualizer.getTotalSize() - vItems[vItems.length - 1].end : 0;
                       return (<>
-                        {paddingTop > 0 && <tr style={{ height: paddingTop }}><td colSpan={colSpan} style={{ padding: 0, border: 0 }} /></tr>}
+                        {paddingTop > 0 && <tr><td colSpan={colSpan} style={{ height: paddingTop, padding: 0, border: 0 }} /></tr>}
                         {vItems.map(vRow => {
                           const card = displayCards[vRow.index];
                           return (
@@ -516,7 +516,7 @@ export default function Collection() {
                             </tr>
                           );
                         })}
-                        {paddingBottom > 0 && <tr style={{ height: paddingBottom }}><td colSpan={colSpan} style={{ padding: 0, border: 0 }} /></tr>}
+                        {paddingBottom > 0 && <tr><td colSpan={colSpan} style={{ height: paddingBottom, padding: 0, border: 0 }} /></tr>}
                       </>);
                     })() : displayCards.map(card => (
                       <tr key={card.id} className={`${card.owned ? 'row-owned' : 'row-missing'} row-clickable`} onClick={() => setCardDetail(card)}>
