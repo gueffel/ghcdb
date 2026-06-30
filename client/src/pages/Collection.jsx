@@ -481,6 +481,23 @@ export default function Collection() {
             ) : (
               <div className="table-wrap" ref={tableWrapRef}>
                 <table className="data-table collection-table">
+                  <colgroup>
+                    <col style={{ width: 44 }} />
+                    <col style={{ width: 44 }} />
+                    <col style={{ width: 64 }} />
+                    <col />{/* description — takes remaining space */}
+                    <col style={{ width: 130 }} />
+                    <col style={{ width: 160 }} />
+                    {showAll && <col style={{ width: 60 }} />}
+                    {showAll && <col style={{ width: 160 }} />}
+                    <col style={{ width: 48 }} />
+                    <col style={{ width: 64 }} />
+                    <col style={{ width: 64 }} />
+                    <col style={{ width: 90 }} />
+                    <col style={{ width: 70 }} />
+                    <col style={{ width: 60 }} />
+                    <col style={{ width: 44 }} />
+                  </colgroup>
                   <thead>
                     <tr>
                       <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`} title="Owned">✓ {indicator('owned')}</th>
