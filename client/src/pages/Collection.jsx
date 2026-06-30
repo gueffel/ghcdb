@@ -482,21 +482,21 @@ export default function Collection() {
               <div className="table-wrap" ref={tableWrapRef}>
                 <table className="data-table collection-table">
                   <colgroup>
-                    <col style={{ width: 44 }} />
-                    <col style={{ width: 44 }} />
-                    <col style={{ width: 64 }} />
-                    <col />{/* description — takes remaining space */}
-                    <col style={{ width: 130 }} />
-                    <col style={{ width: 160 }} />
-                    {showAll && <col style={{ width: 60 }} />}
-                    {showAll && <col style={{ width: 160 }} />}
-                    <col style={{ width: 48 }} />
-                    <col style={{ width: 64 }} />
-                    <col style={{ width: 64 }} />
-                    <col style={{ width: 90 }} />
-                    <col style={{ width: 70 }} />
-                    <col style={{ width: 60 }} />
-                    <col style={{ width: 44 }} />
+                    <col style={{ width: '3%' }} />
+                    <col style={{ width: '3%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: showAll ? '9%' : '11%' }} />
+                    <col style={{ width: showAll ? '20%' : '24%' }} />
+                    <col style={{ width: showAll ? '11%' : '14%' }} />
+                    {showAll && <col style={{ width: '5%' }} />}
+                    {showAll && <col style={{ width: '11%' }} />}
+                    <col style={{ width: '4%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '7%' }} />
+                    <col style={{ width: '6%' }} />
+                    <col style={{ width: '5%' }} />
+                    <col style={{ width: '3%' }} />
                   </colgroup>
                   <thead>
                     <tr>

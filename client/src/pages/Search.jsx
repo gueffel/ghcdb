@@ -181,8 +181,8 @@ export default function Search() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`}>Owned {indicator('owned')}</th>
-                  <th className="col-sm-hide"></th>
+                  <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`} title="Owned">✓ {indicator('owned')}</th>
+                  <th onClick={() => onSort('wishlisted')} className={`sortable-th col-sm-hide ${sortKey === 'wishlisted' ? 'sorted' : ''}`} title="Wishlist">♥ {indicator('wishlisted')}</th>
                   <th onClick={() => onSort('card_number')} className={`sortable-th col-sm-hide ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
                   <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}><span className="th-full">Player / Description</span><span className="th-short">Player</span> {indicator('description')}</th>
                   <th onClick={() => onSort('set_name')} className={`sortable-th ${sortKey === 'set_name' ? 'sorted' : ''}`}>Set {indicator('set_name')}</th>

@@ -5,14 +5,14 @@ import { useAuth } from '../App.jsx';
 import { supabase } from '../lib/supabase.js';
 
 function BugStatusBadge({ status }) {
-  return <span className={`bug-status ${status}`}>{status}</span>;
+  return <span className={`bug-status bug-status--${status}`}>{status}</span>;
 }
 
 function BugItem({ bug, onExpand, expanded, detail, loadingDetail }) {
   const date = new Date(bug.created_at).toLocaleDateString();
   return (
     <div className="bug-item">
-      <div className="bug-item-header" onClick={() => onExpand(bug.id)} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div className="bug-item-header" onClick={() => onExpand(bug.id)}>
         <BugStatusBadge status={bug.status} />
         <span className="bug-item-title">{bug.title}</span>
         <span className="bug-item-meta">
