@@ -252,14 +252,17 @@ export default function Collection() {
   const vtTbodyOffset = useRef(0);
 
   // table-wrap (not collection-main) is the actual scroll container because
-  // overflow-x:auto implicitly makes overflow-y:auto too (CSS spec)
+  // overflow-x:auto implicitly makes overflow-y:auto too (CSS spec).
+  // Deps include shouldVirtualize so this re-runs after cards load and the
+  // table-wrap is actually in the DOM (it's conditionally rendered).
   useEffect(() => {
+    if (!shouldVirtualize) return;
     const el = tableWrapRef.current;
     if (!el) return;
     const onScroll = () => setVtScrollTop(el.scrollTop);
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [shouldVirtualize]);
 
   useLayoutEffect(() => {
     const el = tableWrapRef.current;
