@@ -165,7 +165,7 @@ export default function Search() {
       </div>
 
       <div className="search-meta">
-        <span>{loading ? <><div className="spinner" />Searching...</> : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`}</span>
+        <span>{loading ? <><span className="spinner" /> Searching...</> : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`}</span>
         <div className="filter-tabs" style={{ marginLeft: 'auto' }}>
           {[['', 'All'], ['true', 'Owned'], ['false', 'Missing']].map(([val, label]) => (
             <button key={val} className={`tab ${filters.owned === val ? 'active' : ''}`} onClick={() => setFilter('owned', val)}>

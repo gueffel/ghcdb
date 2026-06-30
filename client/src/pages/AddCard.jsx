@@ -16,20 +16,29 @@ export default function AddCard() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
-  const [products, setProducts] = useState([]);
-  const [years, setYears] = useState([]);
-  const [setNames, setSetNames] = useState([]);
+  const [catalogYears, setCatalogYears] = useState([]);
+  const [catalogProducts, setCatalogProducts] = useState([]);
+  const [catalogSetNames, setCatalogSetNames] = useState([]);
+  const [recentYears, setRecentYears] = useState([]);
+  const [recentProducts, setRecentProducts] = useState([]);
 
   useEffect(() => {
-    api.getProducts().then(p => {
-      setProducts([...new Set(p.map(x => x.product))].sort());
-      setYears([...new Set(p.map(x => x.year))].sort((a, b) => b.localeCompare(a)));
-    });
+    api.getCatalogSets().then(sets => {
+      setCatalogProducts([...new Set(sets.map(x => x.product))].sort());
+      setCatalogYears([...new Set(sets.map(x => x.year))].sort((a, b) => b.localeCompare(a)));
+    }).catch(() => {});
+    api.getRecentAdditions().then(({ years, products }) => {
+      setRecentYears(years);
+      setRecentProducts(products);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
-    api.getSetNames(form.year, form.product).then(setSetNames).catch(() => {});
+    api.getCatalogSetNames(form.year, form.product).then(setCatalogSetNames).catch(() => {});
   }, [form.year, form.product]);
+
+  const defaultYears    = recentYears.length    > 0 ? recentYears    : catalogYears.slice(0, 3);
+  const defaultProducts = recentProducts.length > 0 ? recentProducts : catalogProducts.slice(0, 3);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -57,26 +66,47 @@ export default function AddCard() {
 
   return (
     <div className="page page-narrow">
-      <h1 className="page-title">Add Card</h1>
+      <h1 className="page-title">Add Single</h1>
 
       <form onSubmit={submit} className="card-form">
         {success && <div className="alert success">{success}</div>}
         {error && <div className="alert error">{error}</div>}
 
         <div className="form-section">
+          <div className="form-section-title">Card Type</div>
+          <div className="toggle-pill-row">
+            <label className={`toggle-pill toggle-pill--owned${form.owned ? ' toggle-pill--on' : ''}`}>
+              <input type="checkbox" checked={form.owned} onChange={e => set('owned', e.target.checked)} />
+              <span className="toggle-pill-dot" />
+              <span>Owned</span>
+            </label>
+            <label className={`toggle-pill toggle-pill--rc${form.rookie ? ' toggle-pill--on' : ''}`}>
+              <input type="checkbox" checked={form.rookie} onChange={e => set('rookie', e.target.checked)} />
+              <span className="toggle-pill-dot" />
+              <span>Rookie Card</span>
+            </label>
+            <label className={`toggle-pill toggle-pill--au${form.auto ? ' toggle-pill--on' : ''}`}>
+              <input type="checkbox" checked={form.auto} onChange={e => set('auto', e.target.checked)} />
+              <span className="toggle-pill-dot" />
+              <span>Autograph</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="form-section">
           <div className="form-section-title">Card Identity</div>
           <div className="form-grid">
             <div className="field">
               <label>Year *</label>
-              <Combobox value={form.year} onChange={v => set('year', v)} options={years} placeholder="2023-24" required />
+              <Combobox value={form.year} onChange={v => set('year', v)} options={catalogYears} defaultOptions={defaultYears} placeholder="2023-24" required />
             </div>
             <div className="field">
               <label>Product *</label>
-              <Combobox value={form.product} onChange={v => set('product', v)} options={products} placeholder="Series 1" required />
+              <Combobox value={form.product} onChange={v => set('product', v)} options={catalogProducts} defaultOptions={defaultProducts} placeholder="Series 1" required />
             </div>
             <div className="field">
               <label>Set Name</label>
-              <Combobox value={form.set_name} onChange={v => set('set_name', v)} options={setNames} placeholder="e.g. Young Guns" />
+              <Combobox value={form.set_name} onChange={v => set('set_name', v)} options={catalogSetNames} defaultOptions={catalogSetNames.slice(0, 3)} placeholder="e.g. Young Guns" />
             </div>
             <div className="field">
               <label>Card #</label>
@@ -133,27 +163,9 @@ export default function AddCard() {
           </div>
         </div>
 
-        <div className="form-section">
-          <div className="form-section-title">Flags</div>
-          <div className="checkbox-row">
-            <label className="checkbox-label">
-              <input type="checkbox" checked={form.owned} onChange={e => set('owned', e.target.checked)} />
-              <span>Owned</span>
-            </label>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={form.rookie} onChange={e => set('rookie', e.target.checked)} />
-              <span>Rookie (RC)</span>
-            </label>
-            <label className="checkbox-label">
-              <input type="checkbox" checked={form.auto} onChange={e => set('auto', e.target.checked)} />
-              <span>Autograph (AU)</span>
-            </label>
-          </div>
-        </div>
-
         <div className="form-actions">
           <button type="submit" className="btn-primary" disabled={saving}>
-            {saving ? 'Adding...' : 'Add Card'}
+            {saving ? 'Adding...' : 'Add Single'}
           </button>
           <button type="button" className="btn-ghost" onClick={() => setForm(EMPTY)}>Reset</button>
         </div>

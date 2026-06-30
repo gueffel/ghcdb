@@ -34,7 +34,9 @@ export function useSortableTable(data, defaultKey = 'card_number', defaultDir = 
     if (!sortKey) return data;
     return [...data].sort((a, b) => {
       const cmp = compareValues(a, b, sortKey);
-      return sortDir === 'asc' ? cmp : -cmp;
+      if (cmp !== 0) return sortDir === 'asc' ? cmp : -cmp;
+      if (sortKey === 'card_number') return compareValues(a, b, 'set_name');
+      return 0;
     });
   }, [data, sortKey, sortDir]);
 

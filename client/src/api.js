@@ -187,6 +187,37 @@ export const api = {
     return data;
   },
 
+  getRecentAdditions: async () => {
+    const { data, error } = await supabase
+      .from('cards')
+      .select('year, product')
+      .order('created_at', { ascending: false })
+      .limit(150);
+    if (error || !data) return { years: [], products: [] };
+    const years    = [...new Set(data.map(r => r.year).filter(Boolean))].slice(0, 3);
+    const products = [...new Set(data.map(r => r.product).filter(Boolean))].slice(0, 3);
+    return { years, products };
+  },
+
+  getCatalogProducts: async () => {
+    const { data, error } = await supabase
+      .from('catalog_cards')
+      .select('year, product')
+      .order('year', { ascending: false });
+    if (error) throw error;
+    const seen = new Set();
+    return data.filter(r => { const k = `${r.year}||${r.product}`; return seen.has(k) ? false : seen.add(k); });
+  },
+
+  getCatalogSetNames: async (year, product) => {
+    let q = supabase.from('catalog_cards').select('set_name').not('set_name', 'is', null).neq('set_name', '').order('set_name').limit(500);
+    if (year) q = q.eq('year', year);
+    if (product) q = q.eq('product', product);
+    const { data, error } = await q;
+    if (error) throw error;
+    return [...new Set(data.map(r => r.set_name))];
+  },
+
   // ── Catalog ────────────────────────────────────────────────
 
   getCatalogSets: async () => {

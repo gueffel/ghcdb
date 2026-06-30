@@ -29,7 +29,7 @@ const PAGE_TITLES = {
   '/overview': 'Overview',
   '/collection': 'Collection',
   '/search': 'Search',
-  '/add': 'Add Card',
+  '/add': 'Add Single',
   '/import': 'Import CSV',
   '/admin': 'Admin',
   '/settings': 'Settings',
@@ -46,6 +46,14 @@ function TitleUpdater() {
     window.scrollTo(0, 0);
   }, [pathname]);
   return null;
+}
+
+const FULLSCREEN_PATHS = ['/collection', '/search'];
+
+function ConditionalFooter() {
+  const { pathname } = useLocation();
+  if (FULLSCREEN_PATHS.includes(pathname)) return null;
+  return <Footer />;
 }
 
 export default function App() {
@@ -109,7 +117,7 @@ export default function App() {
             <Route path="*" element={<Navigate to={user ? '/overview' : '/'} replace />} />
           </Routes>
         </main>
-        {user && <Footer />}
+        {user && <ConditionalFooter />}
       </BrowserRouter>
     </AuthContext.Provider>
   );

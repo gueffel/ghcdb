@@ -70,7 +70,7 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned, 
                   onClick={() => { if (!card.owned) setJustOwned(true); onToggleOwned(card); }}
                   onAnimationEnd={() => setJustOwned(false)}
                 >
-                  {card.owned ? '✓ Owned' : '○ Not owned'}
+                  {card.owned ? '✓ Owned' : '○ Mark as owned'}
                 </button>
               ) : (
                 <span className={`badge ${card.owned ? 'badge-green' : ''}`} style={!card.owned ? { color: 'var(--text-muted)', background: 'transparent', border: '1px solid var(--border)' } : {}}>
