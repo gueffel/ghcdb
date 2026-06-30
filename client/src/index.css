@@ -1128,7 +1128,7 @@ tr.row-clickable:active { background: var(--bg4); }
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
 }
 

@@ -234,7 +234,7 @@ export default function Landing() {
           </p>
           <div className="lp-hero-actions">
             <Link to="/login?register=1" className="lp-cta-primary">
-              Create Free Account
+              Create Account
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 8h10M9 4l4 4-4 4"/>
               </svg>
@@ -309,7 +309,7 @@ export default function Landing() {
         <h2 className="lp-banner-title">Ready to get organized?</h2>
         <p className="lp-banner-sub">Everything you need to manage your hockey card collection.</p>
         <Link to="/login?register=1" className="lp-cta-primary">
-          Create Free Account
+          Create Account
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 8h10M9 4l4 4-4 4"/>
           </svg>
