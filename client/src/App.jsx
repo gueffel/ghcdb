@@ -42,7 +42,7 @@ function TitleUpdater() {
   const { pathname } = useLocation();
   useEffect(() => {
     const page = PAGE_TITLES[pathname];
-    document.title = page ? `GHCdb — ${page}` : 'GHCdb';
+    document.title = page ? `GHCdb · ${page}` : 'GHCdb';
     window.scrollTo(0, 0);
   }, [pathname]);
   return null;

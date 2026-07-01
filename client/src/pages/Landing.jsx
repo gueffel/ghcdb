@@ -6,18 +6,18 @@ import logoLight2 from '../assets/logo_light.svg';
 
 function MockCollection() {
   const rows = [
-    { owned: true,  num: '201',  name: 'E. Pettersson YG' },
-    { owned: true,  num: '247',  name: 'M. Tkachuk RC' },
-    { owned: false, num: 'A-CM', name: 'C. McDavid Auto' },
-    { owned: true,  num: '312',  name: 'N. MacKinnon' },
-    { owned: false, num: '88',   name: 'P. Kane Canvas' },
-    { owned: true,  num: '29',   name: 'N. Kucherov RC' },
-    { owned: false, num: 'A-BP', name: 'B. Point Auto' },
+    { owned: true,  num: '201',  name: 'Elias Pettersson' },
+    { owned: true,  num: '247',  name: 'Nils Hoglander' },
+    { owned: false, num: 'A-CM', name: 'Connor McDavid' },
+    { owned: true,  num: '312',  name: 'Nathan MacKinnon' },
+    { owned: false, num: '88',   name: 'Patrick Kane ' },
+    { owned: true,  num: '29',   name: 'Nikita Kucherov' },
+    { owned: false, num: 'A-TD', name: 'Thatcher Demko' },
   ];
   return (
     <div className="lp-mini">
       <div className="lp-mini-hd">
-        <span className="lp-mini-tag">2022-23 UD Series 1</span>
+        <span className="lp-mini-tag">2022-23 Series 1</span>
         <span className="lp-mini-meta">198 / 250</span>
       </div>
       <div className="lp-mini-prog"><div className="lp-mini-pb lp-mini-pb-anim" /></div>
@@ -34,10 +34,10 @@ function MockCollection() {
 
 function MockSearch() {
   const rows = [
-    { owned: true,  name: 'E. Pettersson Canvas',     set: 'UD 2023' },
-    { owned: false, name: 'E. Pettersson Auto /99',   set: 'SP Auth.' },
-    { owned: true,  name: 'E. Pettersson Young Guns', set: 'UD 2018' },
-    { owned: false, name: 'E. Pettersson Retro RC',   set: 'UD 2019' },
+    { owned: true,  name: 'Elias Pettersson Canvas',  set: 'Series 1' },
+    { owned: false, name: 'Elias Pettersson Auto /99',   set: 'SP Authentic' },
+    { owned: true,  name: 'Elias Pettersson Young Guns', set: 'Series 2' },
+    { owned: false, name: 'Elias Pettersson Retro RC',   set: 'SP Game Used' },
   ];
   return (
     <div className="lp-mini">
@@ -58,11 +58,11 @@ function MockSearch() {
 
 function MockWishlist() {
   const items = [
-    { name: 'McDavid Acetate /25',   tag: 'Short print' },
-    { name: 'Crosby Young Guns RC',  tag: '2005-06' },
-    { name: 'Ovechkin Gold /10',     tag: 'Rare' },
+    { name: 'McDavid Auto /25',      tag: 'Auto' },
+    { name: 'Crosby Young Guns',     tag: 'RC' },
+    { name: 'Ovechkin Gold /10',     tag: 'Numbered' },
     { name: 'Makar Rookie Auto /99', tag: 'Auto' },
-    { name: 'Pettersson Black /5',   tag: 'SSP' },
+    { name: 'Pettersson Black /5',   tag: 'Numbered' },
     { name: 'Draisaitl Canvas',      tag: 'Canvas' },
     { name: 'Stamkos Auto /50',      tag: 'Numbered' },
   ];
@@ -108,14 +108,14 @@ function MockMobile() {
   return (
     <div className="lp-mini lp-mini-mobile">
       <div className="lp-mini-mob-card">
-        <div className="lp-mini-mob-name">E. Pettersson</div>
-        <div className="lp-mini-mob-sub">Young Guns RC · #201</div>
-        <div className="lp-mini-mob-set">2018-19 UD Series 1</div>
+        <div className="lp-mini-mob-name">Elias Pettersson</div>
+        <div className="lp-mini-mob-sub">Young Guns · #248</div>
+        <div className="lp-mini-mob-set">2018-19 Series 1</div>
       </div>
       <div className="lp-mini-mob-status">○ Not in your collection</div>
       <div className="lp-mini-mob-actions">
         <span className="lp-mini-mob-wl">♥ Wishlist</span>
-        <span className="lp-mini-mob-own">Mark owned ✓</span>
+        <span className="lp-mini-mob-own">✓ Mark owned</span>
       </div>
     </div>
   );
@@ -123,13 +123,13 @@ function MockMobile() {
 
 function MockCatalog() {
   const sets = [
-    { name: '2023-24 UD Series 1',  n: 250 },
+    { name: '2023-24 Series 1',     n: 250 },
     { name: '2022-23 SP Authentic', n: 100 },
-    { name: '2021-22 UD Canvas',    n: 120 },
-    { name: '2020-21 UD Series 2',  n: 200 },
-    { name: '2019-20 UD Series 1',  n: 250 },
+    { name: '2021-22 Clear Cut',    n: 120 },
+    { name: '2020-21 Series 2',     n: 200 },
+    { name: '2019-20 Extended',     n: 250 },
     { name: '2018-19 SP Authentic', n: 90  },
-    { name: '2017-18 UD Canvas',    n: 110 },
+    { name: '2017-18 SP Game Used', n: 110 },
   ];
   return (
     <div className="lp-mini">
@@ -145,20 +145,20 @@ function MockCatalog() {
 }
 
 const FEATURES = [
-  { mock: <MockCollection />, eyebrow: 'Collection',     title: 'Full Set Checklists',       body: 'Browse every card. Mark owned, record serial numbers, add grades, and track duplicates.' },
-  { mock: <MockSearch />,     eyebrow: 'Search',         title: 'Find Any Card Instantly',    body: 'Search your entire collection by player, number, team, set, or product.' },
-  { mock: <MockWishlist />,   eyebrow: 'Wishlist',       title: "Track What You're Hunting",  body: 'Flag any card as wishlisted so you never lose track of what you still need.' },
-  { mock: <MockDashboard />,  eyebrow: 'Dashboard',      title: 'Stats at a Glance',          body: 'Owned totals, rookies, autos, graded cards, and a team breakdown chart.' },
-  { mock: <MockMobile />,     eyebrow: 'Mobile',          title: 'Perfect at Card Shows',     body: 'Pull up your wishlist on the floor. Check off finds on the spot — works great on any phone, no install needed.' },
-  { mock: <MockCatalog />,    eyebrow: 'Catalog',        title: 'One-Click Set Import',       body: 'Browse master checklists and add an entire set to your collection instantly.' },
+  { mock: <MockCollection />, eyebrow: 'Collection',  title: 'Full Set Checklists',          body: 'Every card in a set, listed in order. Tick off what you own, note grades and serial numbers, and watch your progress fill up.' },
+  { mock: <MockSearch />,     eyebrow: 'Search',      title: 'Find Any Card Instantly',      body: 'Search by player name, card number, team, set, or product. Your whole collection, right at your fingertips.' },
+  { mock: <MockWishlist />,   eyebrow: 'Wishlist',    title: "Know What You're Still After", body: "Save any card to your wishlist so you always know what you're still looking for." },
+  { mock: <MockDashboard />,  eyebrow: 'Dashboard',   title: 'See Your Collection at a Glance', body: 'How many cards you own, how many are rookies or autos, and a quick breakdown by team.' },
+  { mock: <MockMobile />,     eyebrow: 'Mobile',      title: 'Great at Card Shows',          body: 'Your whole collection fits in your pocket. Check what you own and mark new finds on the spot. Just open it in your browser.' },
+  { mock: <MockCatalog />,    eyebrow: 'Catalog',     title: 'Pick a Set, Add the Whole Thing', body: 'Browse thousands of complete set checklists and add every card to your collection in one go.' },
 ];
 
 const MOCK_CARDS = [
-  { owned: true,  num: '201',  desc: 'Elias Pettersson Young Guns',  set: '2018-19 UD Series 1' },
-  { owned: true,  num: 'C-32', desc: 'Connor McDavid Canvas',         set: '2022-23 UD Series 2' },
-  { owned: false, num: 'A-NM', desc: 'Nathan MacKinnon Auto',          set: '2021-22 SP Authentic' },
-  { owned: true,  num: '249',  desc: 'Cale Makar Rookie',              set: '2019-20 Upper Deck' },
-  { owned: false, num: '12',   desc: 'Sidney Crosby Portrait',         set: '2020-21 UD Series 1' },
+  { owned: true,  num: '201',  desc: 'Elias Pettersson',               product: '2018-19 Series 1',     set: 'Young Guns' },
+  { owned: true,  num: 'C-32', desc: 'Connor McDavid',                 product: '2022-23 Series 2',     set: 'Canvas' },
+  { owned: false, num: 'A-NM', desc: 'Nathan MacKinnon',               product: '2021-22 SP Authentic', set: 'Base Set' },
+  { owned: true,  num: '249',  desc: 'Cale Makar',                     product: '2019-20 Artifacts',    set: 'Red Parallel' },
+  { owned: false, num: '12',   desc: 'Sidney Crosby',                  product: '2020-21 Series 1',     set: 'Portraits' },
 ];
 
 // ── Component ────────────────────────────────────────────────
@@ -222,15 +222,15 @@ export default function Landing() {
       {/* Hero */}
       <section className="lp-hero">
         <div className="lp-hero-content">
-          <div className="lp-hero-badge">🏒 Built for Hockey Card Collectors</div>
+          <div className="lp-hero-badge">Built for collectors, by a collector</div>
           <h1 className="lp-hero-title">
             Your entire collection,<br />
             <span className="lp-hero-accent">organized &amp; searchable.</span>
           </h1>
           <p className="lp-hero-sub">
-            Track every card you own and every card you're still hunting — organized by set,
-            player, and team. Import your spreadsheet, check off cards as you pull them, and
-            see your progress at a glance.
+            Browse complete master checklists of products, mark what you own, and
+            track your progress card by card. Organized by player, team, and year. Perfect
+            for having your whole collection at a glance.
           </p>
           <div className="lp-hero-actions">
             <Link to="/login?register=1" className="lp-cta-primary">
@@ -242,9 +242,9 @@ export default function Landing() {
             <Link to="/login" className="btn-ghost lp-cta-ghost">Sign In</Link>
           </div>
           <div className="lp-hero-perks">
-            <span>✓ Import from CSV</span>
-            <span>✓ Export any view</span>
-            <span>✓ Track every set</span>
+            <span>✓ Complete set checklists</span>
+            <span>✓ Track owned vs. missing</span>
+            <span>✓ Works great on (nearly) every device</span>
           </div>
         </div>
 
@@ -254,7 +254,7 @@ export default function Landing() {
             <span className="lp-mock-dot lp-mock-dot-r" />
             <span className="lp-mock-dot lp-mock-dot-y" />
             <span className="lp-mock-dot lp-mock-dot-g" />
-            <span className="lp-mock-window-title">GHCdb — Collection</span>
+            <span className="lp-mock-window-title">GHCdb · Collection</span>
           </div>
           <div className="lp-mock-body">
             <div className="lp-mock-stats">
@@ -268,7 +268,7 @@ export default function Landing() {
             </div>
             <div className="lp-mock-table">
               <div className="lp-mock-th">
-                <span>✓</span><span>#</span><span>Player / Description</span><span>Set</span>
+                <span>✓</span><span>#</span><span>Player / Description</span><span>Set</span><span>Product</span>
               </div>
               {MOCK_CARDS.map((c, i) => (
                 <div key={i} className={`lp-mock-row ${c.owned ? 'lp-mock-row-owned' : 'lp-mock-row-missing'}`}>
@@ -276,6 +276,7 @@ export default function Landing() {
                   <span className="lp-mock-card-num">{c.num}</span>
                   <span className="lp-mock-desc">{c.desc}</span>
                   <span className="lp-mock-set">{c.set}</span>
+                  <span className="lp-mock-set">{c.product}</span>
                 </div>
               ))}
             </div>
@@ -286,8 +287,8 @@ export default function Landing() {
 
       {/* Section header */}
       <div className="lp-section-hd">
-        <div className="lp-section-eyebrow">Everything you need</div>
-        <h2 className="lp-section-title">One app for your entire collection</h2>
+        <div className="lp-section-eyebrow">Everything in one place</div>
+        <h2 className="lp-section-title">One home for your whole collection</h2>
       </div>
 
       {/* Feature bento grid */}
@@ -306,14 +307,19 @@ export default function Landing() {
       {/* CTA Banner */}
       <section className="lp-banner">
         <div className="lp-banner-glow" />
-        <h2 className="lp-banner-title">Ready to get organized?</h2>
-        <p className="lp-banner-sub">Everything you need to manage your hockey card collection.</p>
+        <div className="lp-banner-badge">Built for collectors, by a collector</div>
+        <h2 className="lp-banner-title">Your cards deserve<br />a proper home.</h2>
+        <p className="lp-banner-sub">You've spent years building your collection. <br className="lp-banner-br" />It's time to actually see it all in one place.</p>
         <Link to="/login?register=1" className="lp-cta-primary">
           Create Account
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 8h10M9 4l4 4-4 4"/>
           </svg>
         </Link>
+        <div className="lp-banner-perks">
+          <span>✓ No app to download</span>
+          <span>✓ Works on every device</span>
+        </div>
       </section>
 
       {/* Footer */}

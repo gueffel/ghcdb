@@ -19,6 +19,7 @@ export default function AddCard() {
   const [catalogYears, setCatalogYears] = useState([]);
   const [catalogProducts, setCatalogProducts] = useState([]);
   const [catalogSetNames, setCatalogSetNames] = useState([]);
+  const [productSetNames, setProductSetNames] = useState([]);
   const [recentYears, setRecentYears] = useState([]);
   const [recentProducts, setRecentProducts] = useState([]);
 
@@ -33,9 +34,28 @@ export default function AddCard() {
     }).catch(() => {});
   }, []);
 
+  // Load set names for the selected product whenever year/product changes
   useEffect(() => {
-    api.getCatalogSetNames(form.year, form.product).then(setCatalogSetNames).catch(() => {});
+    if (!form.year || !form.product) { setProductSetNames([]); return; }
+    let cancelled = false;
+    api.getCatalogSetNames(form.year, form.product, '')
+      .then(names => { if (!cancelled) setProductSetNames(names); })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, [form.year, form.product]);
+
+  // Use product set names if the product is in the catalog, otherwise search the full catalog
+  useEffect(() => {
+    if (productSetNames.length > 0) { setCatalogSetNames(productSetNames); return; }
+    if (!form.set_name || form.set_name.length < 2) { setCatalogSetNames([]); return; }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      api.getCatalogSetNames('', '', form.set_name)
+        .then(names => { if (!cancelled) setCatalogSetNames(names); })
+        .catch(() => {});
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [productSetNames, form.set_name]);
 
   const defaultYears    = recentYears.length    > 0 ? recentYears    : catalogYears.slice(0, 3);
   const defaultProducts = recentProducts.length > 0 ? recentProducts : catalogProducts.slice(0, 3);
@@ -50,9 +70,9 @@ export default function AddCard() {
     try {
       const result = await api.addCard(form);
       if (result.action === 'marked_owned') {
-        setSuccess(`"${form.description || form.card_number}" does exist already — marked as owned.`);
+        setSuccess(`"${form.description || form.card_number}" was already in your collection, so we marked it as owned.`);
       } else if (result.action === 'duplicated') {
-        setSuccess(`"${form.description || form.card_number}" is already owned — duplicate count increased.`);
+        setSuccess(`"${form.description || form.card_number}" is already owned, so we added a duplicate.`);
       } else {
         setSuccess(`Card "${form.description || form.card_number}" added successfully!`);
       }

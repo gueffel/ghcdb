@@ -262,7 +262,7 @@ export default function Search() {
       {!loading && results.length === 0 && !query && !Object.values(filters).some(Boolean) && (
         <div className="empty-state">
           <div className="empty-icon">🔍</div>
-          <p>Type any combination of player, set, team, product, or year — each word narrows the results.</p>
+          <p>Type any combination of player, set, team, product, or year. Each word narrows the results.</p>
         </div>
       )}
 

@@ -35,6 +35,7 @@ function EditableRow({ card, onSave, onCancel, saving }) {
     <tr className="row-editing">
       <td>{txt('card_number', '#', 'w-60')}</td>
       <td>{txt('description', 'Player / description', 'w-200')}</td>
+      <td>{txt('set_name', 'Set name', 'w-140')}</td>
       <td>{txt('team_city', 'City', 'w-100')}</td>
       <td>{txt('team_name', 'Team', 'w-100')}</td>
       <td className="text-center">
@@ -473,6 +474,7 @@ export default function Admin() {
     return editSet.cards.filter(c =>
       (c.card_number || '').toLowerCase().includes(q)
       || (c.description || '').toLowerCase().includes(q)
+      || (c.set_name || '').toLowerCase().includes(q)
       || (c.team_city || '').toLowerCase().includes(q)
       || (c.team_name || '').toLowerCase().includes(q)
     );
@@ -703,6 +705,7 @@ export default function Admin() {
                 <tr>
                   <th>#</th>
                   <th>Player / Description</th>
+                  <th>Set</th>
                   <th>Team City</th>
                   <th>Team Name</th>
                   <th>RC</th>
@@ -727,6 +730,7 @@ export default function Admin() {
                     <tr key={card.id} className="catalog-edit-row">
                       <td className="text-muted">{card.card_number}</td>
                       <td>{card.description}</td>
+                      <td className="text-muted">{card.set_name || ''}</td>
                       <td className="text-muted">{card.team_city}</td>
                       <td className="text-muted">{card.team_name}</td>
                       <td className="text-center">{card.rookie ? <span className="badge badge-orange">RC</span> : ''}</td>
@@ -827,7 +831,7 @@ export default function Admin() {
                     className="collection-search"
                     value={annTitle}
                     onChange={e => setAnnTitle(e.target.value)}
-                    placeholder="Title (optional) — e.g. Scheduled Maintenance"
+                    placeholder="Title (optional), e.g. Scheduled Maintenance"
                     style={{ width: '100%' }}
                   />
                 </div>

@@ -108,11 +108,18 @@ export const api = {
   },
 
   addCard: async (card) => {
-    const c = normalizeCard(card);
+    const { data: { user } } = await supabase.auth.getUser();
+    const owned = card.owned === true || card.owned === 1;
+    const c = {
+      ...normalizeCard(card),
+      user_id: user.id,
+      owned,
+      duplicates: parseInt(card.duplicates) || 0,
+      owned_at: owned ? new Date().toISOString() : null,
+    };
 
     if (c.card_number) {
-      const { data: { user } } = await supabase.auth.getUser();
-      let q = supabase.from('cards').select('id, owned').eq('year', c.year).eq('product', c.product).eq('card_number', c.card_number);
+      let q = supabase.from('cards').select('id, owned, duplicates').eq('year', c.year).eq('product', c.product).eq('card_number', c.card_number);
       q = c.set_name ? q.eq('set_name', c.set_name) : q.is('set_name', null);
       const { data: existing } = await q.maybeSingle();
 
@@ -209,13 +216,14 @@ export const api = {
     return data.filter(r => { const k = `${r.year}||${r.product}`; return seen.has(k) ? false : seen.add(k); });
   },
 
-  getCatalogSetNames: async (year, product) => {
-    let q = supabase.from('catalog_cards').select('set_name').not('set_name', 'is', null).neq('set_name', '').order('set_name').limit(500);
-    if (year) q = q.eq('year', year);
-    if (product) q = q.eq('product', product);
-    const { data, error } = await q;
+  getCatalogSetNames: async (year, product, search) => {
+    const { data, error } = await supabase.rpc('get_catalog_set_names', {
+      p_year: year || null,
+      p_product: product || null,
+      p_search: search || null,
+    });
     if (error) throw error;
-    return [...new Set(data.map(r => r.set_name))];
+    return (data || []).map(r => r.set_name);
   },
 
   // ── Catalog ────────────────────────────────────────────────

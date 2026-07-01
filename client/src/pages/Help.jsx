@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 
-function Section({ title, children }) {
+function Section({ title, icon, children }) {
   const [open, setOpen] = useState(true);
   return (
     <div className="help-section">
       <button className="help-section-toggle" onClick={() => setOpen(o => !o)}>
-        <span>{title}</span>
-        <span className="help-arrow">{open ? '▲' : '▼'}</span>
+        <span className="help-section-label">
+          {icon && <span className="help-icon">{icon}</span>}
+          {title}
+        </span>
+        <span className={`help-arrow${open ? ' open' : ''}`} />
       </button>
       {open && <div className="help-section-body">{children}</div>}
     </div>
@@ -16,62 +19,62 @@ function Section({ title, children }) {
 export default function Help() {
   return (
     <div className="page page-narrow">
-      <h1 className="page-title">Help &amp; Guide</h1>
-      <p className="help-intro">GHCdb is a personal hockey card collection tracker. Use it to log every card in your collection, mark which ones you own, and get stats on your progress.</p>
+      <h1 className="page-title">Help</h1>
+      <p className="help-intro">GHCdb keeps track of every hockey card you own and every one you're still looking for. Here's how everything works.</p>
 
-      <Section title="Overview">
-        <p>The Overview page shows a summary of your entire collection at a glance:</p>
+      <Section title="Overview" icon="📊">
+        <p>The Overview page gives you a quick snapshot of your whole collection:</p>
         <ul>
-          <li><strong>Owned</strong> — how many cards you currently have in hand, and what % of your total catalogue that covers.</li>
-          <li><strong>Rookies / Autos / Graded</strong> — counts of owned cards with those attributes vs. your total.</li>
-          <li><strong>Duplicates</strong> — total extra copies tracked across your collection.</li>
-          <li><strong>Most Owned Player / Set</strong> — the description and product with the highest owned-card count.</li>
-          <li><strong>Charts</strong> — a pie chart of owned cards by NHL team (using official team colours) and a stacked bar chart breaking down owned vs. not-owned by year.</li>
-          <li><strong>Products table</strong> — every year/set with owned and total counts and a completion bar.</li>
-          <li><strong>Recently Added</strong> — the last 10 cards you marked as owned.</li>
+          <li><strong>Owned:</strong> how many cards you have, and what percentage of your full catalogue that covers.</li>
+          <li><strong>Rookies / Autos / Graded:</strong> how many of your owned cards have those attributes.</li>
+          <li><strong>Duplicates:</strong> how many extra copies you're tracking across your collection.</li>
+          <li><strong>Most Owned Player / Set:</strong> who and what shows up the most in your collection.</li>
+          <li><strong>Charts:</strong> a pie chart showing your cards by NHL team, and a bar chart breaking down owned vs. missing by year.</li>
+          <li><strong>Products table:</strong> every set you're tracking, with a completion bar for each one.</li>
+          <li><strong>Recently Added:</strong> the last 10 cards you marked as owned.</li>
         </ul>
       </Section>
 
-      <Section title="Collection">
-        <p>The Collection page is your main workspace. The left sidebar lists every product (set) you've imported, grouped by year.</p>
+      <Section title="Your Collection" icon="📦">
+        <p>This is where most of the action happens. The sidebar on the left lists every set you're tracking, grouped by year.</p>
         <ul>
-          <li>Click a <strong>year</strong> to expand it and see its sets. The <code>owned/total</code> count is shown next to each year and set.</li>
-          <li>Click a <strong>product name</strong> to load that set's full card list on the right.</li>
-          <li>Click <strong>All Collections</strong> to see every card across all sets in one table.</li>
-          <li>Use the <strong>Owned / Missing / All</strong> tabs and the search box to filter what you see.</li>
-          <li>Click the <strong>✓ / ○ button</strong> on any row to toggle whether you own that card. If the card has a serial number slot, you'll be prompted to enter your copy's number.</li>
-          <li>Click the <strong>✎ pencil</strong> to open a full edit modal — update any field or delete the card entirely.</li>
-          <li>The <strong>+ button</strong> in the sidebar header opens the Catalog Picker, letting you add a pre-built set from the admin catalog.</li>
-          <li>The <strong>del</strong> button next to a set removes every card in that product from your collection.</li>
+          <li>Click a <strong>year</strong> to expand it and see all the sets underneath. You'll see how many cards you own out of the total.</li>
+          <li>Click a <strong>set name</strong> to pull up the full card list on the right.</li>
+          <li>Click <strong>All Collections</strong> at the top to see every card across all your sets in one table.</li>
+          <li>Use the <strong>Owned / Missing / All</strong> tabs and the search box to find specific cards quickly.</li>
+          <li>Click the <strong>✓ / ○ button</strong> on any card to mark it owned or missing. For numbered cards, you'll be asked for your copy's number.</li>
+          <li>Click the <strong>✎ pencil</strong> to edit a card's details or remove it entirely.</li>
+          <li>The <strong>+</strong> button at the top of the sidebar lets you add a whole set from the catalog in one go.</li>
+          <li>The <strong>del</strong> button next to a set removes all cards in that set from your collection.</li>
         </ul>
       </Section>
 
-      <Section title="Wishlist">
-        <p>The wishlist lets you flag cards you don't own yet but want to track separately from your general missing cards.</p>
+      <Section title="Wishlist" icon="♥">
+        <p>The wishlist is for cards you don't own yet but are actively looking for. It keeps them separate from your general missing cards so you always know what you're hunting.</p>
         <ul>
-          <li>Click the <strong>♥ heart button</strong> on any unowned card in the Collection or Search table to add it to your wishlist. Click it again to remove it.</li>
-          <li>The heart button is also available in the card detail modal for unowned cards.</li>
-          <li>Marking a wishlisted card as <strong>owned</strong> automatically removes it from the wishlist.</li>
-          <li>Your wishlist is shown in the <strong>Overview</strong> page as a quick-access panel. Click any row to open the card detail.</li>
+          <li>Click the <strong>♥ heart</strong> on any card you don't own to add it to your wishlist. Click it again to remove it.</li>
+          <li>The heart is also available in the card detail view.</li>
+          <li>When you mark a wishlisted card as owned, it's automatically taken off your wishlist.</li>
+          <li>Your wishlist appears on the Overview page so you can always see what you're after at a glance.</li>
         </ul>
       </Section>
 
-      <Section title="Search">
-        <p>Search scans across your entire collection simultaneously — player name, team, card number, set name, and more. Results update as you type. Use the filter dropdowns to narrow by year, product, rookie status, auto status, or owned status.</p>
+      <Section title="Search" icon="🔍">
+        <p>Search looks across your whole collection at once: player name, team, card number, set name, and more. Results update as you type. Use the filter dropdowns to narrow things down by year, product, rookie or auto status, or whether you own it.</p>
       </Section>
 
-      <Section title="Add Card">
-        <p>Add a single card manually without importing a CSV. Fill in the fields and click Save. If a card with the same number already exists in that product:</p>
+      <Section title="Adding a Single Card" icon="➕">
+        <p>Use this to add one card at a time without needing a spreadsheet. Fill in what you know and hit Save. If a card with the same number is already in that set:</p>
         <ul>
-          <li>If it wasn't owned, it will be marked as owned.</li>
-          <li>If it was already owned, the duplicate count will increase by 1.</li>
+          <li>If you didn't have it yet, it'll be marked as owned.</li>
+          <li>If you already had it, your duplicate count for that card goes up by 1.</li>
         </ul>
       </Section>
 
-      <Section title="Import CSV">
-        <p>The fastest way to load a full set is to import a CSV file. Your file can use any of these column names (case-insensitive):</p>
+      <Section title="Importing from a Spreadsheet" icon="📂">
+        <p>Got your collection in a spreadsheet? Import it as a CSV and GHCdb will map the columns automatically. Your file can use any of these column names:</p>
         <table className="data-table help-table">
-          <thead><tr><th>Field</th><th>Accepted headers</th></tr></thead>
+          <thead><tr><th>Field</th><th>Accepted column names</th></tr></thead>
           <tbody>
             <tr><td>Card #</td><td>Card Number, Card #, #, Card</td></tr>
             <tr><td>Set Name</td><td>Set Name, Subset, Insert, Parallel</td></tr>
@@ -91,38 +94,40 @@ export default function Help() {
             <tr><td>Duplicates</td><td>Duplicates, Dupes, Dups, Duplicate</td></tr>
           </tbody>
         </table>
-        <p style={{ marginTop: 12 }}>Boolean columns (Owned, Rookie, Auto) accept: <code>TRUE</code>, <code>YES</code>, <code>Y</code>, <code>1</code>, <code>X</code> (case-insensitive). Anything else is treated as false.</p>
-        <p><strong>Replace mode</strong> — if you enable this option and pick a year/product, all existing cards for that set will be deleted before the import runs. Useful for re-importing a corrected file.</p>
+        <p style={{ marginTop: 12 }}>For yes/no columns like Owned, Rookie, and Auto, use TRUE, YES, Y, 1, or X to mean yes. Anything else counts as no.</p>
+        <div className="help-tip">
+          <strong>Replace mode:</strong> turning this on and picking a year and product will clear out all existing cards for that set before importing. Handy if you're re-importing a corrected file and don't want duplicates piling up.
+        </div>
       </Section>
 
-      <Section title="Nomenclature">
-        <p>GHCdb uses specific terms to organise your cards. Here's what each one means:</p>
+      <Section title="Key Terms" icon="📖">
+        <p>The hobby has its own lingo, and so does GHCdb. Here's what the main terms mean:</p>
         <ul>
-          <li><strong>Product</strong> — the release or set name as sold by the manufacturer. Examples: <em>2024-25 Upper Deck Series 1</em>, <em>2023-24 SP Authentic</em>, <em>2022-23 Trilogy</em>. A product maps to one physical box or release. All cards imported together are typically from the same product.</li>
-          <li><strong>Set Name</strong> — a subset, insert, or parallel within a product. A single product contains many sets. Examples within <em>Series 1</em>: <em>Base</em>, <em>Young Guns</em>, <em>Silver Foil</em>, <em>UD Canvas</em>. Within <em>SP Authentic</em>: <em>Base</em>, <em>Future Watch</em>, <em>Autographs</em>. The Set Name column in the table distinguishes cards that share the same card number but belong to different subsets.</li>
-          <li><strong>Year</strong> — the season the product was released, e.g. <em>2024-25</em>. Used to group products in the Collection sidebar.</li>
+          <li><strong>Product:</strong> the physical release, as it comes off the shelf. Think <em>2024-25 Upper Deck Series 1</em> or <em>2023-24 SP Authentic</em>. One box, one product.</li>
+          <li><strong>Set Name:</strong> a specific subset, insert, or parallel within a product. Series 1 for example has Base cards, Young Guns, Silver Foil, UD Canvas, and more — each is a different set within the same product.</li>
+          <li><strong>Year:</strong> the season, like <em>2024-25</em>. Used to group your products in the sidebar.</li>
         </ul>
-        <p>In short: <strong>Product → Set Name → Card</strong>. One product contains many sets, each of which contains individual cards.</p>
+        <p>The short version: one <strong>Product</strong> has many <strong>Set Names</strong>, each of which has individual <strong>Cards</strong>.</p>
       </Section>
 
-      <Section title="Card Fields Explained">
+      <Section title="What Each Field Means" icon="🃏">
         <ul>
-          <li><strong>Card #</strong> — the printed number on the card (e.g. <code>42</code>, <code>RC-12</code>).</li>
-          <li><strong>Set Name</strong> — the subset or parallel within a product (e.g. "Silver Prizm", "Base").</li>
-          <li><strong>Serial / Of</strong> — for numbered cards. <em>Serial</em> is your specific copy number; <em>Of</em> is the print run (e.g. serial 14 of 99).</li>
-          <li><strong>Thickness</strong> — card thickness in points, useful for identifying thick relics or 1/1s.</li>
-          <li><strong>Grade</strong> — grading company and grade (e.g. "PSA 10", "BGS 9.5").</li>
-          <li><strong>Duplicates</strong> — how many extra copies of this card you own beyond the first.</li>
-          <li><strong>Owned</strong> — whether you physically have this card. Toggle it anytime from the collection table.</li>
+          <li><strong>Card #:</strong> the number printed on the card, like <code>42</code> or <code>RC-12</code>.</li>
+          <li><strong>Set Name:</strong> the subset or parallel the card belongs to, like "Young Guns" or "Silver Foil".</li>
+          <li><strong>Serial / Of:</strong> for numbered cards. Serial is your specific copy; Of is how many were made. If you have card 14 of 99, Serial is 14 and Of is 99.</li>
+          <li><strong>Thickness:</strong> the card's thickness in points. Handy for thick relics, patch cards, and 1/1s.</li>
+          <li><strong>Grade:</strong> the grading company and score, like "PSA 10" or "BGS 9.5".</li>
+          <li><strong>Duplicates:</strong> how many extra copies of this card you have on top of the first one.</li>
+          <li><strong>Owned:</strong> whether you actually have this card. Tap or click to toggle it anytime.</li>
         </ul>
       </Section>
 
-      <Section title="Account &amp; Settings">
-        <p>Access your account settings by clicking your name in the top-right corner.</p>
+      <Section title="Account &amp; Settings" icon="⚙️">
+        <p>Click your name in the top-right corner to get to your account settings.</p>
         <ul>
-          <li>Update your first name, last name, or email address.</li>
-          <li>Change your password — you'll need your current password to set a new one.</li>
-          <li>If you forget your password, use the <strong>Forgot password?</strong> link on the sign-in screen. A reset link will be emailed to your registered address (valid for 1 hour).</li>
+          <li>Update your name or email address anytime.</li>
+          <li>Change your password. You'll need your current one to set a new one.</li>
+          <li>If you forget your password, hit <strong>Forgot password?</strong> on the sign-in screen. A reset link will be sent to your email and is valid for 1 hour.</li>
         </ul>
       </Section>
     </div>

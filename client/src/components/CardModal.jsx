@@ -42,6 +42,11 @@ export default function CardModal({ card, onClose, onSaved, onDeleted }) {
           <button className="modal-close" onClick={close}>✕</button>
         </div>
         <form onSubmit={save} className="card-form">
+          {form.duplicates > 0 && (
+            <div className="modal-dup-notice">
+              You have {form.duplicates} duplicate{form.duplicates !== 1 ? 's' : ''} of this card
+            </div>
+          )}
           <div className="form-grid">
             <div className="field">
               <label>Year</label>

@@ -20,7 +20,7 @@ export default function SerialPromptModal({ card, onConfirm, onCancel }) {
         <div style={{ padding: '20px' }}>
           <p style={{ margin: '0 0 16px', color: 'var(--text-muted)', fontSize: 14 }}>
             <strong style={{ color: 'var(--text)' }}>{card.description}</strong>
-            {' '}— serialized /{card.serial_of}
+            {', serialized /'}{card.serial_of}
           </p>
           <div className="field">
             <label>Your card number <span className="field-optional">(leave blank to skip)</span></label>

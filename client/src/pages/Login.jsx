@@ -58,7 +58,7 @@ export default function Login() {
       <div className="login-card">
         <img src={logoLight2} alt="GHCdb" className="login-logo" />
         <p className="login-subtitle">Track your collection</p>
-        <p className="login-desc">Log every card in your hockey card collection, track what you own vs. what you're still hunting for, and see stats on your progress — by team, year, and set.</p>
+        <p className="login-desc">Log every card in your hockey card collection, track what you own vs. what you're still hunting for, and see stats on your progress by team, year, and set.</p>
 
         {mode !== 'forgot' && !registerSent && (
           <div className="tab-row">
