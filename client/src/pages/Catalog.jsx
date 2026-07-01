@@ -20,6 +20,7 @@ export default function Catalog() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [previewCards, setPreviewCards] = useState([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [previewCache, setPreviewCache] = useState({});
   const [userProducts, setUserProducts] = useState(new Set());
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState(null); // { type: 'success'|'error'|'confirm', text, year, product }
@@ -38,11 +39,19 @@ export default function Catalog() {
   const selectSet = (year, product) => {
     setSelectedYear(year);
     setSelectedProduct(product);
+    setSidebarOpen(false);
+    const key = `${year}::${product}`;
+    if (previewCache[key]) {
+      setPreviewCards(previewCache[key]);
+      return;
+    }
     setLoadingPreview(true);
     setPreviewCards([]);
-    setSidebarOpen(false);
     api.getCatalogCards(year, product)
-      .then(setPreviewCards)
+      .then(cards => {
+        setPreviewCache(prev => ({ ...prev, [key]: cards }));
+        setPreviewCards(cards);
+      })
       .finally(() => setLoadingPreview(false));
   };
 

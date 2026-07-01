@@ -324,7 +324,7 @@ export const api = {
   getAnnouncement: async () => {
     const { data, error } = await supabase
       .from('announcements')
-      .select('*')
+      .select('id, title, message')
       .order('id', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -360,7 +360,7 @@ export const api = {
   getMyBugs: async () => {
     const { data, error } = await supabase
       .from('bug_reports')
-      .select('*, bug_replies(count)')
+      .select('id, title, status, created_at, bug_replies(count)')
       .order('created_at', { ascending: false });
     if (error) throw error;
     return data.map(b => ({ ...b, reply_count: b.bug_replies?.[0]?.count ?? 0 }));
@@ -369,7 +369,7 @@ export const api = {
   getBug: async (id) => {
     const { data, error } = await supabase
       .from('bug_reports')
-      .select('*, bug_replies(*, profiles(username))')
+      .select('id, title, description, status, created_at, bug_replies(id, message, created_at, profiles(username))')
       .eq('id', id)
       .single();
     if (error) throw error;

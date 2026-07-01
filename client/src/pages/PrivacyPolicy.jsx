@@ -1,4 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../App.jsx';
 
 function Section({ title, children }) {
   return (
@@ -12,8 +14,14 @@ function Section({ title, children }) {
 }
 
 export default function PrivacyPolicy() {
+  const { user } = useAuth();
   return (
     <div className="page page-narrow">
+      {!user && (
+        <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)', marginBottom: 20, textDecoration: 'none' }}>
+          ← Back
+        </Link>
+      )}
       <h1 className="page-title">Privacy Policy</h1>
       <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 24, marginTop: -16 }}>Last updated: July 2026</p>
 

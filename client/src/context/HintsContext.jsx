@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { api } from '../api.js';
+import { supabase } from '../lib/supabase.js';
 
 const HintsContext = createContext(null);
 
@@ -11,21 +12,36 @@ export function HintsProvider({ children }) {
   const seenRef = useRef({});
   const saveTimer = useRef(null);
 
-  useEffect(() => {
-    api.getHintsState()
-      .then(data => {
-        if (data) {
-          const on = data.hints_enabled !== false;
-          const seen = data.hints_seen || {};
-          enabledRef.current = on;
-          seenRef.current = seen;
-          setHintsEnabledState(on);
-          setSeenHints(seen);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
+  const loadHints = useCallback(async () => {
+    try {
+      const data = await api.getHintsState();
+      if (data) {
+        const on = data.hints_enabled !== false;
+        const seen = data.hints_seen || {};
+        enabledRef.current = on;
+        seenRef.current = seen;
+        setHintsEnabledState(on);
+        setSeenHints(seen);
+      }
+    } catch {}
+    setLoaded(true);
   }, []);
+
+  useEffect(() => {
+    loadHints();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') loadHints();
+      if (event === 'SIGNED_OUT') {
+        enabledRef.current = true;
+        seenRef.current = {};
+        setHintsEnabledState(true);
+        setSeenHints({});
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [loadHints]);
 
   const scheduleSave = useCallback(() => {
     clearTimeout(saveTimer.current);
