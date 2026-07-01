@@ -57,8 +57,6 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         <img src={logoLight2} alt="GHCdb" className="login-logo" />
-        <p className="login-subtitle">Track your collection</p>
-        <p className="login-desc">Log every card in your hockey card collection, track what you own vs. what you're still hunting for, and see stats on your progress by team, year, and set.</p>
 
         {mode !== 'forgot' && !registerSent && (
           <div className="tab-row">
@@ -73,7 +71,7 @@ export default function Login() {
             {forgotSent ? (
               <div className="alert success">If that email is registered, a reset link has been sent.</div>
             ) : (
-              <form onSubmit={submit}>
+              <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {error && <div className="alert error">{error}</div>}
                 <div className="field">
                   <label>Email</label>

@@ -50,11 +50,22 @@ function TitleUpdater() {
 }
 
 const FULLSCREEN_PATHS = ['/collection', '/search'];
+const NO_CHROME_PATHS = ['/reset-password'];
 
-function ConditionalFooter() {
+function AppChrome({ children }) {
   const { pathname } = useLocation();
-  if (FULLSCREEN_PATHS.includes(pathname)) return null;
-  return <Footer />;
+  const { user } = useAuth();
+  const showChrome = user && !NO_CHROME_PATHS.includes(pathname);
+  const showFooter = showChrome && !FULLSCREEN_PATHS.includes(pathname);
+  return (
+    <>
+      {showChrome && <Navbar />}
+      <main className={showChrome ? 'with-nav' : ''}>
+        {children}
+      </main>
+      {showFooter && <Footer />}
+    </>
+  );
 }
 
 export default function App() {
@@ -100,8 +111,7 @@ export default function App() {
       <HintsProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <TitleUpdater />
-        {user && <Navbar />}
-        <main className={user ? 'with-nav' : ''}>
+        <AppChrome>
           <Routes>
             <Route path="/" element={user ? <Navigate to="/overview" replace /> : <Landing />} />
             <Route path="/login" element={user ? <Navigate to="/overview" replace /> : <Login />} />
@@ -118,8 +128,7 @@ export default function App() {
             <Route path="/report-bug" element={<ProtectedRoute><BugReport /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to={user ? '/overview' : '/'} replace />} />
           </Routes>
-        </main>
-        {user && <ConditionalFooter />}
+        </AppChrome>
       </BrowserRouter>
       </HintsProvider>
     </AuthContext.Provider>
