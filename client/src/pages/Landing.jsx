@@ -20,7 +20,7 @@ function MockCollection() {
         <span className="lp-mini-tag">2022-23 UD Series 1</span>
         <span className="lp-mini-meta">198 / 250</span>
       </div>
-      <div className="lp-mini-prog"><div className="lp-mini-pb" style={{ width: '79%' }} /></div>
+      <div className="lp-mini-prog"><div className="lp-mini-pb lp-mini-pb-anim" /></div>
       {rows.map((c, i) => (
         <div key={i} className={`lp-mini-row ${c.owned ? 'lp-mini-owned' : 'lp-mini-miss'}`}>
           <span className="lp-mini-chk">{c.owned ? '✓' : '○'}</span>
@@ -42,7 +42,7 @@ function MockSearch() {
   return (
     <div className="lp-mini">
       <div className="lp-mini-searchbar">
-        <span>🔍</span><span className="lp-mini-sq">Pettersson</span>
+        <span>🔍</span><span className="lp-mini-sq">Pettersson</span><span className="lp-mini-cursor" aria-hidden="true">|</span>
       </div>
       <div className="lp-mini-count-sm">42 results</div>
       {rows.map((r, i) => (
@@ -73,7 +73,7 @@ function MockWishlist() {
       </div>
       {items.map((item, i) => (
         <div key={i} className="lp-mini-row">
-          <span className="lp-mini-heart">♥</span>
+          <span className="lp-mini-heart" style={{ animationDelay: `${(i * 0.85).toFixed(2)}s` }}>♥</span>
           <span className="lp-mini-nm">{item.name}</span>
           <span className="lp-mini-pill">{item.tag}</span>
         </div>
@@ -93,10 +93,10 @@ function MockDashboard() {
         <div className="lp-mini-sc"><span className="lp-mini-sn">5</span><span className="lp-mini-sl">Graded</span></div>
       </div>
       <div className="lp-mini-div" />
-      {teams.map(([t, v]) => (
+      {teams.map(([t, v], i) => (
         <div key={t} className="lp-mini-bar-row">
           <span className="lp-mini-team">{t}</span>
-          <div className="lp-mini-track"><div className="lp-mini-fill" style={{ width: `${v}%` }} /></div>
+          <div className="lp-mini-track"><div className="lp-mini-fill" style={{ width: `${v}%`, animationDelay: `${(i * 0.7).toFixed(1)}s` }} /></div>
           <span className="lp-mini-val">{v}</span>
         </div>
       ))}
@@ -104,19 +104,19 @@ function MockDashboard() {
   );
 }
 
-function MockImport() {
+function MockMobile() {
   return (
-    <div className="lp-mini lp-mini-csv">
-      <div className="lp-mini-csv-hd">year · product · player · owned</div>
-      {[
-        '2023 · UD Series 1 · Pettersson · TRUE',
-        '2023 · UD Series 1 · McDavid · TRUE',
-        '2023 · UD Series 1 · MacKinnon · FALSE',
-        '2023 · UD Series 1 · Matthews · TRUE',
-        '2023 · UD Series 1 · Point · FALSE',
-        '2023 · UD Series 1 · Draisaitl · TRUE',
-        '2023 · UD Series 1 · Kucherov · TRUE',
-      ].map((r, i) => <div key={i} className="lp-mini-csv-row">{r}</div>)}
+    <div className="lp-mini lp-mini-mobile">
+      <div className="lp-mini-mob-card">
+        <div className="lp-mini-mob-name">E. Pettersson</div>
+        <div className="lp-mini-mob-sub">Young Guns RC · #201</div>
+        <div className="lp-mini-mob-set">2018-19 UD Series 1</div>
+      </div>
+      <div className="lp-mini-mob-status">○ Not in your collection</div>
+      <div className="lp-mini-mob-actions">
+        <span className="lp-mini-mob-wl">♥ Wishlist</span>
+        <span className="lp-mini-mob-own">Mark owned ✓</span>
+      </div>
     </div>
   );
 }
@@ -137,7 +137,7 @@ function MockCatalog() {
         <div key={i} className="lp-mini-row lp-mini-cat">
           <span className="lp-mini-nm">{s.name}</span>
           <span className="lp-mini-meta">{s.n} cards</span>
-          <span className="lp-mini-add-btn">+ Add</span>
+          <span className="lp-mini-add-btn" style={{ animationDelay: `${(i * 1.05).toFixed(2)}s` }}>+ Add</span>
         </div>
       ))}
     </div>
@@ -149,7 +149,7 @@ const FEATURES = [
   { mock: <MockSearch />,     eyebrow: 'Search',         title: 'Find Any Card Instantly',    body: 'Search your entire collection by player, number, team, set, or product.' },
   { mock: <MockWishlist />,   eyebrow: 'Wishlist',       title: "Track What You're Hunting",  body: 'Flag any card as wishlisted so you never lose track of what you still need.' },
   { mock: <MockDashboard />,  eyebrow: 'Dashboard',      title: 'Stats at a Glance',          body: 'Owned totals, rookies, autos, graded cards, and a team breakdown chart.' },
-  { mock: <MockImport />,     eyebrow: 'Import / Export', title: 'CSV In and Out',            body: 'Bring your spreadsheet — any column names work. Export any view back to CSV.' },
+  { mock: <MockMobile />,     eyebrow: 'Mobile',          title: 'Perfect at Card Shows',     body: 'Pull up your wishlist on the floor. Check off finds on the spot — works great on any phone, no install needed.' },
   { mock: <MockCatalog />,    eyebrow: 'Catalog',        title: 'One-Click Set Import',       body: 'Browse master checklists and add an entire set to your collection instantly.' },
 ];
 
