@@ -59,9 +59,9 @@ export default function Search() {
   const LIMIT = 35;
 
   const searchBarRef = useRef(null);
-  const filterRowRef = useRef(null);
+  const filterDropdownsRef = useRef(null);
   const pageHint = usePageHints(SEARCH_HINTS);
-  const hintRefs = { search_overview: searchBarRef, search_filters: filterRowRef };
+  const hintRefs = { search_overview: searchBarRef, search_filters: filterDropdownsRef };
 
   useEffect(() => {
     api.getProducts().then(p => {
@@ -160,8 +160,8 @@ export default function Search() {
         </div>
       </div>
 
-      <div className="filter-row" ref={filterRowRef}>
-        <div className={`filter-dropdowns${filtersOpen ? ' open' : ''}`}>
+      <div className="filter-row">
+        <div className={`filter-dropdowns${filtersOpen ? ' open' : ''}`} ref={filterDropdownsRef}>
           <select value={filters.year} onChange={e => setFilter('year', e.target.value)} className="filter-select">
             <option value="">All years</option>
             {years.map(y => <option key={y} value={y}>{y}</option>)}

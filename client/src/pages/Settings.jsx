@@ -157,65 +157,69 @@ export default function Settings() {
 
   return (
     <>
-    <div className="page page-narrow">
+    <div className="page page-mid">
       <h1 className="page-title">Settings</h1>
 
       <div className="settings-stack">
-        <div className="settings-card">
-          <div>
-            <h2 className="settings-section-title">Profile</h2>
-            <p className="settings-section-sub">
-              {user?.email}
-            </p>
+        <div className="settings-top-row">
+          <div className="settings-section">
+            <div className="settings-eyebrow">Your account</div>
+            <h2 className="settings-section-h2">Profile</h2>
+            <div className="settings-card">
+              <p className="settings-section-sub" style={{ marginTop: 0 }}>{user?.email}</p>
+              <form onSubmit={saveProfile} className="settings-form">
+                <div className="field-row">
+                  <div className="field">
+                    <label>First Name <span className="field-optional">(optional)</span></label>
+                    <input value={profileForm.first_name} onChange={e => setProfileForm(p => ({ ...p, first_name: e.target.value }))} autoComplete="given-name" placeholder="First name" />
+                  </div>
+                  <div className="field">
+                    <label>Last Name <span className="field-optional">(optional)</span></label>
+                    <input value={profileForm.last_name} onChange={e => setProfileForm(p => ({ ...p, last_name: e.target.value }))} autoComplete="family-name" placeholder="Last name" />
+                  </div>
+                </div>
+                {profileStatus && <div className={`alert ${profileStatus.type}`}>{profileStatus.msg}</div>}
+                <button type="submit" className="btn-primary" disabled={profileLoading}>
+                  {profileLoading ? 'Saving…' : 'Save Profile'}
+                </button>
+              </form>
+            </div>
           </div>
-          <form onSubmit={saveProfile} className="settings-form">
-            <div className="field-row">
-              <div className="field">
-                <label>First Name <span className="field-optional">(optional)</span></label>
-                <input value={profileForm.first_name} onChange={e => setProfileForm(p => ({ ...p, first_name: e.target.value }))} autoComplete="given-name" placeholder="First name" />
-              </div>
-              <div className="field">
-                <label>Last Name <span className="field-optional">(optional)</span></label>
-                <input value={profileForm.last_name} onChange={e => setProfileForm(p => ({ ...p, last_name: e.target.value }))} autoComplete="family-name" placeholder="Last name" />
+
+          {!isOAuthUser && (
+            <div className="settings-section">
+              <div className="settings-eyebrow">Security</div>
+              <h2 className="settings-section-h2">Change Password</h2>
+              <div className="settings-card">
+                <form onSubmit={savePassword} className="settings-form">
+                  <div className="field">
+                    <label>Current Password</label>
+                    <input type="password" value={passwords.current_password} onChange={e => setPasswords(p => ({ ...p, current_password: e.target.value }))} autoComplete="current-password" required />
+                  </div>
+                  <div className="field">
+                    <label>New Password</label>
+                    <input type="password" value={passwords.new_password} onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))} autoComplete="new-password" required minLength={6} />
+                  </div>
+                  <div className="field">
+                    <label>Confirm New Password</label>
+                    <input type="password" value={passwords.confirm_password} onChange={e => setPasswords(p => ({ ...p, confirm_password: e.target.value }))} autoComplete="new-password" required />
+                  </div>
+                  {passwordStatus && <div className={`alert ${passwordStatus.type}`}>{passwordStatus.msg}</div>}
+                  <button type="submit" className="btn-primary" disabled={passwordLoading}>
+                    {passwordLoading ? 'Saving…' : 'Change Password'}
+                  </button>
+                </form>
               </div>
             </div>
-            {profileStatus && <div className={`alert ${profileStatus.type}`}>{profileStatus.msg}</div>}
-            <button type="submit" className="btn-primary" disabled={profileLoading}>
-              {profileLoading ? 'Saving…' : 'Save Profile'}
-            </button>
-          </form>
+          )}
         </div>
 
-        {!isOAuthUser && (
-          <div className="settings-card">
-            <h2 className="settings-section-title">Change Password</h2>
-            <form onSubmit={savePassword} className="settings-form">
-              <div className="field">
-                <label>Current Password</label>
-                <input type="password" value={passwords.current_password} onChange={e => setPasswords(p => ({ ...p, current_password: e.target.value }))} autoComplete="current-password" required />
-              </div>
-              <div className="field">
-                <label>New Password</label>
-                <input type="password" value={passwords.new_password} onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))} autoComplete="new-password" required minLength={6} />
-              </div>
-              <div className="field">
-                <label>Confirm New Password</label>
-                <input type="password" value={passwords.confirm_password} onChange={e => setPasswords(p => ({ ...p, confirm_password: e.target.value }))} autoComplete="new-password" required />
-              </div>
-              {passwordStatus && <div className={`alert ${passwordStatus.type}`}>{passwordStatus.msg}</div>}
-              <button type="submit" className="btn-primary" disabled={passwordLoading}>
-                {passwordLoading ? 'Saving…' : 'Change Password'}
-              </button>
-            </form>
-          </div>
-        )}
-
         {hintsCtx?.loaded && (
-          <div className="settings-card">
-            <div>
-              <h2 className="settings-section-title">Feature Tips</h2>
-              <p className="settings-section-sub">Guided tip bubbles that appear the first time you visit each section. They explain key features without getting in the way.</p>
-            </div>
+          <div className="settings-section">
+          <div className="settings-eyebrow">Preferences</div>
+          <h2 className="settings-section-h2">Feature Tips</h2>
+          <div className="settings-section-body">
+            <p className="settings-section-sub" style={{ marginTop: 0 }}>Guided tip bubbles that appear the first time you visit each section. They explain key features without getting in the way.</p>
             <div className="settings-row">
               {hintsCtx.hintsEnabled ? (
                 <>
@@ -230,13 +234,16 @@ export default function Settings() {
               )}
             </div>
           </div>
+          </div>
         )}
 
-        <div className="settings-card">
-          <div className="settings-card-header">
-            <h2 className="settings-section-title">Bug Reports</h2>
+        <div className="settings-section">
+          <div className="settings-eyebrow">Support</div>
+          <div className="settings-section-h2-row">
+            <h2 className="settings-section-h2">Bug Reports</h2>
             <Link to="/report-bug" className="btn-primary" style={{ textDecoration: 'none', fontSize: 13, padding: '7px 14px' }}>+ New Report</Link>
           </div>
+          <div className="settings-section-body">
           {bugsLoading ? (
             <div style={{ padding: '12px 0', color: 'var(--text-muted)', fontSize: 13 }}>Loading…</div>
           ) : bugs.length === 0 ? (
@@ -250,13 +257,16 @@ export default function Settings() {
               ))}
             </div>
           )}
-        </div>
-        <div className="settings-card settings-card--danger">
-          <div>
-            <h2 className="settings-section-title">Delete Account</h2>
-            <p className="settings-section-sub">Permanently remove your account and all collection data. This cannot be undone.</p>
           </div>
-          <button className="btn-danger" onClick={openDeleteModal}>Delete my account…</button>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-eyebrow">Danger zone</div>
+          <h2 className="settings-section-h2">Delete Account</h2>
+          <div className="settings-section-body">
+            <p className="settings-section-sub" style={{ marginTop: 0 }}>Permanently remove your account and all collection data. This cannot be undone.</p>
+            <button className="btn-danger" style={{ alignSelf: 'flex-start' }} onClick={openDeleteModal}>Delete my account</button>
+          </div>
         </div>
       </div>
     </div>

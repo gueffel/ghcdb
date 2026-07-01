@@ -319,6 +319,12 @@ export const api = {
     return data;
   },
 
+  getOpenBugCount: async () => {
+    const { data, error } = await supabase.rpc('admin_get_open_bug_count');
+    if (error) throw error;
+    return data ?? 0;
+  },
+
   // ── Announcements ──────────────────────────────────────────
 
   getAnnouncement: async () => {

@@ -4,6 +4,18 @@
   publish = "dist"
 
 [[redirects]]
+  from   = "/nhl-api/*"
+  to     = "https://api-web.nhle.com/:splat"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/nhl-search/*"
+  to     = "https://search.d3.nhle.com/:splat"
+  status = 200
+  force  = true
+
+[[redirects]]
   from   = "/*"
   to     = "/index.html"
   status = 200

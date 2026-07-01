@@ -1,90 +1,112 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { MiniStats, MiniSidebar, MiniOwnedToggle, MiniWishlist, MiniSearch, MiniAddSingle, MiniImport } from '../components/HintMiniUIs.jsx';
 
-function Section({ title, icon, children }) {
-  const [open, setOpen] = useState(true);
+function QuickCard({ icon, title, body }) {
   return (
-    <div className="help-section">
-      <button className="help-section-toggle" onClick={() => setOpen(o => !o)}>
-        <span className="help-section-label">
-          {icon && <span className="help-icon">{icon}</span>}
-          {title}
-        </span>
-        <span className={`help-arrow${open ? ' open' : ''}`} />
-      </button>
-      {open && <div className="help-section-body">{children}</div>}
+    <div className="help-quick-card">
+      <span className="help-quick-icon">{icon}</span>
+      <div className="help-quick-title">{title}</div>
+      <p className="help-quick-body">{body}</p>
+    </div>
+  );
+}
+
+function Topic({ title, eyebrow, mini, children }) {
+  return (
+    <div className="help-topic">
+      {eyebrow && <div className="help-eyebrow">{eyebrow}</div>}
+      <h2 className="help-topic-title">{title}</h2>
+      {mini ? (
+        <div className="help-topic-inner">
+          <div>{children}</div>
+          <div className="help-mini">{mini}</div>
+        </div>
+      ) : children}
     </div>
   );
 }
 
 export default function Help() {
   return (
-    <div className="page page-narrow">
+    <div className="page page-mid">
       <h1 className="page-title">Help</h1>
-      <p className="help-intro">GHCdb keeps track of every hockey card you own and every one you're still looking for. Here's how everything works.</p>
+      <p className="help-intro">GHCdb is a checklist and tracker for your hockey card collection. Here's how to get the most out of it.</p>
 
-      <Section title="Overview" icon="📊">
-        <p>The Overview page gives you a quick snapshot of your whole collection:</p>
+      <div className="help-quick-grid">
+        <QuickCard
+          icon="✓"
+          title="Tick off your cards"
+          body="Click the checkmark next to any card to mark it owned. Tap again to unmark it. For numbered cards you'll be asked for your copy number."
+        />
+        <QuickCard
+          icon="📥"
+          title="Import a spreadsheet"
+          body="Already have your collection in a spreadsheet? Export it as CSV and drop it into Import — GHCdb figures out the columns automatically."
+        />
+        <QuickCard
+          icon="♥"
+          title="Track what you're hunting"
+          body="Heart any card you're after. Your wishlist shows up on the Overview page so you never lose track of what you need."
+        />
+      </div>
+
+      <Topic title="Your dashboard" eyebrow="Overview" mini={<MiniStats />}>
+        <p>The Overview page gives you the big picture — how many cards you own, your rookie and auto counts, which sets are closest to complete, and your most recently added cards. The team breakdown and year charts are there too if you want to see how your collection is spread across the league.</p>
+      </Topic>
+
+      <Topic title="The collection page" eyebrow="Collection" mini={
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <MiniSidebar />
+          <MiniOwnedToggle />
+        </div>
+      }>
+        <p>This is where you'll spend most of your time. Your sets live in the sidebar on the left — click a year to expand it, then pick a set to load its cards on the right.</p>
         <ul>
-          <li><strong>Owned:</strong> how many cards you have, and what percentage of your full catalogue that covers.</li>
-          <li><strong>Rookies / Autos / Graded:</strong> how many of your owned cards have those attributes.</li>
-          <li><strong>Duplicates:</strong> how many extra copies you're tracking across your collection.</li>
-          <li><strong>Most Owned Player / Set:</strong> who and what shows up the most in your collection.</li>
-          <li><strong>Charts:</strong> a pie chart showing your cards by NHL team, and a bar chart breaking down owned vs. missing by year.</li>
-          <li><strong>Products table:</strong> every set you're tracking, with a completion bar for each one.</li>
-          <li><strong>Recently Added:</strong> the last 10 cards you marked as owned.</li>
+          <li>Click <strong>All Collections</strong> at the top to see every card you're tracking at once.</li>
+          <li>The <strong>Owned / Missing / All</strong> tabs let you focus on just what you need — Missing is great for knowing what you're still after.</li>
+          <li>The search box filters by player, card number, team, or set name.</li>
+          <li>The <strong>+</strong> button in the sidebar lets you add a full set from the catalog in one shot — no manual entry needed.</li>
+          <li>The <strong>del</strong> button next to a set name removes all cards in that set.</li>
+          <li>Click the <strong>pencil</strong> on any card row to edit its details or delete it.</li>
         </ul>
-      </Section>
+      </Topic>
 
-      <Section title="Your Collection" icon="📦">
-        <p>This is where most of the action happens. The sidebar on the left lists every set you're tracking, grouped by year.</p>
+      <Topic title="Your wishlist" eyebrow="Wishlist" mini={<MiniWishlist />}>
+        <p>The wishlist is for cards you don't have yet but are actively looking for. It keeps them separate from your general "missing" cards so you can see what you're actually hunting.</p>
         <ul>
-          <li>Click a <strong>year</strong> to expand it and see all the sets underneath. You'll see how many cards you own out of the total.</li>
-          <li>Click a <strong>set name</strong> to pull up the full card list on the right.</li>
-          <li>Click <strong>All Collections</strong> at the top to see every card across all your sets in one table.</li>
-          <li>Use the <strong>Owned / Missing / All</strong> tabs and the search box to find specific cards quickly.</li>
-          <li>Click the <strong>✓ / ○ button</strong> on any card to mark it owned or missing. For numbered cards, you'll be asked for your copy's number.</li>
-          <li>Click the <strong>✎ pencil</strong> to edit a card's details or remove it entirely.</li>
-          <li>The <strong>+</strong> button at the top of the sidebar lets you add a whole set from the catalog in one go.</li>
-          <li>The <strong>del</strong> button next to a set removes all cards in that set from your collection.</li>
+          <li>Click the <strong>♥</strong> on any card you don't own to add it to your wishlist. Click again to remove it.</li>
+          <li>When you mark a wishlisted card as owned, it's automatically taken off the wishlist.</li>
+          <li>Your wishlist shows up on the Overview page and is searchable and paginated so it stays useful even when it grows.</li>
         </ul>
-      </Section>
+      </Topic>
 
-      <Section title="Wishlist" icon="♥">
-        <p>The wishlist is for cards you don't own yet but are actively looking for. It keeps them separate from your general missing cards so you always know what you're hunting.</p>
-        <ul>
-          <li>Click the <strong>♥ heart</strong> on any card you don't own to add it to your wishlist. Click it again to remove it.</li>
-          <li>The heart is also available in the card detail view.</li>
-          <li>When you mark a wishlisted card as owned, it's automatically taken off your wishlist.</li>
-          <li>Your wishlist appears on the Overview page so you can always see what you're after at a glance.</li>
-        </ul>
-      </Section>
+      <Topic title="Search" eyebrow="Finding cards" mini={<MiniSearch />}>
+        <p>Search looks across your entire collection at once — player, team, card number, set name, year, product. Results update as you type. Use the filter dropdowns to narrow things down by year, product, rookie or auto status, or whether you own it.</p>
+      </Topic>
 
-      <Section title="Search" icon="🔍">
-        <p>Search looks across your whole collection at once: player name, team, card number, set name, and more. Results update as you type. Use the filter dropdowns to narrow things down by year, product, rookie or auto status, or whether you own it.</p>
-      </Section>
+      <Topic title="Adding a single card" eyebrow="Add card" mini={<MiniAddSingle />}>
+        <p>Use the Add Single page to add one card at a time without needing a spreadsheet. Fill in what you know and hit Save.</p>
+        <p>If a card with the same number already exists in that set, GHCdb will mark it owned — or bump your duplicate count if you already had it.</p>
+      </Topic>
 
-      <Section title="Adding a Single Card" icon="➕">
-        <p>Use this to add one card at a time without needing a spreadsheet. Fill in what you know and hit Save. If a card with the same number is already in that set:</p>
-        <ul>
-          <li>If you didn't have it yet, it'll be marked as owned.</li>
-          <li>If you already had it, your duplicate count for that card goes up by 1.</li>
-        </ul>
-      </Section>
-
-      <Section title="Importing from a Spreadsheet" icon="📂">
-        <p>Got your collection in a spreadsheet? Import it as a CSV and GHCdb will map the columns automatically. Your file can use any of these column names:</p>
-        <table className="data-table help-table">
-          <thead><tr><th>Field</th><th>Accepted column names</th></tr></thead>
+      <Topic title="Importing from a spreadsheet" eyebrow="Import CSV">
+        <p>Export your spreadsheet as CSV and drop it into the Import page. GHCdb maps the columns automatically as long as you use recognisable names.</p>
+        <div className="help-mini" style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 10 }}>What your CSV might look like</div>
+          <MiniImport />
+        </div>
+        <table className="data-table help-table" style={{ marginBottom: 14 }}>
+          <thead><tr><th>Field</th><th>Column names it recognises</th></tr></thead>
           <tbody>
             <tr><td>Card #</td><td>Card Number, Card #, #, Card</td></tr>
             <tr><td>Set Name</td><td>Set Name, Subset, Insert, Parallel</td></tr>
-            <tr><td>Description</td><td>Description, Player, Name, Subject</td></tr>
+            <tr><td>Player</td><td>Description, Player, Name, Subject</td></tr>
             <tr><td>Team City</td><td>Team City, City</td></tr>
             <tr><td>Team Name</td><td>Team Name, Team</td></tr>
             <tr><td>Rookie</td><td>Rookie, RC</td></tr>
             <tr><td>Auto</td><td>Auto, Autograph</td></tr>
-            <tr><td>Mem</td><td>Mem, Memorabilia, Relic, Patch</td></tr>
-            <tr><td>Serial</td><td>Serial, Serial Number</td></tr>
+            <tr><td>Mem / Relic</td><td>Mem, Memorabilia, Relic, Patch</td></tr>
+            <tr><td>Serial #</td><td>Serial, Serial Number</td></tr>
             <tr><td>Serial Of</td><td>Of, Serial Of, Numbered To</td></tr>
             <tr><td>Thickness</td><td>Thickness</td></tr>
             <tr><td>Year</td><td>Year, Season</td></tr>
@@ -94,42 +116,29 @@ export default function Help() {
             <tr><td>Duplicates</td><td>Duplicates, Dupes, Dups, Duplicate</td></tr>
           </tbody>
         </table>
-        <p style={{ marginTop: 12 }}>For yes/no columns like Owned, Rookie, and Auto, use TRUE, YES, Y, 1, or X to mean yes. Anything else counts as no.</p>
+        <p>For yes/no columns like Owned, Rookie, and Auto — TRUE, YES, Y, 1, or X all count as yes. Anything else is no.</p>
         <div className="help-tip">
-          <strong>Replace mode:</strong> turning this on and picking a year and product will clear out all existing cards for that set before importing. Handy if you're re-importing a corrected file and don't want duplicates piling up.
+          <strong>Replace mode:</strong> wipes the existing cards for a specific year and product before importing. Use it when you're re-importing a corrected file and don't want duplicates stacking up.
         </div>
-      </Section>
+      </Topic>
 
-      <Section title="Key Terms" icon="📖">
-        <p>The hobby has its own lingo, and so does GHCdb. Here's what the main terms mean:</p>
+      <Topic title="Hockey card lingo" eyebrow="Reference">
+        <p>Here's how the terminology maps to what GHCdb actually does:</p>
         <ul>
-          <li><strong>Product:</strong> the physical release, as it comes off the shelf. Think <em>2024-25 Upper Deck Series 1</em> or <em>2023-24 SP Authentic</em>. One box, one product.</li>
-          <li><strong>Set Name:</strong> a specific subset, insert, or parallel within a product. Series 1 for example has Base cards, Young Guns, Silver Foil, UD Canvas, and more — each is a different set within the same product.</li>
-          <li><strong>Year:</strong> the season, like <em>2024-25</em>. Used to group your products in the sidebar.</li>
+          <li><strong>Product</strong> is the release — <em>2024-25 Upper Deck Series 1</em> or <em>2023-24 SP Authentic</em>. One box, one product.</li>
+          <li><strong>Set Name</strong> is the subset or parallel within that product. Series 1 has Base, Young Guns, Silver Foil, UD Canvas — each of those is a separate set within the same product.</li>
+          <li><strong>Year</strong> is the season, like <em>2024-25</em>. GHCdb uses it to group your products in the sidebar.</li>
+          <li><strong>Serial / Of</strong> — for numbered cards, Serial is your specific copy and Of is the print run. Card 14 of 99: Serial = 14, Of = 99.</li>
+          <li><strong>Thickness</strong> — measured in points. Handy for thick relics, patches, and 1/1s.</li>
+          <li><strong>Grade</strong> — the grading company and score, like PSA 10 or BGS 9.5.</li>
+          <li><strong>Duplicates</strong> — how many extra copies of a card you have beyond the first.</li>
         </ul>
-        <p>The short version: one <strong>Product</strong> has many <strong>Set Names</strong>, each of which has individual <strong>Cards</strong>.</p>
-      </Section>
+      </Topic>
 
-      <Section title="What Each Field Means" icon="🃏">
-        <ul>
-          <li><strong>Card #:</strong> the number printed on the card, like <code>42</code> or <code>RC-12</code>.</li>
-          <li><strong>Set Name:</strong> the subset or parallel the card belongs to, like "Young Guns" or "Silver Foil".</li>
-          <li><strong>Serial / Of:</strong> for numbered cards. Serial is your specific copy; Of is how many were made. If you have card 14 of 99, Serial is 14 and Of is 99.</li>
-          <li><strong>Thickness:</strong> the card's thickness in points. Handy for thick relics, patch cards, and 1/1s.</li>
-          <li><strong>Grade:</strong> the grading company and score, like "PSA 10" or "BGS 9.5".</li>
-          <li><strong>Duplicates:</strong> how many extra copies of this card you have on top of the first one.</li>
-          <li><strong>Owned:</strong> whether you actually have this card. Tap or click to toggle it anytime.</li>
-        </ul>
-      </Section>
-
-      <Section title="Account &amp; Settings" icon="⚙️">
-        <p>Click your name in the top-right corner to get to your account settings.</p>
-        <ul>
-          <li>Update your name or email address anytime.</li>
-          <li>Change your password. You'll need your current one to set a new one.</li>
-          <li>If you forget your password, hit <strong>Forgot password?</strong> on the sign-in screen. A reset link will be sent to your email and is valid for 1 hour.</li>
-        </ul>
-      </Section>
+      <Topic title="Account & settings" eyebrow="Account">
+        <p>Click your name (or the ⚙ icon) in the top right to get to Settings. You can update your name, change your password, and turn the guided tip bubbles on or off. You can also export your collection as CSV from the Collection page if you ever need a copy of your data.</p>
+        <p>If you forget your password, hit <strong>Forgot password?</strong> on the sign-in screen and we'll send you a reset link.</p>
+      </Topic>
     </div>
   );
 }

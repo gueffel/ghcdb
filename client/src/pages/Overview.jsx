@@ -8,6 +8,12 @@ import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import { NHL_TEAM_COLORS, getTeamMeta } from '../nhlTeams.js';
 import { usePageHints } from '../context/HintsContext.jsx';
+
+function renderMarkdown(text) {
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const html = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+  return { __html: html };
+}
 import HintBubble from '../components/HintBubble.jsx';
 import { MiniStats, MiniWishlist } from '../components/HintMiniUIs.jsx';
 
@@ -152,7 +158,7 @@ export default function Overview() {
           <div className="announcement-icon">📣</div>
           <div className="announcement-body">
             {announcement.title && <div className="announcement-title">{announcement.title}</div>}
-            <span className="announcement-text">{announcement.message}</span>
+            <span className="announcement-text" dangerouslySetInnerHTML={renderMarkdown(announcement.message)} />
           </div>
           <button
             className="announcement-close"

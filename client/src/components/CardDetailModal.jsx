@@ -1,11 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TeamChip from './TeamChip.jsx';
 import { getTeamMeta } from '../nhlTeams.js';
+
+const rosterCache = {}; // keyed by "season::team" — one fetch per team/season
+
+function toNhlSeason(year) {
+  const m = year?.match(/^(\d{4})-(\d{2,4})$/);
+  if (!m) return null;
+  const start = m[1];
+  const end = m[2].length === 2 ? start.slice(0, 2) + m[2] : m[2];
+  return start + end;
+}
+
+async function getRoster(teamAbbrev, season) {
+  const key = `${season}::${teamAbbrev}`;
+  if (key in rosterCache) return rosterCache[key];
+  rosterCache[key] = fetch(`/nhl-api/v1/roster/${teamAbbrev}/${season}`)
+    .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+    .then(data => [...(data.forwards || []), ...(data.defensemen || []), ...(data.goalies || [])])
+    .catch(err => { console.warn('[headshot] roster fetch failed:', teamAbbrev, season, err.message); return []; });
+  return rosterCache[key];
+}
+
+async function searchPlayerId(playerName) {
+  try {
+    const res = await fetch(`/nhl-search/api/v1/search/player?culture=en-us&limit=5&q=${encodeURIComponent(playerName)}`);
+    if (!res.ok) throw new Error();
+    const results = await res.json();
+    if (!results?.length) return null;
+    const input = playerName.toLowerCase().trim();
+    const match = results.find(r => {
+      const name = (r.name || '').toLowerCase();
+      const parts = input.split(/\s+/).filter(Boolean);
+      return parts.length > 0 && parts.every(part => name.includes(part));
+    });
+    return match?.playerId || null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveHeadshot(teamAbbrev, season, playerName) {
+  const players = await getRoster(teamAbbrev, season);
+  const input = playerName.toLowerCase().trim();
+  const rosterMatch = players.find(p => {
+    const full = `${p.firstName.default} ${p.lastName.default}`.toLowerCase();
+    if (full === input) return true;
+    const parts = input.split(/\s+/).filter(Boolean);
+    return parts.length > 0 && parts.every(part => full.includes(part));
+  });
+  if (rosterMatch?.headshot) return rosterMatch.headshot;
+
+  // Player not on current roster (traded, offseason) — search by name for their ID
+  const playerId = await searchPlayerId(playerName);
+  if (!playerId) return null;
+  return `https://assets.nhle.com/mugs/nhl/${season}/${teamAbbrev}/${playerId}.png`;
+}
 
 export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned, onToggleWishlist }) {
   const teamMeta = getTeamMeta(card.team_city, card.team_name);
   const [justOwned, setJustOwned] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [headshot, setHeadshot] = useState(null);
+  const [headshotLoading, setHeadshotLoading] = useState(false);
+  const [headshotFailed, setHeadshotFailed] = useState(false);
+
+  const willAttemptHeadshot = !!(teamMeta?.abbrev && toNhlSeason(card.year) && card.description);
+
+  useEffect(() => {
+    setHeadshot(null);
+    setHeadshotFailed(false);
+    const season = toNhlSeason(card.year);
+    if (!teamMeta?.abbrev || !season || !card.description) return;
+    setHeadshotLoading(true);
+    resolveHeadshot(teamMeta.abbrev, season, card.description).then(url => {
+      setHeadshotLoading(false);
+      if (url) setHeadshot(url);
+      else setHeadshotFailed(true);
+    });
+  }, [card.id]);
   const close = () => { setClosing(true); setTimeout(onClose, 180); };
   const serialDisplay = card.serial && card.serial_of
     ? `${card.serial}/${card.serial_of}`
@@ -23,13 +96,36 @@ export default function CardDetailModal({ card, onClose, onEdit, onToggleOwned, 
       <div className="modal card-detail-modal" onClick={e => e.stopPropagation()} style={teamMeta ? { background: `linear-gradient(160deg, var(--bg2) 55%, ${teamMeta.color}1a 100%)` } : undefined}>
         <div className="modal-header">
           <div className="modal-header-left">
-            {teamMeta && (
+            {willAttemptHeadshot ? (
+              <div
+                className="modal-player-headshot-wrap"
+                style={{ background: headshot && !headshotFailed ? `linear-gradient(170deg, #ffffff18 0%, ${teamMeta.color}cc 100%)` : 'transparent' }}
+              >
+                {headshotLoading && <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />}
+                {headshot && !headshotFailed && (
+                  <img
+                    className="modal-player-headshot"
+                    src={headshot}
+                    alt={card.description}
+                    onError={() => setHeadshotFailed(true)}
+                  />
+                )}
+                {(headshotFailed || (!headshotLoading && !headshot)) && teamMeta && (
+                  <img
+                    className="modal-team-logo"
+                    src={`https://assets.nhle.com/logos/nhl/svg/${teamMeta.abbrev}_light.svg`}
+                    alt={`${card.team_city} ${card.team_name}`}
+                    style={{ width: 44, height: 44 }}
+                  />
+                )}
+              </div>
+            ) : teamMeta ? (
               <img
                 className="modal-team-logo"
                 src={`https://assets.nhle.com/logos/nhl/svg/${teamMeta.abbrev}_light.svg`}
                 alt={`${card.team_city} ${card.team_name}`}
               />
-            )}
+            ) : null}
             <div>
               <h2 className="modal-title">{card.description || 'Card Detail'}</h2>
               {card.card_number && <div className="card-detail-subtitle">#{card.card_number}</div>}

@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Papa from 'papaparse';
 import { api } from '../api.js';
+import { useAuth } from '../App.jsx';
+
+function renderMarkdown(text) {
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const html = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+  return { __html: html };
+}
 
 function EditableRow({ card, onSave, onCancel, saving }) {
   const [draft, setDraft] = useState({
@@ -158,6 +165,12 @@ function AdminBugRow({ bug, expanded, onExpand, onReply, onSetStatus, onDelete }
 
                   {/* Actions */}
                   <div className="bug-actions" style={{ margin: '12px 16px 16px', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                    {(detail?.status || bug.status) === 'open' && (
+                      <button className="btn-ghost btn-sm" style={{ color: 'var(--gold)', borderColor: 'var(--gold)' }}
+                        onClick={e => { e.stopPropagation(); handleSetStatus('acknowledged'); }}>
+                        Acknowledge
+                      </button>
+                    )}
                     {(detail?.status || bug.status) !== 'fixed' && (
                       <button className="btn-ghost btn-sm" style={{ color: 'var(--green)', borderColor: 'var(--green)' }}
                         onClick={e => { e.stopPropagation(); handleSetStatus('fixed'); }}>
@@ -202,6 +215,7 @@ function AdminBugRow({ bug, expanded, onExpand, onReply, onSetStatus, onDelete }
 }
 
 export default function Admin() {
+  const { refreshOpenBugCount, openBugCount } = useAuth();
   const [activeTab, setActiveTab] = useState('catalog'); // catalog | users | bugs | announcements
 
   // Catalog state
@@ -453,6 +467,7 @@ export default function Admin() {
   const handleBugStatus = async (id, status) => {
     await api.setBugStatus(id, status);
     setBugsList(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+    refreshOpenBugCount();
   };
 
   const handleBugDelete = async (id) => {
@@ -480,7 +495,7 @@ export default function Admin() {
     );
   }, [editSet, editSearch]);
 
-  const openCount = bugsList.filter(b => b.status === 'open').length;
+  const openCount = bugsList.length > 0 ? bugsList.filter(b => b.status === 'open').length : openBugCount;
 
   return (
     <div className="page">
@@ -815,7 +830,7 @@ export default function Admin() {
                 <div className="ann-preview">
                   <div className="ann-preview-label">Current announcement</div>
                   {currentAnn.title && <div className="ann-preview-title">{currentAnn.title}</div>}
-                  <p className="ann-preview-text">{currentAnn.message}</p>
+                  <p className="ann-preview-text" dangerouslySetInnerHTML={renderMarkdown(currentAnn.message)} />
                   <div className="ann-preview-meta">
                     Posted {new Date(currentAnn.updated_at).toLocaleString()}
                   </div>
@@ -844,6 +859,9 @@ export default function Admin() {
                     placeholder="Write a short message for users… (news, downtime, etc.)"
                     style={{ width: '100%' }}
                   />
+                  <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 5 }}>
+                    <strong style={{ color: 'var(--text-muted)' }}>**bold**</strong> &nbsp;·&nbsp; <em style={{ color: 'var(--text-muted)' }}>*italic*</em>
+                  </div>
                 </div>
               </div>
 

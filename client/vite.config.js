@@ -10,4 +10,18 @@ export default defineConfig({
     __COMMIT_HASH__: JSON.stringify(commitHash),
   },
   plugins: [react()],
+  server: {
+    proxy: {
+      '/nhl-api': {
+        target: 'https://api-web.nhle.com',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/nhl-api/, ''),
+      },
+      '/nhl-search': {
+        target: 'https://search.d3.nhle.com',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/nhl-search/, ''),
+      },
+    },
+  },
 });

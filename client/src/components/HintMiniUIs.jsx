@@ -41,13 +41,13 @@ export function MiniSidebar() {
 
 export function MiniGroupSwitch() {
   return (
-    <div style={{ display: 'flex', gap: 6 }}>
+    <div style={{ display: 'flex', gap: 4, padding: '6px 10px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)' }}>
       {[['By Year', true], ['By Product', false]].map(([l, a]) => (
         <span key={l} style={{
-          padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600,
-          background: a ? 'var(--accent)' : 'var(--bg3)',
-          color: a ? 'white' : 'var(--text-muted)',
-          border: `1px solid ${a ? 'var(--accent)' : 'var(--border)'}`,
+          flex: 1, padding: '3px 6px', fontSize: 11, fontWeight: 600, textAlign: 'center',
+          border: '1px solid var(--border)', borderRadius: 4,
+          background: a ? 'var(--bg4)' : 'transparent',
+          color: a ? 'var(--text)' : 'var(--text-muted)',
         }}>{l}</span>
       ))}
     </div>
@@ -75,13 +75,13 @@ export function MiniOwnedToggle() {
 
 export function MiniTabs() {
   return (
-    <div style={{ display: 'flex', gap: 4 }}>
+    <div style={{ display: 'flex' }}>
       {[['All', false], ['Owned', true], ['Missing', false]].map(([l, a]) => (
         <span key={l} style={{
-          padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600,
-          background: a ? 'var(--accent)' : 'var(--bg3)',
-          color: a ? 'white' : 'var(--text-muted)',
-          border: `1px solid ${a ? 'var(--accent)' : 'var(--border)'}`,
+          flex: 1, padding: '7px', borderRadius: 6, fontSize: 11, fontWeight: 500,
+          textAlign: 'center',
+          background: a ? 'var(--bg4)' : 'transparent',
+          color: a ? 'var(--text)' : 'var(--text-muted)',
         }}>{l}</span>
       ))}
     </div>
@@ -116,6 +116,38 @@ export function MiniAddSingle() {
           ) : (
             <div style={{ flex: 1, fontSize: 11, color: 'var(--text)', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 6px' }}>{v}</div>
           )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function MiniSearch() {
+  const rows = [
+    ['Connor McDavid', 'Young Guns', true],
+    ['Connor McDavid', 'Base Set', false],
+    ['Connor McDavid', 'Future Watch Auto', true],
+  ];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg3)', border: '1px solid var(--accent)', borderRadius: 6, padding: '4px 8px', marginBottom: 2 }}>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>🔍</span>
+        <span style={{ fontSize: 11, color: 'var(--text)', fontFamily: 'monospace' }}>mcdavid</span>
+      </div>
+      <div style={{ fontSize: 10, color: 'var(--text-dim)', marginBottom: 1 }}>3 results</div>
+      {rows.map(([name, set, owned]) => (
+        <div key={set} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', borderBottom: '1px solid var(--border)' }}>
+          <span style={{
+            width: 18, height: 18, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 10, fontWeight: 700, flexShrink: 0,
+            background: owned ? '#22c55e' : 'transparent',
+            border: `1px solid ${owned ? '#22c55e' : 'var(--border)'}`,
+            color: owned ? 'white' : 'var(--text-muted)',
+          }}>{owned ? '✓' : '○'}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>{set}</div>
+          </div>
         </div>
       ))}
     </div>

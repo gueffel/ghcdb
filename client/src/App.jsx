@@ -1,6 +1,7 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase.js';
+import { api } from './api.js';
 import { HintsProvider } from './context/HintsContext.jsx';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
@@ -73,6 +74,7 @@ function AppChrome({ children }) {
 export default function App() {
   const [user, setUser] = useState(undefined); // undefined = loading
   const [profile, setProfile] = useState(null);
+  const [openBugCount, setOpenBugCount] = useState(0);
 
   async function loadProfile(supabaseUser) {
     if (!supabaseUser) { setProfile(null); return; }
@@ -102,11 +104,20 @@ export default function App() {
 
   const updateProfile = (fields) => setProfile(prev => ({ ...prev, ...fields }));
 
+  const refreshOpenBugCount = useCallback(() => {
+    api.getOpenBugCount().then(setOpenBugCount).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (profile?.is_admin) refreshOpenBugCount();
+    else setOpenBugCount(0);
+  }, [profile?.is_admin]);
+
   if (user === undefined) {
     return <div className="loading-screen"><div className="spinner" /><span>Loading...</span></div>;
   }
 
-  const authValue = { user, profile, logout, updateProfile };
+  const authValue = { user, profile, logout, updateProfile, openBugCount, refreshOpenBugCount };
 
   return (
     <AuthContext.Provider value={authValue}>
