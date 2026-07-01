@@ -325,7 +325,10 @@ export default function Landing() {
       {/* Footer */}
       <footer className="lp-footer">
         <span>© {new Date().getFullYear()} GHCdb</span>
-        <Link to="/login">Sign In</Link>
+        <div style={{ display: 'flex', gap: 20 }}>
+          <Link to="/privacy">Privacy Policy</Link>
+          <Link to="/login">Sign In</Link>
+        </div>
       </footer>
 
     </div>

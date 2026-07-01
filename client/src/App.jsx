@@ -17,6 +17,7 @@ import ResetPassword from './pages/ResetPassword.jsx';
 import Help from './pages/Help.jsx';
 import About from './pages/About.jsx';
 import BugReport from './pages/BugReport.jsx';
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 
 export const AuthContext = createContext(null);
 export function useAuth() { return useContext(AuthContext); }
@@ -36,6 +37,7 @@ const PAGE_TITLES = {
   '/settings': 'Settings',
   '/help': 'Help',
   '/about': 'About',
+  '/privacy': 'Privacy Policy',
   '/report-bug': 'Report a Bug',
 };
 
@@ -116,6 +118,7 @@ export default function App() {
             <Route path="/" element={user ? <Navigate to="/overview" replace /> : <Landing />} />
             <Route path="/login" element={user ? <Navigate to="/overview" replace /> : <Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/overview" element={<ProtectedRoute><Overview /></ProtectedRoute>} />
             <Route path="/collection" element={<ProtectedRoute><Collection /></ProtectedRoute>} />
             <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
