@@ -1281,9 +1281,10 @@ tr.row-clickable:active { background: var(--bg4); }
   animation: lp-fade-up 0.5s ease 0.3s both;
 }
 .lp-hero-perks {
-  display: flex; gap: 18px; flex-wrap: wrap;
+  display: flex; column-gap: 18px; row-gap: 8px; flex-wrap: wrap;
   animation: lp-fade-up 0.5s ease 0.4s both;
 }
+.lp-hero-footnote { font-size: 11px; color: var(--text-dim); margin-top: 14px; margin-left: 24px; }
 .lp-hero-perks span {
   display: flex; align-items: center; gap: 6px;
   color: var(--text-muted); font-size: 13px; font-weight: 400;

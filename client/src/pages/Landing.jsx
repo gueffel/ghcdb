@@ -244,8 +244,9 @@ export default function Landing() {
           <div className="lp-hero-perks">
             <span><span className="lp-perk-check">✓</span> Track your cards</span>
             <span><span className="lp-perk-check">✓</span> Complete set checklists</span>
-            <span><span className="lp-perk-check">✓</span> Works great on (nearly) every device</span>
+            <span><span className="lp-perk-check">✓</span> Works great on (nearly*) every device</span>
           </div>
+          <p className="lp-hero-footnote">*probably won't work on your Commodore 64</p>
         </div>
 
         {/* Mock app UI */}
