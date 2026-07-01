@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import { supabase } from '../lib/supabase.js';
+import { useHints } from '../context/HintsContext.jsx';
 
 function BugStatusBadge({ status }) {
   return <span className={`bug-status bug-status--${status}`}>{status}</span>;
@@ -56,6 +57,7 @@ function BugItem({ bug, onExpand, expanded, detail, loadingDetail }) {
 export default function Settings() {
   const { user, profile, updateProfile } = useAuth();
   const isOAuthUser = user?.app_metadata?.provider && user.app_metadata.provider !== 'email';
+  const hintsCtx = useHints();
 
   const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '' });
   const [profileStatus, setProfileStatus] = useState(null);
@@ -129,16 +131,18 @@ export default function Settings() {
   };
 
   return (
-    <div className="page">
-      <h1 className="page-title">Account Settings</h1>
+    <div className="page page-narrow">
+      <h1 className="page-title">Settings</h1>
 
-      <div className="settings-grid">
+      <div className="settings-stack">
         <div className="settings-card">
-          <h2 className="settings-section-title">Profile</h2>
-          <p className="settings-section-sub">
-            Logged in as <strong>{profile?.username}</strong>
-            {user?.email && <> · {user.email}</>}
-          </p>
+          <div>
+            <h2 className="settings-section-title">Profile</h2>
+            <p className="settings-section-sub">
+              Logged in as <strong>{profile?.username}</strong>
+              {user?.email && <> · {user.email}</>}
+            </p>
+          </div>
           <form onSubmit={saveProfile} className="settings-form">
             <div className="field-row">
               <div className="field">
@@ -180,24 +184,48 @@ export default function Settings() {
             </form>
           </div>
         )}
-      </div>
 
-      <div style={{ marginTop: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>My Bug Reports</h2>
-          <Link to="/report-bug" className="btn-primary" style={{ textDecoration: 'none', padding: '7px 16px', fontSize: 13 }}>+ New Report</Link>
-        </div>
-        {bugsLoading ? (
-          <div className="page-loading">Loading…</div>
-        ) : bugs.length === 0 ? (
-          <div className="bug-empty">No bug reports yet. <Link to="/report-bug" style={{ color: 'var(--accent)' }}>Submit one</Link> if you find something broken.</div>
-        ) : (
-          <div className="bug-list">
-            {bugs.map(bug => (
-              <BugItem key={bug.id} bug={bug} expanded={expandedBugId === bug.id} detail={bugDetails[bug.id]} loadingDetail={loadingDetailId === bug.id} onExpand={toggleBug} />
-            ))}
+        {hintsCtx?.loaded && (
+          <div className="settings-card">
+            <div>
+              <h2 className="settings-section-title">Feature Tips</h2>
+              <p className="settings-section-sub">Guided tip bubbles that appear the first time you visit each section. They explain key features without getting in the way.</p>
+            </div>
+            <div className="settings-row">
+              {hintsCtx.hintsEnabled ? (
+                <>
+                  <span className="settings-status">Tips are active.</span>
+                  <button className="btn-ghost" onClick={() => hintsCtx.setEnabled(false)}>Turn off tips</button>
+                </>
+              ) : (
+                <>
+                  <span className="settings-status">Tips are turned off.</span>
+                  <button className="btn-primary" onClick={() => hintsCtx.reset()}>Restart the tour</button>
+                </>
+              )}
+            </div>
           </div>
         )}
+
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <h2 className="settings-section-title">Bug Reports</h2>
+            <Link to="/report-bug" className="btn-primary" style={{ textDecoration: 'none', fontSize: 13, padding: '7px 14px' }}>+ New Report</Link>
+          </div>
+          {bugsLoading ? (
+            <div style={{ padding: '12px 0', color: 'var(--text-muted)', fontSize: 13 }}>Loading…</div>
+          ) : bugs.length === 0 ? (
+            <p className="settings-section-sub" style={{ marginTop: 0 }}>
+              No bug reports yet. <Link to="/report-bug" style={{ color: 'var(--accent)' }}>Submit one</Link> if you find something broken.
+            </p>
+          ) : (
+            <div className="bug-list" style={{ maxWidth: 'none' }}>
+              {bugs.map(bug => (
+                <BugItem key={bug.id} bug={bug} expanded={expandedBugId === bug.id} detail={bugDetails[bug.id]} loadingDetail={loadingDetailId === bug.id} onExpand={toggleBug} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

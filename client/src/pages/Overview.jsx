@@ -7,6 +7,32 @@ import { Pie } from 'react-chartjs-2';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import { NHL_TEAM_COLORS, getTeamMeta } from '../nhlTeams.js';
+import { usePageHints } from '../context/HintsContext.jsx';
+import HintBubble from '../components/HintBubble.jsx';
+import { MiniStats, MiniWishlist } from '../components/HintMiniUIs.jsx';
+
+const OVERVIEW_HINTS = [
+  {
+    id: 'overview_stats',
+    position: 'bottom',
+    title: 'Your collection at a glance',
+    body: 'These cards update automatically as you add or own cards. Click through to your Collection to mark cards owned.',
+    miniUI: <MiniStats />,
+  },
+  {
+    id: 'overview_wishlist',
+    position: 'bottom',
+    title: 'Your want list',
+    body: 'Cards you mark with ♥ show up here so you always know what you\'re hunting. You can search or page through your wishlist right from this panel.',
+    miniUI: <MiniWishlist />,
+  },
+  {
+    id: 'overview_products',
+    position: 'bottom',
+    title: 'Completion tracking',
+    body: 'Every set in your collection is listed here with how many cards you own vs. the total. Head to the Collection page for full detail and per-card checkboxes.',
+  },
+];
 
 
 
@@ -64,6 +90,12 @@ export default function Overview() {
   const [wishlistSearch, setWishlistSearch] = useState('');
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const wishlistDebounce = useRef(null);
+
+  const statsRef = useRef(null);
+  const wishlistRef = useRef(null);
+  const productsRef = useRef(null);
+  const hintRefs = { overview_stats: statsRef, overview_wishlist: wishlistRef, overview_products: productsRef };
+  const pageHint = usePageHints(OVERVIEW_HINTS);
 
   useEffect(() => {
     api.getStats().then(s => { setStats(s); setLoading(false); }).catch(() => setLoading(false));
@@ -132,7 +164,7 @@ export default function Overview() {
       )}
       <h1 className="page-title">{greeting}</h1>
 
-      <div className="stat-grid">
+      <div className="stat-grid" ref={statsRef}>
         <StatCard label="Owned" value={(totals.owned ?? 0).toLocaleString()} gradient="linear-gradient(135deg, #22c55e, #0d9488)" />
         <StatCard label="Rookies" value={(totals.ownedRookies ?? 0).toLocaleString()} gradient="linear-gradient(135deg, #f97316, #eab308)" />
         <StatCard label="Autos" value={(totals.ownedAutos ?? 0).toLocaleString()} gradient="linear-gradient(135deg, #a855f7, #ec4899)" />
@@ -153,7 +185,7 @@ export default function Overview() {
         )}
         <div className="chart-card wishlist-panel">
           <div className="wishlist-panel-header">
-            <h2 className="chart-title">My Wishlist</h2>
+            <h2 className="chart-title"><span ref={wishlistRef} style={{ display: 'inline-block' }}>My Wishlist</span></h2>
             <div className="search-input-wrap" style={{ maxWidth: 260, marginLeft: 'auto' }}>
               <input
                 className="collection-search"
@@ -265,7 +297,7 @@ export default function Overview() {
       {byProduct.length > 0 && (
         <div className="table-card">
           <div className="chart-title-row">
-            <h2 className="chart-title">My Products</h2>
+            <h2 className="chart-title"><span ref={productsRef} style={{ display: 'inline-block' }}>My Products</span></h2>
             <Link to="/collection" className="btn-ghost" style={{ fontSize: 13 }}>Full Collection →</Link>
           </div>
           <div className="table-wrap">
@@ -286,6 +318,16 @@ export default function Overview() {
             </table>
           </div>
         </div>
+      )}
+
+      {pageHint && (
+        <HintBubble
+          hint={pageHint.hint}
+          targetRef={hintRefs[pageHint.hint.id]}
+          remaining={pageHint.remaining}
+          onNext={() => pageHint.markSeen(pageHint.hint.id)}
+          onDismiss={() => pageHint.disable(false)}
+        />
       )}
 
       {cardDetail && (

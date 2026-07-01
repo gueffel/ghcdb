@@ -399,4 +399,25 @@ export const api = {
     if (error) throw error;
     return { ok: true };
   },
+
+  // ── Hints ──────────────────────────────────────────────────
+
+  getHintsState: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data } = await supabase.from('profiles')
+      .select('hints_enabled, hints_seen')
+      .eq('id', user.id)
+      .single();
+    return data;
+  },
+
+  saveHintsState: async (hints_enabled, hints_seen) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from('profiles')
+      .update({ hints_enabled, hints_seen })
+      .eq('id', user.id);
+    if (error) throw error;
+  },
 };

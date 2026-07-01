@@ -7,6 +7,9 @@ import SerialPromptModal from '../components/SerialPromptModal.jsx';
 import CatalogPickerModal from '../components/CatalogPickerModal.jsx';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
 import TeamChip from '../components/TeamChip.jsx';
+import { usePageHints } from '../context/HintsContext.jsx';
+import HintBubble from '../components/HintBubble.jsx';
+import { MiniSidebar, MiniGroupSwitch, MiniOwnedToggle, MiniTabs } from '../components/HintMiniUIs.jsx';
 
 const VIRTUALIZE_THRESHOLD = 300;
 
@@ -72,6 +75,16 @@ export default function Collection() {
   const tableWrapRef = useRef(null);
   const tbodyRef = useRef(null);
   const location = useLocation();
+
+  // Hint anchors
+  const sidebarRef = useRef(null);
+  const addBtnRef = useRef(null);
+  const groupRowRef = useRef(null);
+  const sidebarSearchRef = useRef(null);
+  const filterTabsRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const thOwnedRef = useRef(null);
+  const fabRef = useRef(null);
 
   const loadProducts = useCallback(() => {
     return api.getProducts().then(p => {
@@ -244,6 +257,30 @@ export default function Collection() {
 
   const shouldVirtualize = displayCards.length > VIRTUALIZE_THRESHOLD;
 
+  const hasProduct = !!selectedProduct || showAll;
+  const collHints = useMemo(() => [
+    { id: 'coll_mob_sidebar', enabled: window.innerWidth < 640, position: 'top', title: 'Open your sets', body: 'Tap ☰ Products to slide open the sidebar and pick which year and set to view. Tap it again (or tap outside) to close.', miniUI: <MiniSidebar /> },
+    { id: 'coll_sidebar', position: 'right', title: 'Your collection', body: 'Everything you own is organised in the sidebar by year. Click a year to expand it, then a set to load its cards — you\'ll see owned vs. total next to each one.', miniUI: <MiniSidebar /> },
+    { id: 'coll_add_catalog', position: 'bottom', title: 'Add a full set at once', body: 'The + button opens the built-in catalog. Pick a year and product and every card gets added in seconds — no manual entry needed.' },
+    { id: 'coll_group_switch', position: 'bottom', title: 'Two ways to browse', body: 'Switch between By Year and By Product to group the sidebar your way. By Product is handy when you collect the same set across multiple seasons.', miniUI: <MiniGroupSwitch /> },
+    { id: 'coll_sidebar_search', position: 'right', title: 'Filter your sets', body: 'Type a year or product name here to jump straight to a specific set without scrolling through the whole list.' },
+    { id: 'coll_tabs', enabled: hasProduct, position: 'bottom', title: 'Filter by ownership', body: 'Switch between All, Owned, and Missing to focus on what you want. Missing is great for knowing what you still need to find.', miniUI: <MiniTabs /> },
+    { id: 'coll_search', enabled: hasProduct, position: 'bottom', title: 'Search within a set', body: 'Find a card fast by player name, card number, team, or set name. Works across All Collections too.' },
+    { id: 'coll_owned', enabled: hasProduct, position: 'bottom', title: 'Mark cards owned', body: 'Click ✓ to toggle a card as owned or missing. For numbered cards (/99 etc.) you\'ll be asked which copy number you have. Click any row to open full card details.', miniUI: <MiniOwnedToggle /> },
+  ], [hasProduct]);
+
+  const pageHint = usePageHints(collHints);
+  const hintRefs = {
+    coll_mob_sidebar: fabRef,
+    coll_sidebar: sidebarRef,
+    coll_add_catalog: addBtnRef,
+    coll_group_switch: groupRowRef,
+    coll_sidebar_search: sidebarSearchRef,
+    coll_tabs: filterTabsRef,
+    coll_search: searchInputRef,
+    coll_owned: thOwnedRef,
+  };
+
   // Manual scroll-driven virtualization
   const VT_ITEM_H = 38;
   const VT_OVERSCAN = 8;
@@ -302,14 +339,15 @@ export default function Collection() {
   return (
     <div className="collection-layout">
       {/* Sidebar */}
-      <aside className={`collection-sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
+      <aside className={`collection-sidebar${sidebarOpen ? ' sidebar-open' : ''}`} ref={sidebarRef}>
         <div className="sidebar-header">
           <span>Products</span>
-          <button className="sidebar-add-btn" onClick={() => setCatalogOpen(true)} title="Add from catalog">+</button>
+          <button className="sidebar-add-btn" ref={addBtnRef} onClick={() => setCatalogOpen(true)} title="Add from catalog">+</button>
         </div>
 
         <div className="sidebar-search-wrap">
           <input
+            ref={sidebarSearchRef}
             className="sidebar-search"
             placeholder="Filter by year or product…"
             value={sidebarSearch}
@@ -320,7 +358,7 @@ export default function Collection() {
           )}
         </div>
 
-        <div className="sidebar-group-row">
+        <div className="sidebar-group-row" ref={groupRowRef}>
           <button
             className={`sidebar-group-btn ${sidebarGroup === 'year' ? 'active' : ''}`}
             onClick={() => { setSidebarGroup('year'); localStorage.setItem('collection_sidebar_group', 'year'); }}
@@ -428,7 +466,7 @@ export default function Collection() {
 
       {/* Main content */}
       <div className="collection-main" ref={mainRef}>
-        <button className="collection-sidebar-toggle btn-ghost" onClick={() => setSidebarOpen(o => !o)}>
+        <button className="collection-sidebar-toggle btn-ghost" ref={fabRef} onClick={() => setSidebarOpen(o => !o)}>
           ☰ Products
         </button>
         {!selectedProduct && !showAll ? (
@@ -455,6 +493,7 @@ export default function Collection() {
               <div className="collection-controls">
                 <div className="search-input-wrap" style={{ flex: 1, minWidth: 120 }}>
                   <input
+                    ref={searchInputRef}
                     className="collection-search"
                     type="text"
                     placeholder="Search cards…"
@@ -465,7 +504,7 @@ export default function Collection() {
                     <button className="search-clear-btn" onClick={() => setSearch('')} aria-label="Clear search">✕</button>
                   )}
                 </div>
-                <div className="filter-tabs">
+                <div className="filter-tabs" ref={filterTabsRef}>
                   {[['all', 'All'], ['owned', 'Owned'], ['missing', 'Missing']].map(([val, label]) => (
                     <button key={val} className={`tab ${filter === val ? 'active' : ''}`} onClick={() => setFilter(val)}>
                       {label}
@@ -500,7 +539,7 @@ export default function Collection() {
                   </colgroup>
                   <thead>
                     <tr>
-                      <th onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`} title="Owned">✓ {indicator('owned')}</th>
+                      <th ref={thOwnedRef} onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`} title="Owned">✓ {indicator('owned')}</th>
                       <th onClick={() => onSort('wishlisted')} className={`sortable-th col-sm-hide ${sortKey === 'wishlisted' ? 'sorted' : ''}`} title="Wishlist">♥ {indicator('wishlisted')}</th>
                       <th onClick={() => onSort('card_number')} className={`sortable-th col-sm-hide ${sortKey === 'card_number' ? 'sorted' : ''}`}># {indicator('card_number')}</th>
                       <th onClick={() => onSort('description')} className={`sortable-th ${sortKey === 'description' ? 'sorted' : ''}`}><span className="th-full">Player / Description</span><span className="th-short">Player</span> {indicator('description')}</th>
@@ -666,6 +705,17 @@ export default function Collection() {
               if (year && product) selectProduct(year, product);
             });
           }}
+        />
+      )}
+
+      {pageHint && (
+        <HintBubble
+          hint={pageHint.hint}
+          targetRef={hintRefs[pageHint.hint.id]}
+          remaining={pageHint.remaining}
+          onNext={() => pageHint.markSeen(pageHint.hint.id)}
+          onDismiss={() => pageHint.disable(false)}
+          sheetOffset={80}
         />
       )}
     </div>

@@ -4,7 +4,18 @@ import { supabase } from '../lib/supabase.js';
 import { api } from '../api.js';
 
 export default function ResetPassword() {
-  const [ready, setReady] = useState(false); // true once Supabase processes the recovery token
+  // Read the hash immediately during initial render — before Supabase clears it.
+  // The PASSWORD_RECOVERY auth event fires synchronously when Supabase parses the
+  // hash, which can happen before our useEffect listener is registered (race condition).
+  // Checking the hash here (in the useState initializer) is always early enough.
+  const [ready, setReady] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.hash.slice(1));
+      return params.get('type') === 'recovery';
+    } catch {
+      return false;
+    }
+  });
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,7 +24,7 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase fires PASSWORD_RECOVERY when the user arrives via the reset email link
+    // Secondary path: catch PASSWORD_RECOVERY if it fires after mount
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setReady(true);
     });

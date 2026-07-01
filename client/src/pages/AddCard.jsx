@@ -1,9 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api.js';
 import { NHL_CITIES, NHL_NAMES, autoFillTeam } from '../nhlTeams.js';
+import { usePageHints } from '../context/HintsContext.jsx';
+import HintBubble from '../components/HintBubble.jsx';
+import { MiniAddSingle } from '../components/HintMiniUIs.jsx';
 
 const MEM_OPTIONS = ['Jsy', 'Patch', 'Laundry Tag', 'Nameplate', 'Logo', 'Stick', 'Puck', 'Glove', 'Skate', 'Helmet', 'Auto', 'Dual Jsy', 'Dual Patch', 'Triple Jsy'];
 import Combobox from '../components/Combobox.jsx';
+
+const ADD_HINTS = [
+  {
+    id: 'add_single',
+    position: 'bottom',
+    title: 'Add a single card',
+    body: 'Fill in what you know. Once you pick a Year and Product, the Set field shows matching options from the catalog. If a card already exists in your collection it\'ll mark it owned (or add a duplicate).',
+    miniUI: <MiniAddSingle />,
+  },
+];
 
 const EMPTY = {
   owned: true, card_number: '', set_name: '', description: '', team_city: '', team_name: '',
@@ -12,6 +25,8 @@ const EMPTY = {
 };
 
 export default function AddCard() {
+  const titleRef = useRef(null);
+  const pageHint = usePageHints(ADD_HINTS);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
@@ -86,7 +101,7 @@ export default function AddCard() {
 
   return (
     <div className="page page-narrow">
-      <h1 className="page-title">Add Single</h1>
+      <h1 className="page-title"><span ref={titleRef} style={{ display: 'inline-block' }}>Add Single</span></h1>
 
       <form onSubmit={submit} className="card-form">
         {success && <div className="alert success">{success}</div>}
@@ -190,6 +205,16 @@ export default function AddCard() {
           <button type="button" className="btn-ghost" onClick={() => setForm(EMPTY)}>Reset</button>
         </div>
       </form>
+
+      {pageHint && (
+        <HintBubble
+          hint={pageHint.hint}
+          targetRef={titleRef}
+          remaining={pageHint.remaining}
+          onNext={() => pageHint.markSeen(pageHint.hint.id)}
+          onDismiss={() => pageHint.disable(false)}
+        />
+      )}
     </div>
   );
 }

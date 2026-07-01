@@ -28,6 +28,7 @@ export default function Navbar() {
         </div>
         <div className="nav-user">
           <NavLink to="/settings" className={({ isActive }) => `nav-username ${isActive ? 'active' : ''}`} title="Account settings">
+            <span className="nav-settings-icon">⚙</span>
             {profile?.first_name || profile?.username}
           </NavLink>
           <button className="btn-ghost" onClick={handleLogout}>Logout</button>
@@ -50,6 +51,7 @@ export default function Navbar() {
         {profile?.is_admin && <NavLink to="/admin" className={({ isActive }) => isActive ? 'nav-link active nav-link-admin' : 'nav-link nav-link-admin'} onClick={close}>⚙ Admin</NavLink>}
         <div className="nav-mobile-footer">
           <NavLink to="/settings" className={({ isActive }) => `nav-username ${isActive ? 'active' : ''}`} onClick={close}>
+            <span className="nav-settings-icon">⚙</span>
             {profile?.first_name || profile?.username}
           </NavLink>
           <button className="btn-ghost" onClick={handleLogout}>Logout</button>

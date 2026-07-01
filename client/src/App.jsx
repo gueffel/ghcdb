@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase.js';
+import { HintsProvider } from './context/HintsContext.jsx';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import Landing from './pages/Landing.jsx';
@@ -96,6 +97,7 @@ export default function App() {
 
   return (
     <AuthContext.Provider value={authValue}>
+      <HintsProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <TitleUpdater />
         {user && <Navbar />}
@@ -119,6 +121,7 @@ export default function App() {
         </main>
         {user && <ConditionalFooter />}
       </BrowserRouter>
+      </HintsProvider>
     </AuthContext.Provider>
   );
 }

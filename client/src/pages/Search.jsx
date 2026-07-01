@@ -5,6 +5,23 @@ import CardDetailModal from '../components/CardDetailModal.jsx';
 import SerialPromptModal from '../components/SerialPromptModal.jsx';
 import { useSortableTable } from '../hooks/useSortableTable.jsx';
 import TeamChip from '../components/TeamChip.jsx';
+import { usePageHints } from '../context/HintsContext.jsx';
+import HintBubble from '../components/HintBubble.jsx';
+
+const SEARCH_HINTS = [
+  {
+    id: 'search_overview',
+    position: 'bottom',
+    title: 'Search your entire collection',
+    body: 'Type any player name, card number, team, set name, product, or year — each word narrows the results.',
+  },
+  {
+    id: 'search_filters',
+    position: 'bottom',
+    title: 'Narrow the results',
+    body: 'The filter icon opens dropdowns to narrow by year, product, rookie, or auto status. The All / Owned / Missing tabs filter by ownership so you can find what you still need.',
+  },
+];
 
 function deduplicateCards(cards) {
   const map = new Map();
@@ -40,6 +57,11 @@ export default function Search() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const debounceRef = useRef(null);
   const LIMIT = 35;
+
+  const searchBarRef = useRef(null);
+  const filterRowRef = useRef(null);
+  const pageHint = usePageHints(SEARCH_HINTS);
+  const hintRefs = { search_overview: searchBarRef, search_filters: filterRowRef };
 
   useEffect(() => {
     api.getProducts().then(p => {
@@ -110,7 +132,7 @@ export default function Search() {
     <div className="page page-wide">
       <h1 className="page-title">Search Cards</h1>
 
-      <div className="search-bar-wrap">
+      <div className="search-bar-wrap" ref={searchBarRef}>
         <div className="search-input-row">
           <div className="search-input-wrap">
             <input
@@ -138,7 +160,7 @@ export default function Search() {
         </div>
       </div>
 
-      <div className="filter-row">
+      <div className="filter-row" ref={filterRowRef}>
         <div className={`filter-dropdowns${filtersOpen ? ' open' : ''}`}>
           <select value={filters.year} onChange={e => setFilter('year', e.target.value)} className="filter-select">
             <option value="">All years</option>
@@ -311,6 +333,16 @@ export default function Search() {
           card={serialPromptCard}
           onConfirm={confirmSerial}
           onCancel={() => setSerialPromptCard(null)}
+        />
+      )}
+
+      {pageHint && (
+        <HintBubble
+          hint={pageHint.hint}
+          targetRef={hintRefs[pageHint.hint.id]}
+          remaining={pageHint.remaining}
+          onNext={() => pageHint.markSeen(pageHint.hint.id)}
+          onDismiss={() => pageHint.disable(false)}
         />
       )}
     </div>

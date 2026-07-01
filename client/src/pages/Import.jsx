@@ -2,6 +2,19 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Papa from 'papaparse';
 import { api } from '../api.js';
+import { usePageHints } from '../context/HintsContext.jsx';
+import HintBubble from '../components/HintBubble.jsx';
+import { MiniImport } from '../components/HintMiniUIs.jsx';
+
+const IMPORT_HINTS = [
+  {
+    id: 'import_overview',
+    position: 'bottom',
+    title: 'Import from a spreadsheet',
+    body: 'Export your spreadsheet as a CSV and drop it here. GHCdb matches column names automatically — check the Help page for the full list. Use Replace mode to overwrite an existing set instead of adding duplicates.',
+    miniUI: <MiniImport />,
+  },
+];
 
 const COLUMN_MAP = {
   'owned': 'Owned',
@@ -33,6 +46,9 @@ export default function Import() {
   const [replaceYear, setReplaceYear] = useState('');
   const [replaceProduct, setReplaceProduct] = useState('');
   const fileRef = useRef();
+
+  const titleRef = useRef(null);
+  const pageHint = usePageHints(IMPORT_HINTS);
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -97,7 +113,7 @@ export default function Import() {
 
   return (
     <div className="page page-narrow">
-      <h1 className="page-title">Import CSV</h1>
+      <h1 className="page-title"><span ref={titleRef} style={{ display: 'inline-block' }}>Import CSV</span></h1>
 
       {step === 'upload' && (
         <div className="import-card">
@@ -189,6 +205,16 @@ export default function Import() {
             </button>
           </div>
         </div>
+      )}
+
+      {pageHint && (
+        <HintBubble
+          hint={pageHint.hint}
+          targetRef={titleRef}
+          remaining={pageHint.remaining}
+          onNext={() => pageHint.markSeen(pageHint.hint.id)}
+          onDismiss={() => pageHint.disable(false)}
+        />
       )}
     </div>
   );
