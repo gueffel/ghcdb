@@ -19,7 +19,7 @@ export default function PrivacyPolicy() {
 
       <div className="settings-stack">
         <Section title="What we collect">
-          <p>When you create an account we collect your <strong style={{ color: 'var(--text)' }}>email address</strong>, a <strong style={{ color: 'var(--text)' }}>username</strong>, and optionally your <strong style={{ color: 'var(--text)' }}>first and last name</strong>. If you sign in with Google or Discord we receive the email address associated with that account.</p>
+          <p>When you create an account we collect your <strong style={{ color: 'var(--text)' }}>email address</strong> and optionally your <strong style={{ color: 'var(--text)' }}>first and last name</strong>. If you sign in with Google or Discord we receive the email address associated with that account.</p>
           <p>The <strong style={{ color: 'var(--text)' }}>card collection data</strong> you enter (card details, ownership status, wishlist, etc.) is stored and associated with your account so we can provide the service.</p>
           <p>We do not collect payment information directly. If you subscribe to a paid plan in the future, payments are processed by a third-party provider and we only store a subscription status and expiry date.</p>
         </Section>

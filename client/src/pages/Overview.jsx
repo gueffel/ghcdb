@@ -77,8 +77,8 @@ function StatCard({ label, value, sub, gradient }) {
 const WISHLIST_PAGE_SIZE = 5;
 
 export default function Overview() {
-  const { profile } = useAuth();
-  const greeting = useMemo(() => getGreeting(profile?.first_name || profile?.username || 'there'), [profile]);
+  const { user, profile } = useAuth();
+  const greeting = useMemo(() => getGreeting(profile?.first_name || user?.email?.split('@')[0] || 'there'), [profile, user]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cardDetail, setCardDetail] = useState(null);

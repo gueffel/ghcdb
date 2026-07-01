@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import { supabase } from '../lib/supabase.js';
@@ -55,7 +55,8 @@ function BugItem({ bug, onExpand, expanded, detail, loadingDetail }) {
 }
 
 export default function Settings() {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, logout } = useAuth();
+  const navigate = useNavigate();
   const isOAuthUser = user?.app_metadata?.provider && user.app_metadata.provider !== 'email';
   const hintsCtx = useHints();
 
@@ -66,6 +67,30 @@ export default function Settings() {
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '', confirm_password: '' });
   const [passwordStatus, setPasswordStatus] = useState(null);
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deleteModalClosing, setDeleteModalClosing] = useState(false);
+
+  const openDeleteModal = () => { setDeleteConfirm(''); setDeleteError(null); setShowDeleteModal(true); };
+  const closeDeleteModal = () => { setDeleteModalClosing(true); setTimeout(() => { setShowDeleteModal(false); setDeleteModalClosing(false); }, 180); };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== 'delete') return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const { error } = await api.deleteAccount();
+      if (error) throw error;
+      await logout();
+      navigate('/');
+    } catch (err) {
+      setDeleteError(err.message || 'Something went wrong. Please try again.');
+      setDeleteLoading(false);
+    }
+  };
 
   const [bugs, setBugs] = useState([]);
   const [bugsLoading, setBugsLoading] = useState(true);
@@ -131,6 +156,7 @@ export default function Settings() {
   };
 
   return (
+    <>
     <div className="page page-narrow">
       <h1 className="page-title">Settings</h1>
 
@@ -139,8 +165,7 @@ export default function Settings() {
           <div>
             <h2 className="settings-section-title">Profile</h2>
             <p className="settings-section-sub">
-              Logged in as <strong>{profile?.username}</strong>
-              {user?.email && <> · {user.email}</>}
+              {user?.email}
             </p>
           </div>
           <form onSubmit={saveProfile} className="settings-form">
@@ -226,7 +251,55 @@ export default function Settings() {
             </div>
           )}
         </div>
+        <div className="settings-card settings-card--danger">
+          <div>
+            <h2 className="settings-section-title">Delete Account</h2>
+            <p className="settings-section-sub">Permanently remove your account and all collection data. This cannot be undone.</p>
+          </div>
+          <button className="btn-danger" onClick={openDeleteModal}>Delete my account…</button>
+        </div>
       </div>
     </div>
+
+    {showDeleteModal && (
+      <div className={`modal-overlay${deleteModalClosing ? ' closing' : ''}`} onClick={closeDeleteModal}>
+        <div className="modal serial-prompt-modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2 style={{ color: 'var(--red)' }}>Delete Account</h2>
+            <button className="modal-close" onClick={closeDeleteModal}>✕</button>
+          </div>
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+              This will <strong style={{ color: 'var(--text)' }}>permanently delete your account and all your card data</strong>. There is no way to recover it.
+            </p>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+              If you want to keep a copy of your collection, go to the <strong style={{ color: 'var(--text)' }}>Collection page</strong> first and use <strong style={{ color: 'var(--text)' }}>Export CSV</strong> to download your data.
+            </p>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Type <strong>delete</strong> to confirm</label>
+              <input
+                value={deleteConfirm}
+                onChange={e => setDeleteConfirm(e.target.value)}
+                autoFocus
+                autoComplete="off"
+                placeholder="delete"
+              />
+            </div>
+            {deleteError && <div className="alert error">{deleteError}</div>}
+          </div>
+          <div className="modal-footer" style={{ padding: '0 20px 20px', borderTop: 'none', marginTop: 0 }}>
+            <button className="btn-ghost" onClick={closeDeleteModal} disabled={deleteLoading}>Cancel</button>
+            <button
+              className="btn-danger"
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirm !== 'delete' || deleteLoading}
+            >
+              {deleteLoading ? 'Deleting…' : 'Delete my account'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

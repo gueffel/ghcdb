@@ -242,9 +242,9 @@ export default function Landing() {
             <Link to="/login" className="btn-ghost lp-cta-ghost">Sign In</Link>
           </div>
           <div className="lp-hero-perks">
-            <span>✓ Complete set checklists</span>
-            <span>✓ Track owned vs. missing</span>
-            <span>✓ Works great on (nearly) every device</span>
+            <span><span className="lp-perk-check">✓</span> Track your cards</span>
+            <span><span className="lp-perk-check">✓</span> Complete set checklists</span>
+            <span><span className="lp-perk-check">✓</span> Works great on (nearly) every device</span>
           </div>
         </div>
 
@@ -317,8 +317,8 @@ export default function Landing() {
           </svg>
         </Link>
         <div className="lp-banner-perks">
-          <span>✓ No app to download</span>
-          <span>✓ Works on every device</span>
+          <span><span className="lp-perk-check">✓</span> No app to download</span>
+          <span><span className="lp-perk-check">✓</span> Works on every device</span>
         </div>
       </section>
 

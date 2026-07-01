@@ -9,7 +9,7 @@ export default function Login() {
   const [mode, setMode] = useState(searchParams.get('register') ? 'register' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
@@ -18,7 +18,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const switchMode = (m) => { setMode(m); setError(''); setForgotSent(false); setRegisterSent(false); };
+  const switchMode = (m) => { setMode(m); setError(''); setForgotSent(false); setRegisterSent(false); setConfirmPassword(''); setFirstName(''); setLastName(''); };
 
   const signInWithProvider = async (provider) => {
     setError('');
@@ -38,7 +38,8 @@ export default function Login() {
         await api.forgotPassword(email);
         setForgotSent(true);
       } else if (mode === 'register') {
-        const { error: err } = await api.register(email, password, username, firstName || null, lastName || null);
+        if (password !== confirmPassword) { setError('Passwords do not match.'); setLoading(false); return; }
+        const { error: err } = await api.register(email, password, firstName || null, lastName || null);
         if (err) throw err;
         setRegisterSent(true);
       } else {
@@ -118,11 +119,7 @@ export default function Login() {
                     <input value={lastName} onChange={e => setLastName(e.target.value)} autoComplete="family-name" />
                   </div>
                 </div>
-                <div className="field">
-                  <label>Username</label>
-                  <input value={username} onChange={e => setUsername(e.target.value)} required autoComplete="username" />
-                </div>
-              </>
+</>
             )}
             <div className="field">
               <label>Email</label>
@@ -132,6 +129,12 @@ export default function Login() {
               <label>Password</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
             </div>
+            {mode === 'register' && (
+              <div className="field">
+                <label>Confirm Password</label>
+                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required autoComplete="new-password" />
+              </div>
+            )}
             <button type="submit" className="btn-primary btn-full" disabled={loading}>
               {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>

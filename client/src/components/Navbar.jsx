@@ -4,7 +4,7 @@ import { useAuth } from '../App.jsx';
 import logoLight2 from '../assets/logo_light.svg';
 
 export default function Navbar() {
-  const { profile, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -29,7 +29,7 @@ export default function Navbar() {
         <div className="nav-user">
           <NavLink to="/settings" className={({ isActive }) => `nav-username ${isActive ? 'active' : ''}`} title="Account settings">
             <span className="nav-settings-icon">⚙</span>
-            {profile?.first_name || profile?.username}
+            {profile?.first_name || user?.email?.split('@')[0]}
           </NavLink>
           <button className="btn-ghost" onClick={handleLogout}>Logout</button>
         </div>
@@ -52,7 +52,7 @@ export default function Navbar() {
         <div className="nav-mobile-footer">
           <NavLink to="/settings" className={({ isActive }) => `nav-username ${isActive ? 'active' : ''}`} onClick={close}>
             <span className="nav-settings-icon">⚙</span>
-            {profile?.first_name || profile?.username}
+            {profile?.first_name || user?.email?.split('@')[0]}
           </NavLink>
           <button className="btn-ghost" onClick={handleLogout}>Logout</button>
         </div>

@@ -4,10 +4,10 @@ import { normalizeCard } from './lib/normalizeCard.js';
 // ── Auth ──────────────────────────────────────────────────────
 
 export const api = {
-  register: (email, password, username, first_name, last_name) =>
+  register: (email, password, first_name, last_name) =>
     supabase.auth.signUp({
       email, password,
-      options: { data: { username, first_name: first_name || null, last_name: last_name || null } },
+      options: { data: { first_name: first_name || null, last_name: last_name || null } },
     }),
 
   login: (email, password) =>
@@ -20,6 +20,9 @@ export const api = {
 
   resetPassword: (password) =>
     supabase.auth.updateUser({ password }),
+
+  deleteAccount: () =>
+    supabase.rpc('delete_my_account'),
 
   // ── Profile ────────────────────────────────────────────────
 
