@@ -103,8 +103,8 @@ export default function Collection() {
     mainRef.current?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
     localStorage.setItem('collection_last', '__all__');
-    api.getCards({ limit: 10000 })
-      .then(data => setCards(deduplicateCards(data.cards, true)))
+    api.getAllCards()
+      .then(cards => setCards(deduplicateCards(cards, true)))
       .finally(() => setLoadingCards(false));
   }, []);
 
@@ -118,8 +118,8 @@ export default function Collection() {
     mainRef.current?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
     localStorage.setItem('collection_last', `${year}::${product}`);
-    api.getCards({ year, product, limit: 2000 })
-      .then(data => setCards(deduplicateCards(data.cards)))
+    api.getAllCards({ year, product })
+      .then(cards => setCards(deduplicateCards(cards)))
       .finally(() => setLoadingCards(false));
   }, []);
 
@@ -141,8 +141,8 @@ export default function Collection() {
           setOpenYears(prev => ({ ...prev, [year]: true }));
           setLoadingCards(true);
           localStorage.setItem('collection_last', `${year}::${product}`);
-          api.getCards({ year, product, limit: 2000 })
-            .then(data => setCards(deduplicateCards(data.cards)))
+          api.getAllCards({ year, product })
+            .then(cards => setCards(deduplicateCards(cards)))
             .finally(() => setLoadingCards(false));
           return;
         }
@@ -155,8 +155,8 @@ export default function Collection() {
         setSelectedProduct(null);
         setShowAll(true);
         setLoadingCards(true);
-        api.getCards({ limit: 10000 })
-          .then(data => setCards(deduplicateCards(data.cards, true)))
+        api.getAllCards()
+          .then(cards => setCards(deduplicateCards(cards, true)))
           .finally(() => setLoadingCards(false));
       } else {
         const [year, ...rest] = last.split('::');
@@ -168,8 +168,8 @@ export default function Collection() {
           setShowAll(false);
           setOpenYears(prev => ({ ...prev, [year]: true }));
           setLoadingCards(true);
-          api.getCards({ year, product, limit: 2000 })
-            .then(data => setCards(deduplicateCards(data.cards)))
+          api.getAllCards({ year, product })
+            .then(cards => setCards(deduplicateCards(cards)))
             .finally(() => setLoadingCards(false));
         }
       }
@@ -281,6 +281,14 @@ export default function Collection() {
     coll_owned: thOwnedRef,
   };
 
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 640px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const handler = e => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   // Manual scroll-driven virtualization
   const VT_ITEM_H = 38;
   const VT_OVERSCAN = 8;
@@ -288,18 +296,26 @@ export default function Collection() {
   const vtViewportH = useRef(800);
   const vtTbodyOffset = useRef(0);
 
+  // Reset scroll to top when search or filter changes so the virtualizer
+  // recalculates visible rows and the browser repaints them correctly.
+  useEffect(() => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    el.scrollTop = 0;
+    setVtScrollTop(0);
+  }, [search, filter]);
+
   // table-wrap (not collection-main) is the actual scroll container because
   // overflow-x:auto implicitly makes overflow-y:auto too (CSS spec).
   // Deps include shouldVirtualize so this re-runs after cards load and the
   // table-wrap is actually in the DOM (it's conditionally rendered).
   useEffect(() => {
-    if (!shouldVirtualize) return;
     const el = tableWrapRef.current;
     if (!el) return;
     const onScroll = () => setVtScrollTop(el.scrollTop);
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
-  }, [shouldVirtualize]);
+  }, [shouldVirtualize]); // re-runs when table-wrap appears in the DOM
 
   useLayoutEffect(() => {
     const el = tableWrapRef.current;
@@ -519,25 +535,28 @@ export default function Collection() {
               <div className="page-loading"><div className="spinner large" />Loading cards...</div>
             ) : (
               <div className="table-wrap" ref={tableWrapRef}>
+                <div className={`table-scroll-shadow${vtScrollTop > 0 ? ' visible' : ''}`} />
                 <table className="data-table collection-table">
-                  <colgroup>
-                    <col style={{ width: '3%' }} />
-                    <col style={{ width: '3%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: showAll ? '9%' : '11%' }} />
-                    <col style={{ width: showAll ? '20%' : '24%' }} />
-                    <col style={{ width: showAll ? '11%' : '14%' }} />
-                    {showAll && <col style={{ width: '5%' }} />}
-                    {showAll && <col style={{ width: '11%' }} />}
-                    <col style={{ width: '4%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '7%' }} />
-                    <col style={{ width: '6%' }} />
-                    <col style={{ width: '5%' }} />
-                    <col style={{ width: '3%' }} />
-                  </colgroup>
-                  <thead>
+                  {!isMobile && (
+                    <colgroup>
+                      <col className="ct-col-check" />
+                      <col className="ct-col-wish" />
+                      <col className="ct-col-num" />
+                      <col className={showAll ? 'ct-col-player ct-col-player-all' : 'ct-col-player'} />
+                      <col className={showAll ? 'ct-col-set ct-col-set-all' : 'ct-col-set'} />
+                      <col className={showAll ? 'ct-col-team ct-col-team-all' : 'ct-col-team'} />
+                      {showAll && <col className="ct-col-year" />}
+                      {showAll && <col className="ct-col-prod" />}
+                      <col className="ct-col-rc" />
+                      <col className="ct-col-auto" />
+                      <col className="ct-col-mem" />
+                      <col className="ct-col-serial" />
+                      <col className="ct-col-grade" />
+                      <col className="ct-col-dupes" />
+                      <col className="ct-col-edit" />
+                    </colgroup>
+                  )}
+                  <thead className={vtScrollTop > 0 ? 'scrolled' : ''}>
                     <tr>
                       <th ref={thOwnedRef} onClick={() => onSort('owned')} className={`sortable-th ${sortKey === 'owned' ? 'sorted' : ''}`} title="Owned">✓ {indicator('owned')}</th>
                       <th onClick={() => onSort('wishlisted')} className={`sortable-th col-sm-hide ${sortKey === 'wishlisted' ? 'sorted' : ''}`} title="Wishlist">♥ {indicator('wishlisted')}</th>
@@ -645,6 +664,12 @@ export default function Collection() {
           </>
         )}
       </div>
+
+      <button
+        className={`scroll-to-top-btn${vtScrollTop > 400 ? ' visible' : ''}`}
+        onClick={() => { const el = tableWrapRef.current; if (el) el.scrollTo({ top: 0, behavior: 'smooth' }); }}
+        aria-label="Scroll to top"
+      >↑</button>
 
       {cardDetail && !editCard && (
         <CardDetailModal
